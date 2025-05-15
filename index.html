@@ -70,12 +70,12 @@
 
   while (addedCount < 30 && displayedCount < fullResults.length) {
     const item = fullResults[displayedCount];
-    displayedCount++;
     const title = item.title || item.name || 'Untitled';
     const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
     const card = document.createElement('div');
     card.className = 'bg-gray-800 p-4 rounded-lg shadow-lg';
     const availabilityText = await fetchAvailability(title, item.id, item.media_type);
+    displayedCount++;
     if (!availabilityText) continue;
     card.innerHTML = `
       <img src="${poster}" alt="${title}" class="rounded mb-4">
@@ -94,7 +94,6 @@
   } else {
     document.getElementById('showMoreBtn').style.display = 'inline-block';
   }
-}
 }
 
 document.addEventListener('DOMContentLoaded', () => {
