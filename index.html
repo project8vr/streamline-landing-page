@@ -67,10 +67,10 @@
     async function showMore() {
   const container = document.getElementById('searchResults');
   let addedCount = 0;
-  let index = displayedCount;
-  while (addedCount < 30 && index < fullResults.length) {
-    const item = fullResults[index];
-    index++;
+
+  while (addedCount < 30 && displayedCount < fullResults.length) {
+    const item = fullResults[displayedCount];
+    displayedCount++;
     const title = item.title || item.name || 'Untitled';
     const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
     const card = document.createElement('div');
@@ -88,8 +88,13 @@
     container.appendChild(card);
     addedCount++;
   }
-  displayedCount = index;
-  document.getElementById('showMoreBtn').style.display = displayedCount >= fullResults.length ? 'none' : 'inline-block';
+
+  if (displayedCount >= fullResults.length) {
+    document.getElementById('showMoreBtn').style.display = 'none';
+  } else {
+    document.getElementById('showMoreBtn').style.display = 'inline-block';
+  }
+}
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -158,6 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
+
 
 
 
