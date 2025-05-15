@@ -34,25 +34,10 @@ let popularPage = 1;
   }
     }
 
-    async function searchTMDB() {
-  const query = document.getElementById('searchInput').value;
-  if (!query.trim()) {
-    document.getElementById('searchResults').innerHTML = '';
-    displayedCount = 0;
-    initialLoad = true;
-    fetchPopular();
-    return;
+    async function searchTMDB() {$1window.searchActive = true;
   }
 
-  const response = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${tmdbApiKey}&query=${encodeURIComponent(query)}`);
-  const data = await response.json();
-  fullResults = data.results;
-  displayedCount = 0;
-  document.getElementById('searchResults').innerHTML = '';
-  initialLoad = false;
-  showMore();
-  
-    async function fetchAvailability(title, id, mediaType) {
+async function fetchAvailability(title, id, mediaType) {
   try {
     const type = mediaType === 'tv' ? 'tv' : 'movie';
     const response = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
@@ -188,8 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
-
-
 
 
 
