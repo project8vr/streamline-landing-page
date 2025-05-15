@@ -42,6 +42,15 @@ let popularPage = 1;
     initialLoad = true;
     fetchPopular();
     return;
+  }
+
+  const response = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${tmdbApiKey}&query=${encodeURIComponent(query)}`);
+  const data = await response.json();
+  fullResults = data.results;
+  displayedCount = 0;
+  document.getElementById('searchResults').innerHTML = '';
+  initialLoad = false;
+  showMore();
   
     async function fetchAvailability(title, id, mediaType) {
   try {
@@ -179,6 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
+
 
 
 
