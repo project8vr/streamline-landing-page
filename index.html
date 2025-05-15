@@ -6,10 +6,12 @@
   <title>Streamline – Smarter Streaming</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script defer>
-    const apiKey = '7d9d522d286dcd36849ec0cd0783b006';
+    const tmdbApiKey = '7d9d522d286dcd36849ec0cd0783b006';
+    const rapidApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
+    const rapidApiHost = 'utelly-tv-shows-and-movies-availability-v1.p.rapidapi.com';
 
     async function fetchPopular() {
-      const response = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=en-US&page=1`);
+      const response = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=en-US&page=1`);
       const data = await response.json();
       renderResults(data.results);
     }
@@ -18,23 +20,46 @@
       const query = document.getElementById('searchInput').value;
       if (!query) return fetchPopular();
 
-      const response = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${encodeURIComponent(query)}`);
+      const response = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${tmdbApiKey}&query=${encodeURIComponent(query)}`);
       const data = await response.json();
       renderResults(data.results);
     }
 
-    function renderResults(results) {
+    async function fetchAvailability(title) {
+      try {
+        const response = await fetch(`https://${rapidApiHost}/lookup?term=${encodeURIComponent(title)}&country=gb`, {
+          method: 'GET',
+          headers: {
+            'X-RapidAPI-Key': rapidApiKey,
+            'X-RapidAPI-Host': rapidApiHost
+          }
+        });
+        const data = await response.json();
+        const locations = data.results && data.results[0] && data.results[0].locations;
+        if (locations && locations.length) {
+          return locations.map(loc => loc.display_name).join(', ');
+        } else {
+          return 'No platforms found';
+        }
+      } catch (error) {
+        console.error('Error fetching availability:', error);
+        return 'Unavailable';
+      }
+    }
+
+    async function renderResults(results) {
       const resultsContainer = document.getElementById('searchResults');
       resultsContainer.innerHTML = '';
-      results.slice(0, 12).forEach(item => {
+      results.slice(0, 12).forEach(async item => {
         const title = item.title || item.name || 'Untitled';
         const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
         const card = document.createElement('div');
         card.className = 'bg-gray-800 p-4 rounded-lg shadow-lg';
+        const availabilityText = await fetchAvailability(title);
         card.innerHTML = `
           <img src="${poster}" alt="${title}" class="rounded mb-4">
           <h3 class="text-lg font-semibold">${title}</h3>
-          <p class="text-sm text-gray-400">Streaming availability coming soon...</p>
+          <p class="text-sm text-gray-400">Available on: ${availabilityText}</p>
         `;
         resultsContainer.appendChild(card);
       });
