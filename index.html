@@ -12,7 +12,6 @@
 
     let displayedCount = 0;
     let fullResults = [];
-let initialLoad = true;
 let popularPage = 1;
 
     async function fetchPopular() {
@@ -26,12 +25,7 @@ let popularPage = 1;
     fullResults = fullResults.concat(data.results);
   }
   popularPage++;
-  if (initialLoad) {
-    for (let i = 0; i < 2; i++) await showMore();
-    initialLoad = false;
-  } else {
-    showMore();
-  }
+  showMore();
     }
 
     async function searchTMDB() {
@@ -100,7 +94,7 @@ async function fetchAvailability(title, id, mediaType) {
   const container = document.getElementById('searchResults');
   let addedCount = 0;
   let scanned = 0;
-  const batchLimit = 18; // 3 full rows of 6
+  const batchLimit = 6; // 3 full rows of 6
 
   while (addedCount < batchLimit && displayedCount + scanned < fullResults.length) {
     const item = fullResults[displayedCount + scanned];
@@ -125,11 +119,7 @@ async function fetchAvailability(title, id, mediaType) {
     addedCount++;
   }
 
-  if (displayedCount >= fullResults.length - 1 && !initialLoad) {
-    fetchPopular();
-  } else {
-    document.getElementById('showMoreBtn').style.display = 'inline-block';
-  }
+  
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -199,9 +189,10 @@ document.addEventListener('DOMContentLoaded', () => {
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded shadow-lg">Show More</button>
   </section>
 
-<img src="https://em-content.zobj.net/source/microsoft-teams/337/unicorn_1f984.png" alt="Unicorn" class="fixed top-4 right-4 h-16 w-16 z-50">
+<img src="https://em-content.zobj.net/source/microsoft-teams/337/elephant_1f418.png" alt="Elephant" class="fixed top-4 right-4 h-16 w-16 z-50">
 </body>
 </html>
+
 
 
 
