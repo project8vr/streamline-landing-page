@@ -65,38 +65,35 @@
 }
 
     async function showMore() {
-      const container = document.getElementById('searchResults');
-      const slice = fullResults.slice(displayedCount, displayedCount + 15);
-      for (const item of slice) {
-        const title = item.title || item.name || 'Untitled';
-        const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
-        const card = document.createElement('div');
-        card.className = 'bg-gray-800 p-4 rounded-lg shadow-lg';
-        const availabilityText = await fetchAvailability(title, item.id, item.media_type);
-if (!availabilityText) continue;
-card.innerHTML = `
-  <img src="${poster}" alt="${title}" class="rounded mb-4">
-  <h3 class="text-lg font-semibold">${title}</h3>
-  <div class="text-sm text-gray-400">
-    ${availabilityText.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center mt-1'>${availabilityText.stream}</div></div>` : ''}
-    ${availabilityText.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center mt-1'>${availabilityText.buy}</div></div>` : ''}
-  </div>
-`;
-container.appendChild(card);
-      }
-      displayedCount += slice.length;
-      document.getElementById('showMoreBtn').style.display = displayedCount >= fullResults.length ? 'none' : 'inline-block';
-    }
+  const container = document.getElementById('searchResults');
+  let addedCount = 0;
+  let index = displayedCount;
+  while (addedCount < 30 && index < fullResults.length) {
+    const item = fullResults[index];
+    index++;
+    const title = item.title || item.name || 'Untitled';
+    const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
+    const card = document.createElement('div');
+    card.className = 'bg-gray-800 p-4 rounded-lg shadow-lg';
+    const availabilityText = await fetchAvailability(title, item.id, item.media_type);
+    if (!availabilityText) continue;
+    card.innerHTML = `
+      <img src="${poster}" alt="${title}" class="rounded mb-4">
+      <h3 class="text-lg font-semibold">${title}</h3>
+      <div class="text-sm text-gray-400">
+        ${availabilityText.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center mt-1'>${availabilityText.stream}</div></div>` : ''}
+        ${availabilityText.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center mt-1'>${availabilityText.buy}</div></div>` : ''}
+      </div>
+    `;
+    container.appendChild(card);
+    addedCount++;
+  }
+  displayedCount = index;
+  document.getElementById('showMoreBtn').style.display = displayedCount >= fullResults.length ? 'none' : 'inline-block';
+}
 
-    document.addEventListener('DOMContentLoaded', () => {
-      fetchPopular();
-      document.getElementById('searchInput').addEventListener('input', () => {
-        clearTimeout(window.searchTimeout);
-        window.searchTimeout = setTimeout(() => {
-          searchTMDB();
-        }, 500);
-      });
-      document.getElementById('showMoreBtn').addEventListener('click', showMore);
+// ensure showMore button always appends
+
     });
   </script>
   <style>
@@ -154,5 +151,6 @@ container.appendChild(card);
 
 </body>
 </html>
+
 
 
