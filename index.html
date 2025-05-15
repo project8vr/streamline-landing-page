@@ -92,9 +92,16 @@
   document.getElementById('showMoreBtn').style.display = displayedCount >= fullResults.length ? 'none' : 'inline-block';
 }
 
-// ensure showMore button always appends
-
-    });
+document.addEventListener('DOMContentLoaded', () => {
+  fetchPopular();
+  document.getElementById('searchInput').addEventListener('input', () => {
+    clearTimeout(window.searchTimeout);
+    window.searchTimeout = setTimeout(() => {
+      searchTMDB();
+    }, 500);
+  });
+  document.getElementById('showMoreBtn').addEventListener('click', showMore);
+});
   </script>
   <style>
     body {
