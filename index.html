@@ -34,35 +34,20 @@
       showMore();
     }
 
-    async function fetchAvailability(title) {
-      const simplifiedTitle = title.replace(/\(.*?\)|:|\//g, '').trim();
-      const countries = ['gb', 'us'];
+    async function fetchAvailability(title, id) {
+  try {
+    const response = await fetch(`https://api.themoviedb.org/3/movie/${id}/watch/providers?api_key=${tmdbApiKey}`);
+    const data = await response.json();
 
-      for (let country of countries) {
-        try {
-          const response = await fetch(`https://${rapidApiHost}/lookup?term=${encodeURIComponent(simplifiedTitle)}&country=${country}`, {
-            method: 'GET',
-            headers: {
-              'X-RapidAPI-Key': rapidApiKey,
-              'X-RapidAPI-Host': rapidApiHost
-            }
-          });
-
-          const data = await response.json();
-          console.log(`UTELLY RESPONSE [${country}] for "${simplifiedTitle}":`, data);
-
-          if (data.results && data.results.length > 0) {
-            const locations = data.results[0].locations;
-            if (locations && locations.length) {
-              return locations.map(loc => loc.display_name).join(', ');
-            }
-          }
-        } catch (error) {
-          console.error(`Error fetching availability for "${simplifiedTitle}" in ${country}:`, error);
-        }
-      }
-      return 'No platforms found';
+    const providers = data.results?.GB?.flatrate;
+    if (providers && providers.length) {
+      return providers.map(p => p.provider_name).join(', ');
     }
+  } catch (error) {
+    console.error(`Error fetching TMDb watch providers for "${title}" (ID: ${id}):`, error);
+  }
+  return 'No platforms found';
+}
 
     async function showMore() {
       const container = document.getElementById('searchResults');
@@ -72,7 +57,7 @@
         const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
         const card = document.createElement('div');
         card.className = 'bg-gray-800 p-4 rounded-lg shadow-lg';
-        const availabilityText = await fetchAvailability(title);
+        const availabilityText = await fetchAvailability(title, item.id);
         card.innerHTML = `
           <img src="${poster}" alt="${title}" class="rounded mb-4">
           <h3 class="text-lg font-semibold">${title}</h3>
