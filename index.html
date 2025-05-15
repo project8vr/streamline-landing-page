@@ -8,16 +8,25 @@
   <script defer>
     const apiKey = '7d9d522d286dcd36849ec0cd0783b006';
 
+    async function fetchPopular() {
+      const response = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=en-US&page=1`);
+      const data = await response.json();
+      renderResults(data.results);
+    }
+
     async function searchTMDB() {
       const query = document.getElementById('searchInput').value;
-      if (!query) return;
+      if (!query) return fetchPopular();
 
       const response = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${encodeURIComponent(query)}`);
       const data = await response.json();
+      renderResults(data.results);
+    }
+
+    function renderResults(results) {
       const resultsContainer = document.getElementById('searchResults');
       resultsContainer.innerHTML = '';
-
-      data.results.slice(0, 12).forEach(item => {
+      results.slice(0, 12).forEach(item => {
         const title = item.title || item.name || 'Untitled';
         const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
         const card = document.createElement('div');
@@ -32,6 +41,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      fetchPopular();
       document.getElementById('searchInput').addEventListener('input', () => {
         clearTimeout(window.searchTimeout);
         window.searchTimeout = setTimeout(() => {
@@ -78,13 +88,19 @@
 </head>
 <body class="text-white">
 
-  <!-- Search Bar Section -->
+  <!-- Hero Section -->
   <section class="text-center py-20 px-6 fade-in">
-    <h2 class="text-4xl font-bold mb-6">Search the Library</h2>
+    <h1 class="text-6xl font-extrabold mb-4">Streamline</h1>
+    <p class="text-xl text-gray-400 mb-4">Your smart streaming subscription assistant</p>
+    <p class="text-lg max-w-3xl mx-auto text-gray-300">You're subscribed to too many platforms. You're endlessly scrolling. You're paying for stuff you're not even watching. Streamline helps you decide what to watch, where to watch it, and when to switch.</p>
+  </section>
+
+  <!-- Preview the Experience / Search Section -->
+  <section class="text-center py-20 px-6 fade-in">
+    <h2 class="text-4xl font-bold mb-6">Preview the Experience</h2>
     <input id="searchInput" type="text" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded mb-4" />
     <div id="searchResults" class="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8"></div>
   </section>
 
-  <!-- The rest of your site continues here... -->
 </body>
 </html>
