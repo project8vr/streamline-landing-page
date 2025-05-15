@@ -52,7 +52,18 @@
         const title = item.title || item.name || 'Untitled';
         const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
         const availability = await fetchAvailability(item.id, item.media_type);
-        if (!availability || (!availability.stream && !availability.buy)) continue;
+        if (!availability) {
+          const card = document.createElement('div');
+          card.className = 'bg-gray-800 p-4 rounded-lg shadow';
+          card.innerHTML = `
+            <img src="${poster}" alt="${title}" class="rounded mb-4">
+            <h3 class="text-lg font-semibold">${title}</h3>
+            <div class="text-sm text-yellow-400 mt-4">Not yet available to stream or buy in the UK.</div>
+          `;
+          container.appendChild(card);
+          displayedCount++;
+          continue;
+        }
 
         const card = document.createElement('div');
         card.className = 'bg-gray-800 p-4 rounded-lg shadow';
@@ -117,6 +128,7 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/frog_1f438.png" alt="Frog" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/dog_1f436.png" alt="Dog" class="fixed top-4 right-4 h-16 w-16 z-50">
 </body>
 </html>
+
