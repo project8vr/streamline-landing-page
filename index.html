@@ -1,189 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Streamline – Smarter Streaming</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Streamline</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script defer>
-    const tmdbApiKey = '7d9d522d286dcd36849ec0cd0783b006';
-    const rapidApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
-    const rapidApiHost = 'utelly-tv-shows-and-movies-availability-v1.p.rapidapi.com';
-
-    let displayedCount = 0;
+    const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
     let fullResults = [];
-let popularPage = 1;
+    let displayedCount = 0;
 
     async function fetchPopular() {
-  const response = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=en-US&page=${popularPage}`);
-  const data = await response.json();
-  if (popularPage === 1) {
-    fullResults = data.results;
-    document.getElementById('searchResults').innerHTML = '';
-    displayedCount = 0;
-  } else {
-    fullResults = fullResults.concat(data.results);
-  }
-  popularPage++;
-  showMore();
+      const res = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=en-GB&page=1`);
+      const data = await res.json();
+      fullResults = data.results;
+      displayedCount = 0;
+      document.getElementById('searchResults').innerHTML = '';
+      showMore();
     }
 
     async function searchTMDB() {
-  const query = document.getElementById('searchInput').value;
-  if (!query.trim()) {
-    document.getElementById('searchResults').innerHTML = '';
-    displayedCount = 0;
-    initialLoad = true;
-    fetchPopular();
-    return;
-  }
+      const query = document.getElementById('searchInput').value;
+      if (!query.trim()) return fetchPopular();
 
-  const response = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${tmdbApiKey}&query=${encodeURIComponent(query)}`);
-  const data = await response.json();
-  fullResults = data.results;
-  displayedCount = 0;
-  document.getElementById('searchResults').innerHTML = '';
-  initialLoad = false;
-  showMore();
-}
-
-async function fetchAvailability(title, id, mediaType) {
-  try {
-    const type = mediaType === 'tv' ? 'tv' : 'movie';
-    const response = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
-    const data = await response.json();
-
-    const stream = data.results?.GB?.flatrate || [];
-    const buy = data.results?.GB?.buy || [];
-
-    if (stream.length === 0 && buy.length === 0) {
-      return null;
+      const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${tmdbApiKey}&query=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      fullResults = data.results;
+      displayedCount = 0;
+      document.getElementById('searchResults').innerHTML = '';
+      showMore();
     }
 
-    const renderLogos = (providers) => providers.map(p => {
-      const name = p.provider_name.toLowerCase();
-      const skip = name.includes('with ads') || name.includes('trailer');
-      if (skip) return '';
-      return `<img src='https://image.tmdb.org/t/p/w92${p.logo_path}' alt='${p.provider_name}' title='${p.provider_name}' class='inline-block h-8 mx-2'>`;
-    }).join('');
+    async function fetchAvailability(id, mediaType) {
+      const type = mediaType === 'tv' ? 'tv' : 'movie';
+      try {
+        const res = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
+        const data = await res.json();
+        const gb = data.results?.GB;
+        if (!gb) return null;
 
-    return {
-      stream: renderLogos(stream),
-      buy: renderLogos(buy)
-    };
-  }
-    return {
-      stream: renderLogos(stream),
-      buy: renderLogos(buy)
-    };
-  } catch (error) {
-    console.error(`Error fetching TMDb watch providers for "${title}" (ID: ${id}):`, error);
-  }
-  return null;
-}
+        const render = (items) => items.map(p => `<img src='https://image.tmdb.org/t/p/w45${p.logo_path}' alt='${p.provider_name}' title='${p.provider_name}' class='inline-block h-8 mx-2'>`).join('');
+
+        return {
+          stream: gb.flatrate ? render(gb.flatrate) : '',
+          buy: gb.buy ? render(gb.buy) : ''
+        };
+      } catch (err) {
+        console.error('Error fetching availability:', err);
+        return null;
+      }
+    }
 
     async function showMore() {
-  const container = document.getElementById('searchResults');
-  let addedCount = 0;
-  let scanned = 0;
-  const batchLimit = 6; // 3 full rows of 6
+      const container = document.getElementById('searchResults');
+      const batch = fullResults.slice(displayedCount, displayedCount + 6);
+      for (const item of batch) {
+        const title = item.title || item.name || 'Untitled';
+        const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
+        const availability = await fetchAvailability(item.id, item.media_type);
+        if (!availability || (!availability.stream && !availability.buy)) continue;
 
-  while (addedCount < batchLimit && displayedCount + scanned < fullResults.length) {
-    const item = fullResults[displayedCount + scanned];
-    scanned++;
-    const title = item.title || item.name || 'Untitled';
-    const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
-    const card = document.createElement('div');
-    card.className = 'bg-gray-800 p-4 rounded-lg shadow-lg';
-    const availabilityText = await fetchAvailability(title, item.id, item.media_type);
-    if (!availabilityText) continue;
-    displayedCount++;
-    card.innerHTML = `
-      <img src="${poster}" alt="${title}" class="rounded mb-4">
-      <h3 class="text-lg font-semibold">${title}</h3>
-      <div class="text-sm text-gray-400">
-        ${availabilityText.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center mt-1'>${availabilityText.stream}</div></div>` : ''}
-        ${availabilityText.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center mt-1'>${availabilityText.buy}</div></div>` : ''}
-        
-      </div>
-    `;
-    container.appendChild(card);
-    addedCount++;
-  }
+        const card = document.createElement('div');
+        card.className = 'bg-gray-800 p-4 rounded-lg shadow';
+        card.innerHTML = `
+          <img src="${poster}" alt="${title}" class="rounded mb-4">
+          <h3 class="text-lg font-semibold">${title}</h3>
+          <div class="text-sm text-gray-300">
+            ${availability.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center'>${availability.stream}</div></div>` : ''}
+            ${availability.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center'>${availability.buy}</div></div>` : ''}
+          </div>
+        `;
+        container.appendChild(card);
+        displayedCount++;
+      }
+    }
 
-  
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  fetchPopular();
-  document.getElementById('searchInput').addEventListener('input', () => {
-    clearTimeout(window.searchTimeout);
-    window.searchTimeout = setTimeout(() => {
-      searchTMDB();
-    }, 500);
-  });
-  document.getElementById('showMoreBtn').addEventListener('click', showMore);
-});
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchPopular();
+      document.getElementById('searchInput').addEventListener('input', () => {
+        clearTimeout(window.searchDebounce);
+        window.searchDebounce = setTimeout(searchTMDB, 500);
+      });
+      document.getElementById('showMoreBtn').addEventListener('click', showMore);
+    });
   </script>
   <style>
     body {
       background: linear-gradient(to bottom, #0f0f1b, #1a1a2e);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    section {
-      background: transparent;
-    }
-    .fade-in {
-      opacity: 0;
-      transform: translateY(20px);
-      animation: fadeInUp 1s ease forwards;
-    }
-    @keyframes fadeInUp {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    .logo-grid img {
-      max-height: 60px;
-      opacity: 0.9;
-      filter: grayscale(100%);
-      transition: all 0.3s ease;
-    }
-    .logo-grid img:hover {
-      opacity: 1;
-      filter: none;
-    }
-    .section-img {
-      background-size: cover;
-      background-position: center;
-      background-blend-mode: multiply;
     }
   </style>
 </head>
 <body class="text-white">
-
-  <!-- Hero Section -->
-  <section class="relative text-center py-24 px-6 fade-in overflow-hidden">
-  <div class="absolute inset-0 bg-gradient-to-br from-purple-900 via-indigo-900 to-gray-900 opacity-30 animate-pulse"></div>
-  <div class="relative z-10 max-w-4xl mx-auto bg-white bg-opacity-5 backdrop-blur-md p-10 rounded-2xl shadow-xl">
-    <h1 class="text-6xl font-extrabold mb-4 text-white">Streamline</h1>
-    <p class="text-2xl text-indigo-300 mb-4">Smarter streaming, simplified.</p>
-    <p class="text-lg text-gray-200">You're subscribed to too many platforms. You're endlessly scrolling. You're paying for stuff you're not even watching. Streamline helps you decide what to watch, where to watch it, and when to switch.</p>
-  </div>
-</section>
-
-  <!-- Preview the Experience / Search Section -->
-  <section class="text-center py-20 px-6 fade-in">
-    <h2 class="text-4xl font-bold mb-6">Preview the Experience</h2>
-    <input id="searchInput" type="text" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded mb-4" />
-    <div id="searchResults" class="mt-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
-    <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded shadow-lg">Show More</button>
+  <section class="text-center py-20 px-6">
+    <h1 class="text-6xl font-bold mb-4">Streamline</h1>
+    <p class="text-xl text-gray-400 mb-6">Smarter streaming, simplified.</p>
+    <input id="searchInput" type="text" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded mb-8" />
+    <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
+    <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-
-<img src="https://em-content.zobj.net/source/microsoft-teams/337/elephant_1f418.png" alt="Elephant" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/crocodile_1f40a.png" alt="Crocodile" class="fixed top-4 right-4 h-16 w-16 z-50">
 </body>
 </html>
+
 
 
 
