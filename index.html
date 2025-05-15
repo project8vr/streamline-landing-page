@@ -12,6 +12,7 @@
 
     let displayedCount = 0;
     let fullResults = [];
+let initialLoad = true;
 let popularPage = 1;
 
     async function fetchPopular() {
@@ -35,8 +36,11 @@ let popularPage = 1;
 
     async function searchTMDB() {
       const query = document.getElementById('searchInput').value;
-      if (!query) return let initialLoad = true;
-  fetchPopular();
+      if (!query) {
+        initialLoad = true;
+        fetchPopular();
+        return;
+      }
 
       const response = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${tmdbApiKey}&query=${encodeURIComponent(query)}`);
       const data = await response.json();
@@ -56,8 +60,8 @@ let popularPage = 1;
     const buy = data.results?.GB?.buy || [];
 
     if (stream.length === 0 && buy.length === 0) {
-      return null;
-    }
+  return { stream: '', buy: '', cinema: true };
+}
 
     const renderLogos = (providers) => providers.map(p => {
       const name = p.provider_name.toLowerCase();
@@ -90,7 +94,7 @@ let popularPage = 1;
     const card = document.createElement('div');
     card.className = 'bg-gray-800 p-4 rounded-lg shadow-lg';
     const availabilityText = await fetchAvailability(title, item.id, item.media_type);
-    if (!availabilityText) continue;
+    if (!availabilityText) availabilityText = {};
     displayedCount++;
     card.innerHTML = `
       <img src="${poster}" alt="${title}" class="rounded mb-4">
@@ -98,13 +102,14 @@ let popularPage = 1;
       <div class="text-sm text-gray-400">
         ${availabilityText.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center mt-1'>${availabilityText.stream}</div></div>` : ''}
         ${availabilityText.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center mt-1'>${availabilityText.buy}</div></div>` : ''}
+        ${availabilityText.cinema ? `<div class='mt-4 text-yellow-400'>🎬 In Cinemas Now</div>` : ''}
       </div>
     `;
     container.appendChild(card);
     addedCount++;
   }
 
-  if (displayedCount >= fullResults.length - 1) {
+  if (displayedCount >= fullResults.length - 1 && !initialLoad) {
     fetchPopular();
   } else {
     document.getElementById('showMoreBtn').style.display = 'inline-block';
@@ -177,4 +182,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
+
 
