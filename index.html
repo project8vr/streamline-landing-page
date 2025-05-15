@@ -35,12 +35,34 @@
     }
 
     async function fetchAvailability(title) {
-      const simplifiedTitle = title.replace(/\(.*?\)|:|\//g, '').trim();
-      const countries = ['gb', 'us'];
+  const simplifiedTitle = title.replace(/\(.*?\)|:|\//g, '').trim();
+  const countries = ['gb', 'us'];
 
-      for (let country of countries) {
-        try {
-          const response = await fetch(`https://${rapidApiHost}/lookup?term=${encodeURIComponent(simplifiedTitle)}&country=${country}`, {
+  for (let country of countries) {
+    try {
+      const response = await fetch(`https://${rapidApiHost}/lookup?term=${encodeURIComponent(simplifiedTitle)}&country=${country}`, {
+        method: 'GET',
+        headers: {
+          'X-RapidAPI-Key': rapidApiKey,
+          'X-RapidAPI-Host': rapidApiHost
+        }
+      });
+
+      const data = await response.json();
+      console.log(`UTELLY RESPONSE [${country}] for "${simplifiedTitle}":`, data);
+
+      if (data.results && data.results.length > 0) {
+        const locations = data.results[0].locations;
+        if (locations && locations.length) {
+          return locations.map(loc => loc.display_name).join(', ');
+        }
+      }
+    } catch (error) {
+      console.error(`Error fetching availability for "${simplifiedTitle}" in ${country}:`, error);
+    }
+  }
+  return 'No platforms found';
+}/lookup?term=${encodeURIComponent(simplifiedTitle)}&country=${country}`, {
             method: 'GET',
             headers: {
               'X-RapidAPI-Key': rapidApiKey,
