@@ -9,35 +9,20 @@
     const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
     let fullResults = [];
     let displayedCount = 0;
-let currentPage = 1;
-let isSearchMode = false;
-let currentQuery = '';
+    let currentPage = 1;
+    let currentQuery = '';
+    let isSearchMode = false;
 
     async function fetchPopular() {
       const res = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=en-GB&page=${currentPage}`);
       const data = await res.json();
-      if (currentPage === 1) fullResults = [];
       fullResults = fullResults.concat(data.results);
-      displayedCount = 0;
-      document.getElementById('searchResults').innerHTML = '';
-      showMore();
     }
 
-    async function searchTMDB() {
-      const query = document.getElementById('searchInput').value.trim();
-      if (!query) {
-        isSearchMode = false;
-        currentPage = 1;
-        return fetchPopular();
-      }
-      isSearchMode = true;
-      currentQuery = query;
-      const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${tmdbApiKey}&query=${encodeURIComponent(query)}&page=1`);
+    async function searchTMDB(query) {
+      const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${tmdbApiKey}&language=en-GB&query=${encodeURIComponent(query)}&page=${currentPage}`);
       const data = await res.json();
-      fullResults = data.results;
-      displayedCount = 0;
-      document.getElementById('searchResults').innerHTML = '';
-      showMore();
+      fullResults = fullResults.concat(data.results);
     }
 
     async function fetchAvailability(id, mediaType) {
@@ -81,22 +66,36 @@ let currentQuery = '';
         `;
         container.appendChild(card);
         displayedCount++;
-        
       }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      fetchPopular();
-      document.getElementById('searchInput').addEventListener('input', () => {
-        clearTimeout(window.searchDebounce);
-        window.searchDebounce = setTimeout(searchTMDB, 500);
+    document.addEventListener('DOMContentLoaded', async () => {
+      await fetchPopular();
+      showMore();
+
+      document.getElementById('searchInput').addEventListener('input', async (e) => {
+        const query = e.target.value.trim();
+        const container = document.getElementById('searchResults');
+        container.innerHTML = '';
+        fullResults = [];
+        displayedCount = 0;
+        currentPage = 1;
+
+        if (query === '') {
+          isSearchMode = false;
+          await fetchPopular();
+        } else {
+          isSearchMode = true;
+          currentQuery = query;
+          await searchTMDB(query);
+        }
+        showMore();
       });
+
       document.getElementById('showMoreBtn').addEventListener('click', async () => {
         currentPage++;
         if (isSearchMode) {
-          const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${tmdbApiKey}&query=${encodeURIComponent(currentQuery)}&page=${currentPage}`);
-          const data = await res.json();
-          fullResults = fullResults.concat(data.results);
+          await searchTMDB(currentQuery);
         } else {
           await fetchPopular();
         }
@@ -118,7 +117,6 @@ let currentQuery = '';
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/owl_1f989.png" alt="Owl" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/frog_1f438.png" alt="Frog" class="fixed top-4 right-4 h-16 w-16 z-50">
 </body>
 </html>
-
