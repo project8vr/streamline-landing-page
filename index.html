@@ -67,16 +67,19 @@
     async function showMore() {
   const container = document.getElementById('searchResults');
   let addedCount = 0;
+  let scanned = 0;
+  const batchLimit = 18; // 3 full rows of 6
 
-  while (addedCount < 30 && displayedCount < fullResults.length) {
-    const item = fullResults[displayedCount];
+  while (addedCount < batchLimit && displayedCount + scanned < fullResults.length) {
+    const item = fullResults[displayedCount + scanned];
+    scanned++;
     const title = item.title || item.name || 'Untitled';
     const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
     const card = document.createElement('div');
     card.className = 'bg-gray-800 p-4 rounded-lg shadow-lg';
     const availabilityText = await fetchAvailability(title, item.id, item.media_type);
-    displayedCount++;
     if (!availabilityText) continue;
+    displayedCount++;
     card.innerHTML = `
       <img src="${poster}" alt="${title}" class="rounded mb-4">
       <h3 class="text-lg font-semibold">${title}</h3>
@@ -162,7 +165,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
-
 
 
 
