@@ -48,6 +48,7 @@ let popularPage = 1;
   fullResults = data.results;
   displayedCount = 0;
   document.getElementById('searchResults').innerHTML = '';
+  initialLoad = false;
   showMore();
 }
       }
@@ -70,8 +71,8 @@ let popularPage = 1;
     const buy = data.results?.GB?.buy || [];
 
     if (stream.length === 0 && buy.length === 0) {
-  return null;
-}
+      return null;
+    }
 }
 
     const renderLogos = (providers) => providers.map(p => {
@@ -105,7 +106,7 @@ let popularPage = 1;
     const card = document.createElement('div');
     card.className = 'bg-gray-800 p-4 rounded-lg shadow-lg';
     const availabilityText = await fetchAvailability(title, item.id, item.media_type);
-    if (!availabilityText) availabilityText = {};
+    if (!availabilityText) return;
     displayedCount++;
     card.innerHTML = `
       <img src="${poster}" alt="${title}" class="rounded mb-4">
@@ -196,6 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
+
 
 
 
