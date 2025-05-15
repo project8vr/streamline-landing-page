@@ -10,6 +10,20 @@
       background: linear-gradient(to bottom, #0f0f1b, #1a1a2e);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
+    section {
+      background: transparent;
+    }
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 1s ease forwards;
+    }
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
     .logo-grid img {
       max-height: 60px;
       opacity: 0.9;
@@ -25,15 +39,12 @@
       background-position: center;
       background-blend-mode: multiply;
     }
-    section {
-      background: linear-gradient(to bottom, rgba(15, 15, 27, 0.9), rgba(26, 26, 46, 0.95));
-    }
   </style>
 </head>
 <body class="text-white">
 
   <!-- Hero Section -->
-  <section class="text-center py-24 px-6">
+  <section class="text-center py-24 px-6 fade-in">
     <h1 class="text-6xl font-extrabold mb-2 tracking-tight">Streamline</h1>
     <p class="text-xl text-gray-400 mb-6">Your smart streaming subscription advisor</p>
     <h2 class="text-4xl font-bold mb-4 leading-tight tracking-tight">Stream smarter. Save more.</h2>
@@ -42,7 +53,7 @@
   </section>
 
   <!-- Logo Row -->
-  <section class="py-16 px-6">
+  <section class="py-16 px-6 fade-in">
     <div class="max-w-5xl mx-auto text-center">
       <p class="mb-6 text-gray-400 text-lg">We monitor content across these platforms and more:</p>
       <div class="flex flex-wrap justify-center items-center gap-10 logo-grid">
@@ -56,7 +67,7 @@
   </section>
 
   <!-- Problem Section -->
-  <section class="py-20 px-6 section-img" style="background-image: url('https://images.unsplash.com/photo-1601933470928-c31f6d5d5430?auto=format&fit=crop&w=1500&q=80');">
+  <section class="py-20 px-6 section-img fade-in" style="background-image: url('https://images.unsplash.com/photo-1601933470928-c31f6d5d5430?auto=format&fit=crop&w=1500&q=80');">
     <div class="max-w-4xl mx-auto text-center bg-black bg-opacity-60 p-6 rounded">
       <h2 class="text-4xl font-bold mb-4">The Problem</h2>
       <p class="text-lg text-gray-300">You’re subscribed to too many platforms. You scroll endlessly. You pay for shows you never watch. You can’t even search across all your services. Streamline fixes all of that.</p>
@@ -64,7 +75,7 @@
   </section>
 
   <!-- Solution / How It Works -->
-  <section class="py-20 px-6 section-img" style="background-image: url('https://images.unsplash.com/photo-1598899134739-24c46f58bd54?auto=format&fit=crop&w=1500&q=80');">
+  <section class="py-20 px-6 section-img fade-in" style="background-image: url('https://images.unsplash.com/photo-1598899134739-24c46f58bd54?auto=format&fit=crop&w=1500&q=80');">
     <div class="max-w-5xl mx-auto text-center bg-black bg-opacity-60 p-6 rounded">
       <h2 class="text-4xl font-bold mb-12">How Streamline Works</h2>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
@@ -85,7 +96,7 @@
   </section>
 
   <!-- Visual UI Concept -->
-  <section class="py-20 px-6">
+  <section class="py-20 px-6 fade-in">
     <div class="max-w-6xl mx-auto text-center">
       <h2 class="text-4xl font-bold mb-10">Preview the Experience</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
@@ -110,7 +121,7 @@
   </section>
 
   <!-- Final CTA -->
-  <section class="text-center py-20 px-6">
+  <section class="text-center py-20 px-6 fade-in">
     <h2 class="text-4xl font-bold mb-6">Join the waitlist today</h2>
     <p class="text-xl text-gray-300 mb-6">Be among the first to take control of your streaming and save money with AI-driven recommendations.</p>
     <a href="https://share.hsforms.com/2CWRJUasySTuqcw6nhdRNngtgl5q" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded shadow-lg transition inline-block mt-4">
@@ -124,4 +135,3 @@
 
 </body>
 </html>
-
