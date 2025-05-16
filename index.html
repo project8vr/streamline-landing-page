@@ -102,13 +102,14 @@
       document.getElementById('searchInput').addEventListener('input', async (e) => {
         console.log('Search input triggered:', e.target.value);
         const searchQuery = e.target.value;
-        if (window.gtag) {
-          gtag('event', 'search', {
-            'event_category': 'engagement',
-            'event_label': searchQuery,
-            'value': searchQuery.length
-          });
-        }
+        if (window.dataLayer) {
+  window.dataLayer.push({
+    event: 'search',
+    event_category: 'engagement',
+    event_label: searchQuery,
+    value: searchQuery.length
+  });
+}
         const query = e.target.value.trim().toLowerCase();
         const container = document.getElementById('searchResults');
         container.innerHTML = '';
