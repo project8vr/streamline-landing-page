@@ -93,6 +93,14 @@
       showMore();
 
       document.getElementById('searchInput').addEventListener('input', async (e) => {
+        const searchQuery = e.target.value;
+        if (window.gtag) {
+          gtag('event', 'search', {
+            'event_category': 'engagement',
+            'event_label': searchQuery,
+            'value': searchQuery.length
+          });
+        }
         const query = e.target.value.trim().toLowerCase();
         const container = document.getElementById('searchResults');
         container.innerHTML = '';
@@ -170,6 +178,3 @@
   </footer>
 </body>
 </html>
-
-
-
