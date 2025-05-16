@@ -101,8 +101,14 @@
           await searchTMDB(query);
 
           const normalize = (t) => t.toLowerCase().replace(/^the\s+/i, '');
+          const seenTitles = new Set();
 
-          fullResults = fullResults.sort((a, b) => {
+          fullResults = fullResults.filter(item => {
+            const title = (item.title || item.name || '').toLowerCase();
+            if (seenTitles.has(title)) return false;
+            seenTitles.add(title);
+            return true;
+          }).sort((a, b) => {
             const aTitle = normalize(a.title || a.name || '');
             const bTitle = normalize(b.title || b.name || '');
 
@@ -121,6 +127,7 @@
             return (b.popularity || 0) - (a.popularity || 0);
           });
         }
+
         showMore();
       });
 
@@ -149,7 +156,7 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/frog_1f438.png" alt="Frog" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/owl_1f989.png" alt="Owl" class="fixed top-4 right-4 h-16 w-16 z-50">
 </body>
 </html>
 
