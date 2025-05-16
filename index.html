@@ -100,18 +100,19 @@
           currentQuery = query;
           await searchTMDB(query);
           fullResults = fullResults.filter(item => {
-            const title = (item.title || item.name || '').toLowerCase();
-            return title.includes(query.toLowerCase());
-          }).sort((a, b) => {
-            const aTitle = (a.title || a.name || '').toLowerCase();
-            const bTitle = (b.title || b.name || '').toLowerCase();
-            const queryLower = query.toLowerCase();
+          const title = (item.title || item.name || '').toLowerCase();
+          return title.includes(query.toLowerCase());
+        }).sort((a, b) => {
+          const aTitle = (a.title || a.name || '').toLowerCase();
+          const bTitle = (b.title || b.name || '').toLowerCase();
+          const queryLower = query.toLowerCase();
 
-            const aExact = aTitle === queryLower ? 0 : aTitle.startsWith(queryLower) ? 1 : 2;
-            const bExact = bTitle === queryLower ? 0 : bTitle.startsWith(queryLower) ? 1 : 2;
+          const aExact = aTitle === queryLower ? 0 : aTitle.startsWith(queryLower) ? 1 : 2;
+          const bExact = bTitle === queryLower ? 0 : bTitle.startsWith(queryLower) ? 1 : 2;
 
-            return aExact - bExact || aTitle.localeCompare(bTitle);
-          });
+          if (aExact !== bExact) return aExact - bExact;
+          return (b.popularity || 0) - (a.popularity || 0);
+        });
         }
         showMore();
       });
@@ -141,6 +142,7 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/tiger_1f42f.png" alt="Tiger" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/fox_1f98a.png" alt="Fox" class="fixed top-4 right-4 h-16 w-16 z-50">
 </body>
 </html>
+
