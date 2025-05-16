@@ -85,7 +85,7 @@
       showMore();
 
       document.getElementById('searchInput').addEventListener('input', async (e) => {
-        const query = e.target.value.trim();
+        const query = e.target.value.trim().toLowerCase();
         const container = document.getElementById('searchResults');
         container.innerHTML = '';
         fullResults = [];
@@ -100,15 +100,20 @@
           currentQuery = query;
           await searchTMDB(query);
 
-          const normalize = (t) => t.replace(/^the\s+/i, '').toLowerCase();
-          const q = query.toLowerCase();
+          const normalize = (t) => t.toLowerCase().replace(/^the\s+/i, '');
 
           fullResults = fullResults.sort((a, b) => {
             const aTitle = normalize(a.title || a.name || '');
             const bTitle = normalize(b.title || b.name || '');
 
-            const aIncludes = aTitle.includes(q);
-            const bIncludes = bTitle.includes(q);
+            const aStarts = aTitle.startsWith(query);
+            const bStarts = bTitle.startsWith(query);
+
+            if (aStarts && !bStarts) return -1;
+            if (!aStarts && bStarts) return 1;
+
+            const aIncludes = aTitle.includes(query);
+            const bIncludes = bTitle.includes(query);
 
             if (aIncludes && !bIncludes) return -1;
             if (!aIncludes && bIncludes) return 1;
@@ -144,6 +149,7 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/cat_1f408.png" alt="Cat" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/frog_1f438.png" alt="Frog" class="fixed top-4 right-4 h-16 w-16 z-50">
 </body>
 </html>
+
