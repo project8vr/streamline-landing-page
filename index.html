@@ -67,29 +67,24 @@
         const title = item.title || item.name || 'Untitled';
         const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
         const availability = await fetchAvailability(item.id, item.media_type);
+        const card = document.createElement('div');
+        card.className = 'bg-gray-800 p-4 rounded-lg shadow';
         if (!availability) {
-          const card = document.createElement('div');
-          card.className = 'bg-gray-800 p-4 rounded-lg shadow';
           card.innerHTML = `
             <img src="${poster}" alt="${title}" class="rounded mb-4">
             <h3 class="text-lg font-semibold">${title}</h3>
             <div class="text-sm text-yellow-400 mt-4">Not yet available to stream or buy in the UK.</div>
           `;
-          container.appendChild(card);
-          displayedCount++;
-          continue;
+        } else {
+          card.innerHTML = `
+            <img src="${poster}" alt="${title}" class="rounded mb-4">
+            <h3 class="text-lg font-semibold">${title}</h3>
+            <div class="text-sm text-gray-300">
+              ${availability.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center'>${availability.stream}</div></div>` : ''}
+              ${availability.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center'>${availability.buy}</div></div>` : ''}
+            </div>
+          `;
         }
-
-        const card = document.createElement('div');
-        card.className = 'bg-gray-800 p-4 rounded-lg shadow';
-        card.innerHTML = `
-          <img src="${poster}" alt="${title}" class="rounded mb-4">
-          <h3 class="text-lg font-semibold">${title}</h3>
-          <div class="text-sm text-gray-300">
-            ${availability.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center'>${availability.stream}</div></div>` : ''}
-            ${availability.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center'>${availability.buy}</div></div>` : ''}
-          </div>
-        `;
         container.appendChild(card);
         displayedCount++;
       }
@@ -103,13 +98,14 @@
         console.log('Search input triggered:', e.target.value);
         const searchQuery = e.target.value;
         if (window.dataLayer) {
-  window.dataLayer.push({
-    event: 'search',
-    event_category: 'engagement',
-    event_label: searchQuery,
-    value: searchQuery.length
-  });
-}
+          window.dataLayer.push({
+            event: 'search',
+            event_category: 'engagement',
+            event_label: searchQuery,
+            value: searchQuery.length
+          });
+        }
+
         const query = e.target.value.trim().toLowerCase();
         const container = document.getElementById('searchResults');
         container.innerHTML = '';
@@ -126,6 +122,7 @@
           await searchTMDB(query);
 
           const normalize = (t) => t.toLowerCase().replace(/^the\s+/i, '');
+          const queryNorm = normalize(query);
           const seenTitles = new Set();
 
           fullResults = fullResults.filter(item => {
@@ -137,15 +134,18 @@
             const aTitle = normalize(a.title || a.name || '');
             const bTitle = normalize(b.title || b.name || '');
 
-            const aStarts = aTitle.startsWith(query);
-            const bStarts = bTitle.startsWith(query);
+            const aExact = aTitle === queryNorm;
+            const bExact = bTitle === queryNorm;
+            if (aExact && !bExact) return -1;
+            if (!aExact && bExact) return 1;
 
+            const aStarts = aTitle.startsWith(queryNorm);
+            const bStarts = bTitle.startsWith(queryNorm);
             if (aStarts && !bStarts) return -1;
             if (!aStarts && bStarts) return 1;
 
-            const aIncludes = aTitle.includes(query);
-            const bIncludes = bTitle.includes(query);
-
+            const aIncludes = aTitle.includes(queryNorm);
+            const bIncludes = bTitle.includes(queryNorm);
             if (aIncludes && !bIncludes) return -1;
             if (!aIncludes && bIncludes) return 1;
 
