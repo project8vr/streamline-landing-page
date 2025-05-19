@@ -15,6 +15,7 @@
       font-weight: 600;
       transition: all 0.3s ease;
       box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
+      font-size: 1.1rem;
     }
     .active-tab {
       background: linear-gradient(to right, #7f5af0, #2cb67d);
@@ -31,27 +32,33 @@
     }
     .flag-tab {
       border-radius: 9999px;
-      padding: 0.5rem 1.2rem;
-      font-size: 1.35rem;
+      padding: 0.75rem 1.5rem;
+      font-size: 2.2rem;
       background: #222;
       border: 2px solid transparent;
-      margin: 0 0.3rem;
+      margin: 0 0.2rem;
       transition: 0.2s;
       box-shadow: 0 2px 12px 0 rgba(90,90,120,0.06);
       outline: none;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      justify-content: center;
+      line-height: 1;
+      height: 3.5rem;
+      width: 4.5rem;
     }
     .flag-tab.selected {
       background: linear-gradient(to right, #7f5af0, #2cb67d);
       color: white;
       border-color: #fff;
+      filter: brightness(1.15) drop-shadow(0 2px 8px #7f5af088);
     }
-    .flag-icon {
-      font-size: 1.8em;
-      margin-right: 0.2em;
-      line-height: 1;
+    .flag-tab:focus {
+      outline: 2px solid #fff;
+    }
+    @media (max-width: 480px) {
+      .flag-tab { padding: 0.6rem 0.7rem; font-size: 1.4rem; height: 2.4rem; width: 2.4rem; }
+      .tab-button { padding: 0.5rem 1rem; font-size: 0.93rem;}
     }
   </style>
 </head>
@@ -60,9 +67,9 @@
     <h1 class="text-6xl font-bold mb-4 leading-tight bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent">Stream 2 Night</h1>
     <p class="text-xl text-gray-300 mb-6">Smarter streaming, simplified.</p>
     <!-- Flag Tabs -->
-    <div class="mb-6 flex justify-center gap-2">
-      <button id="regionUK" class="flag-tab selected"><span class="flag-icon">🇬🇧</span>UK</button>
-      <button id="regionUS" class="flag-tab"><span class="flag-icon">🇺🇸</span>US</button>
+    <div class="mb-6 flex justify-center gap-3">
+      <button id="regionUK" class="flag-tab selected" title="United Kingdom" aria-label="United Kingdom">🇬🇧</button>
+      <button id="regionUS" class="flag-tab" title="United States" aria-label="United States">🇺🇸</button>
     </div>
     <!-- Media Type Tabs -->
     <div class="mb-8 flex justify-center gap-4">
