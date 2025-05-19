@@ -8,7 +8,6 @@
   'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
   })(window,document,'script','dataLayer','GTM-PQB3CSDG');</script>
   <!-- End Google Tag Manager -->
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z4PWK187GP"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -22,6 +21,7 @@
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script defer>
     const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
+    const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
     let fullResults = [];
     let displayedCount = 0;
     let currentPage = 1;
@@ -40,20 +40,51 @@
       fullResults = fullResults.concat(data.results);
     }
 
-    async function fetchAvailability(id, mediaType) {
+    async function fetchAvailability(id, mediaType, title) {
       const type = mediaType === 'tv' ? 'tv' : 'movie';
       try {
-        const res = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
-        const data = await res.json();
-        const gb = data.results?.GB;
-        if (!gb) return null;
+        const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
+        const tmdbData = await tmdbRes.json();
+        const gb = tmdbData.results?.GB;
 
-        const render = (items) => items.map(p => `<img src='https://image.tmdb.org/t/p/w45${p.logo_path}' alt='${p.provider_name}' title='${p.provider_name}' class='inline-block h-8 mx-2'>`).join('');
+        let stream = '';
+        let buy = '';
 
-        return {
-          stream: gb.flatrate ? render(gb.flatrate) : '',
-          buy: gb.buy ? render(gb.buy) : ''
-        };
+        if (gb) {
+          const render = (items) => items.map(p => `<img src='https://image.tmdb.org/t/p/w45${p.logo_path}' alt='${p.provider_name}' title='${p.provider_name}' class='inline-block h-8 mx-2'>`).join('');
+          stream = gb.flatrate ? render(gb.flatrate) : '';
+          buy = gb.buy ? render(gb.buy) : '';
+        }
+
+        if (!stream && !buy && title) {
+          const searchRes = await fetch(`https://watchmode.p.rapidapi.com/search/?search_value=${encodeURIComponent(title)}&search_type=1`, {
+            method: 'GET',
+            headers: {
+              'X-RapidAPI-Key': watchmodeApiKey,
+              'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
+            }
+          });
+          const searchData = await searchRes.json();
+          const match = searchData.title_results.find(r => r.name.toLowerCase() === title.toLowerCase());
+          if (match) {
+            const sourceRes = await fetch(`https://watchmode.p.rapidapi.com/title/${match.id}/sources/`, {
+              method: 'GET',
+              headers: {
+                'X-RapidAPI-Key': watchmodeApiKey,
+                'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
+              }
+            });
+            const sourceData = await sourceRes.json();
+            const watchmodeLogos = sourceData.filter(s => s.type === 'sub' || s.type === 'buy')
+              .map(s => `<div class='text-sm text-white border px-2 py-1 rounded mx-1'>${s.name}</div>`)
+              .join('');
+            stream = watchmodeLogos;
+          }
+        }
+
+        if (!stream && !buy) return null;
+        return { stream, buy };
+
       } catch (err) {
         console.error('Error fetching availability:', err);
         return null;
@@ -66,7 +97,7 @@
       for (const item of batch) {
         const title = item.title || item.name || 'Untitled';
         const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
-        const availability = await fetchAvailability(item.id, item.media_type);
+        const availability = await fetchAvailability(item.id, item.media_type, title);
         const card = document.createElement('div');
         card.className = 'bg-gray-800 p-4 rounded-lg shadow';
         if (!availability) {
@@ -95,7 +126,6 @@
       showMore();
 
       document.getElementById('searchInput').addEventListener('input', async (e) => {
-        console.log('Search input triggered:', e.target.value);
         const searchQuery = e.target.value;
         if (window.dataLayer) {
           window.dataLayer.push({
@@ -106,7 +136,7 @@
           });
         }
 
-        const query = e.target.value.trim().toLowerCase();
+        const query = searchQuery.trim().toLowerCase();
         const container = document.getElementById('searchResults');
         container.innerHTML = '';
         fullResults = [];
@@ -133,26 +163,21 @@
           }).sort((a, b) => {
             const aTitle = normalize(a.title || a.name || '');
             const bTitle = normalize(b.title || b.name || '');
-
             const aExact = aTitle === queryNorm;
             const bExact = bTitle === queryNorm;
             if (aExact && !bExact) return -1;
             if (!aExact && bExact) return 1;
-
             const aStarts = aTitle.startsWith(queryNorm);
             const bStarts = bTitle.startsWith(queryNorm);
             if (aStarts && !bStarts) return -1;
             if (!aStarts && bStarts) return 1;
-
             const aIncludes = aTitle.includes(queryNorm);
             const bIncludes = bTitle.includes(queryNorm);
             if (aIncludes && !bIncludes) return -1;
             if (!aIncludes && bIncludes) return 1;
-
             return (b.popularity || 0) - (a.popularity || 0);
           });
         }
-
         showMore();
       });
 
@@ -174,10 +199,6 @@
   </style>
 </head>
 <body class="text-white">
-  <!-- Google Tag Manager (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PQB3CSDG"
-  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-  <!-- End Google Tag Manager (noscript) -->
   <section class="text-center py-20 px-6">
     <h1 class="text-6xl font-bold mb-4">Streamline</h1>
     <p class="text-xl text-gray-400 mb-6">Smarter streaming, simplified.</p>
@@ -185,9 +206,9 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/tiger_1f405.png" alt="Tiger" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/gorilla_1f98d.png" alt="Gorilla" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
-    This site uses the TMDb and Utelly APIs but is not endorsed or certified by either.
+    This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
 </body>
 </html>
