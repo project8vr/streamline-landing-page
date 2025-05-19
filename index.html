@@ -47,50 +47,147 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/octopus_1f419.png" alt="Octopus" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/turtle_1f422.png" alt="Turtle" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
   <script defer>
-    // existing script...
+    const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
+    const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
+    let fullResults = [];
+    let displayedCount = 0;
+    let currentPage = 1;
+    let currentQuery = '';
+    let isSearchMode = false;
+    let mediaTypeFilter = 'all';
 
-      const searchInput = document.getElementById('searchInput');
-      const searchHandler = async () => {
-        const query = searchInput.value.trim().toLowerCase();
-        const container = document.getElementById('searchResults');
-        container.innerHTML = '';
-        fullResults = [];
-        displayedCount = 0;
-        currentPage = 1;
+    async function fetchPopular() {
+      const type = mediaTypeFilter === 'tv' ? 'tv' : 'movie';
+      const res = await fetch(`https://api.themoviedb.org/3/${type}/popular?api_key=${tmdbApiKey}&language=en-GB&page=${currentPage}`);
+      const data = await res.json();
+      fullResults = fullResults.concat(data.results.map(item => ({ ...item, media_type: type })));
+    }
 
-        if (query === '') {
-          isSearchMode = false;
-          await fetchPopular();
-        } else {
-          isSearchMode = true;
-          currentQuery = query;
-          await searchTMDB(query);
-          const normalize = (t) => t.toLowerCase().replace(/^the\s+/i, '');
-          const queryNorm = normalize(query);
-          const seenTitles = new Set();
+    async function searchTMDB(query) {
+      const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${tmdbApiKey}&language=en-GB&query=${encodeURIComponent(query)}&page=${currentPage}`);
+      const data = await res.json();
+      fullResults = fullResults.concat(data.results);
+    }
 
-          fullResults = fullResults.filter(item => {
-            const title = (item.title || item.name || '').toLowerCase();
-            const mediaType = item.media_type;
-            if (mediaTypeFilter !== 'all' && mediaType !== mediaTypeFilter) return false;
-            if (seenTitles.has(title)) return false;
-            seenTitles.add(title);
-            return true;
-          }).sort((a, b) => {
-            const aTitle = normalize(a.title || a.name || '');
-            const bTitle = normalize(b.title || b.name || '');
-            if (aTitle === queryNorm) return -1;
-            if (bTitle === queryNorm) return 1;
-            return (b.popularity || 0) - (a.popularity || 0);
-          });
+    async function fetchAvailability(id, mediaType, title) {
+      const type = mediaType === 'tv' ? 'tv' : 'movie';
+      try {
+        const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
+        const tmdbData = await tmdbRes.json();
+        const gb = tmdbData.results?.GB;
+        let stream = '', buy = '';
+
+        if (gb) {
+          const render = (items) => items.map(p => `<img src='https://image.tmdb.org/t/p/w45${p.logo_path}' alt='${p.provider_name}' class='inline-block h-8 mx-2'>`).join('');
+          stream = gb.flatrate ? render(gb.flatrate) : '';
+          buy = gb.buy ? render(gb.buy) : '';
         }
-        showMore();
-      };
+
+        if (!stream && !buy && title) {
+          const searchRes = await fetch(`https://watchmode.p.rapidapi.com/search/?search_value=${encodeURIComponent(title)}&search_type=1`, {
+            headers: {
+              'X-RapidAPI-Key': watchmodeApiKey,
+              'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
+            }
+          });
+          const searchData = await searchRes.json();
+          const match = searchData.title_results.find(r => r.name.toLowerCase() === title.toLowerCase());
+          if (match) {
+            const sourceRes = await fetch(`https://watchmode.p.rapidapi.com/title/${match.id}/sources/`, {
+              headers: {
+                'X-RapidAPI-Key': watchmodeApiKey,
+                'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
+              }
+            });
+            const sourceData = await sourceRes.json();
+            const watchmodeLogos = sourceData.filter(s => s.type === 'sub' || s.type === 'buy')
+              .map(s => `<div class='text-sm text-white border px-2 py-1 rounded mx-1'>${s.name}</div>`).join('');
+            stream = watchmodeLogos;
+          }
+        }
+
+        return stream || buy ? { stream, buy } : null;
+      } catch {
+        return null;
+      }
+    }
+
+    async function showMore() {
+      const container = document.getElementById('searchResults');
+      const batch = fullResults.slice(displayedCount).filter(item => {
+        return mediaTypeFilter === 'all' || item.media_type === mediaTypeFilter;
+      }).slice(0, 12);
+
+      for (const item of batch) {
+        const title = item.title || item.name || 'Untitled';
+        const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
+        const availability = await fetchAvailability(item.id, item.media_type, title);
+        const card = document.createElement('div');
+        card.className = 'bg-gray-800 p-4 rounded-lg shadow';
+        card.innerHTML = `<img src="${poster}" alt="${title}" class="rounded mb-4">
+          <h3 class="text-lg font-semibold">${title}</h3>`;
+        if (!availability) {
+          card.innerHTML += `<div class="text-sm text-yellow-400 mt-4">Not yet available to stream or buy in the UK.</div>`;
+        } else {
+          if (availability.stream) card.innerHTML += `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center'>${availability.stream}</div></div>`;
+          if (availability.buy) card.innerHTML += `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center'>${availability.buy}</div></div>`;
+        }
+        container.appendChild(card);
+        displayedCount++;
+      }
+    }
+
+    function setActiveTab(tab) {
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active-tab'));
+      tab.classList.add('active-tab');
+    }
+
+    const searchInput = document.getElementById('searchInput');
+    const searchHandler = async () => {
+      const query = searchInput.value.trim().toLowerCase();
+      const container = document.getElementById('searchResults');
+      container.innerHTML = '';
+      fullResults = [];
+      displayedCount = 0;
+      currentPage = 1;
+
+      if (query === '') {
+        isSearchMode = false;
+        await fetchPopular();
+      } else {
+        isSearchMode = true;
+        currentQuery = query;
+        await searchTMDB(query);
+        const normalize = t => t.toLowerCase().replace(/^the\s+/i, '');
+        const queryNorm = normalize(query);
+        const seenTitles = new Set();
+
+        fullResults = fullResults.filter(item => {
+          const title = (item.title || item.name || '').toLowerCase();
+          const mediaType = item.media_type;
+          if (mediaTypeFilter !== 'all' && mediaType !== mediaTypeFilter) return false;
+          if (seenTitles.has(title)) return false;
+          seenTitles.add(title);
+          return true;
+        }).sort((a, b) => {
+          const aTitle = normalize(a.title || a.name || '');
+          const bTitle = normalize(b.title || b.name || '');
+          if (aTitle === queryNorm) return -1;
+          if (bTitle === queryNorm) return 1;
+          return (b.popularity || 0) - (a.popularity || 0);
+        });
+      }
+      showMore();
+    };
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await fetchPopular();
+      showMore();
 
       searchInput.addEventListener('input', searchHandler);
 
@@ -110,7 +207,16 @@
         await searchHandler();
       });
 
-    // rest of script remains unchanged...
+      document.getElementById('showMoreBtn').addEventListener('click', async () => {
+        currentPage++;
+        if (isSearchMode) {
+          await searchTMDB(currentQuery);
+        } else {
+          await fetchPopular();
+        }
+        showMore();
+      });
+    });
   </script>
 </body>
 </html>
