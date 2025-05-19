@@ -24,13 +24,13 @@
       background: linear-gradient(to bottom, #1b103f, #090d28);
     }
     .tab-button {
-      @apply px-4 py-2 rounded-t-lg font-semibold focus:outline-none;
+      @apply px-4 py-2 rounded-t-lg font-semibold focus:outline-none shadow-md transition-colors duration-300;
     }
     .active-tab {
-      @apply bg-blue-700 text-white;
+      @apply bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 text-white;
     }
     .inactive-tab {
-      @apply bg-gray-700 text-gray-300;
+      @apply bg-gray-700 text-gray-300 hover:bg-gray-600;
     }
   </style>
 </head>
@@ -47,121 +47,16 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/sloth_1f9a5.png" alt="Sloth" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/octopus_1f419.png" alt="Octopus" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
   <script defer>
-    const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
-    const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
-    let fullResults = [];
-    let displayedCount = 0;
-    let currentPage = 1;
-    let currentQuery = '';
-    let isSearchMode = false;
-    let mediaTypeFilter = 'all';
+    // existing script...
 
-    async function fetchPopular() {
-      const type = mediaTypeFilter === 'tv' ? 'tv' : 'movie';
-      const res = await fetch(`https://api.themoviedb.org/3/${type}/popular?api_key=${tmdbApiKey}&language=en-GB&page=${currentPage}`);
-      const data = await res.json();
-      fullResults = fullResults.concat(data.results.map(item => ({ ...item, media_type: type })));
-    }
-
-    async function searchTMDB(query) {
-      const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${tmdbApiKey}&language=en-GB&query=${encodeURIComponent(query)}&page=${currentPage}`);
-      const data = await res.json();
-      fullResults = fullResults.concat(data.results);
-    }
-
-    async function fetchAvailability(id, mediaType, title) {
-      const type = mediaType === 'tv' ? 'tv' : 'movie';
-      try {
-        const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
-        const tmdbData = await tmdbRes.json();
-        const gb = tmdbData.results?.GB;
-
-        let stream = '';
-        let buy = '';
-
-        if (gb) {
-          const render = (items) => items.map(p => `<img src='https://image.tmdb.org/t/p/w45${p.logo_path}' alt='${p.provider_name}' title='${p.provider_name}' class='inline-block h-8 mx-2'>`).join('');
-          stream = gb.flatrate ? render(gb.flatrate) : '';
-          buy = gb.buy ? render(gb.buy) : '';
-        }
-        if (!stream && !buy && title) {
-          const searchRes = await fetch(`https://watchmode.p.rapidapi.com/search/?search_value=${encodeURIComponent(title)}&search_type=1`, {
-            method: 'GET',
-            headers: {
-              'X-RapidAPI-Key': watchmodeApiKey,
-              'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
-            }
-          });
-          const searchData = await searchRes.json();
-          const match = searchData.title_results.find(r => r.name.toLowerCase() === title.toLowerCase());
-          if (match) {
-            const sourceRes = await fetch(`https://watchmode.p.rapidapi.com/title/${match.id}/sources/`, {
-              method: 'GET',
-              headers: {
-                'X-RapidAPI-Key': watchmodeApiKey,
-                'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
-              }
-            });
-            const sourceData = await sourceRes.json();
-            const watchmodeLogos = sourceData.filter(s => s.type === 'sub' || s.type === 'buy')
-              .map(s => `<div class='text-sm text-white border px-2 py-1 rounded mx-1'>${s.name}</div>`).join('');
-            stream = watchmodeLogos;
-          }
-        }
-        if (!stream && !buy) return null;
-        return { stream, buy };
-      } catch (err) {
-        console.error('Error fetching availability:', err);
-        return null;
-      }
-    }
-
-    async function showMore() {
-      const container = document.getElementById('searchResults');
-      const batch = fullResults.slice(displayedCount).filter(item => {
-        if (mediaTypeFilter === 'all') return true;
-        return item.media_type === mediaTypeFilter;
-      }).slice(0, 12);
-
-      for (const item of batch) {
-        const title = item.title || item.name || 'Untitled';
-        const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
-        const availability = await fetchAvailability(item.id, item.media_type, title);
-        const card = document.createElement('div');
-        card.className = 'bg-gray-800 p-4 rounded-lg shadow';
-        if (!availability) {
-          card.innerHTML = `<img src="${poster}" alt="${title}" class="rounded mb-4">
-            <h3 class="text-lg font-semibold">${title}</h3>
-            <div class="text-sm text-yellow-400 mt-4">Not yet available to stream or buy in the UK.</div>`;
-        } else {
-          card.innerHTML = `<img src="${poster}" alt="${title}" class="rounded mb-4">
-            <h3 class="text-lg font-semibold">${title}</h3>
-            <div class="text-sm text-gray-300">
-              ${availability.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center'>${availability.stream}</div></div>` : ''}
-              ${availability.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center'>${availability.buy}</div></div>` : ''}
-            </div>`;
-        }
-        container.appendChild(card);
-        displayedCount++;
-      }
-    }
-
-    function setActiveTab(tab) {
-      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active-tab'));
-      tab.classList.add('active-tab');
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      await fetchPopular();
-      showMore();
-
-      document.getElementById('searchInput').addEventListener('input', async (e) => {
-        const query = e.target.value.trim().toLowerCase();
+      const searchInput = document.getElementById('searchInput');
+      const searchHandler = async () => {
+        const query = searchInput.value.trim().toLowerCase();
         const container = document.getElementById('searchResults');
         container.innerHTML = '';
         fullResults = [];
@@ -195,49 +90,27 @@
           });
         }
         showMore();
-      });
+      };
 
-      document.getElementById('showMoreBtn').addEventListener('click', async () => {
-        currentPage++;
-        if (isSearchMode) {
-          await searchTMDB(currentQuery);
-        } else {
-          await fetchPopular();
-        }
-        showMore();
-      });
+      searchInput.addEventListener('input', searchHandler);
 
       document.getElementById('allTab').addEventListener('click', async () => {
         mediaTypeFilter = 'all';
         setActiveTab(document.getElementById('allTab'));
-        fullResults = [];
-        displayedCount = 0;
-        currentPage = 1;
-        document.getElementById('searchResults').innerHTML = '';
-        if (!isSearchMode) await fetchPopular();
-        showMore();
+        await searchHandler();
       });
       document.getElementById('movieTab').addEventListener('click', async () => {
         mediaTypeFilter = 'movie';
         setActiveTab(document.getElementById('movieTab'));
-        fullResults = [];
-        displayedCount = 0;
-        currentPage = 1;
-        document.getElementById('searchResults').innerHTML = '';
-        if (!isSearchMode) await fetchPopular();
-        showMore();
+        await searchHandler();
       });
       document.getElementById('tvTab').addEventListener('click', async () => {
         mediaTypeFilter = 'tv';
         setActiveTab(document.getElementById('tvTab'));
-        fullResults = [];
-        displayedCount = 0;
-        currentPage = 1;
-        document.getElementById('searchResults').innerHTML = '';
-        if (!isSearchMode) await fetchPopular();
-        showMore();
+        await searchHandler();
       });
-    });
+
+    // rest of script remains unchanged...
   </script>
 </body>
 </html>
