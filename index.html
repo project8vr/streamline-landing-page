@@ -21,27 +21,33 @@
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
     body {
-      background: linear-gradient(to bottom, #0f0f1b, #1a1a2e);
+      background: linear-gradient(to bottom, #1b103f, #090d28);
+    }
+    .tab-button {
+      @apply px-4 py-2 rounded-t-lg font-semibold focus:outline-none;
+    }
+    .active-tab {
+      @apply bg-blue-700 text-white;
+    }
+    .inactive-tab {
+      @apply bg-gray-700 text-gray-300;
     }
   </style>
 </head>
 <body class="text-white">
   <section class="text-center py-20 px-6">
-    <h1 class="text-6xl font-bold mb-4">Streamline</h1>
-    <p class="text-xl text-gray-400 mb-6">Smarter streaming, simplified.</p>
-    <div class="mb-4">
-      <label class="mr-2">Show:</label>
-      <select id="mediaTypeFilter" class="text-black px-3 py-1 rounded">
-        <option value="all">All</option>
-        <option value="movie">Movies only</option>
-        <option value="tv">Series only</option>
-      </select>
+    <h1 class="text-6xl font-bold mb-4 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent">Streamline</h1>
+    <p class="text-xl text-gray-300 mb-6">Smarter streaming, simplified.</p>
+    <div class="mb-4 flex justify-center space-x-2">
+      <button id="allTab" class="tab-button active-tab">All</button>
+      <button id="movieTab" class="tab-button inactive-tab">Movies</button>
+      <button id="tvTab" class="tab-button inactive-tab">Series</button>
     </div>
     <input id="searchInput" type="text" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded mb-8" />
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/koala_1f428.png" alt="Koala" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/sloth_1f9a5.png" alt="Sloth" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
@@ -53,11 +59,13 @@
     let currentPage = 1;
     let currentQuery = '';
     let isSearchMode = false;
+    let mediaTypeFilter = 'all';
 
     async function fetchPopular() {
-      const res = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=en-GB&page=${currentPage}`);
+      const type = mediaTypeFilter === 'tv' ? 'tv' : 'movie';
+      const res = await fetch(`https://api.themoviedb.org/3/${type}/popular?api_key=${tmdbApiKey}&language=en-GB&page=${currentPage}`);
       const data = await res.json();
-      fullResults = fullResults.concat(data.results);
+      fullResults = fullResults.concat(data.results.map(item => ({ ...item, media_type: type })));
     }
 
     async function searchTMDB(query) {
@@ -81,7 +89,6 @@
           stream = gb.flatrate ? render(gb.flatrate) : '';
           buy = gb.buy ? render(gb.buy) : '';
         }
-
         if (!stream && !buy && title) {
           const searchRes = await fetch(`https://watchmode.p.rapidapi.com/search/?search_value=${encodeURIComponent(title)}&search_type=1`, {
             method: 'GET',
@@ -102,15 +109,12 @@
             });
             const sourceData = await sourceRes.json();
             const watchmodeLogos = sourceData.filter(s => s.type === 'sub' || s.type === 'buy')
-              .map(s => `<div class='text-sm text-white border px-2 py-1 rounded mx-1'>${s.name}</div>`) 
-              .join('');
+              .map(s => `<div class='text-sm text-white border px-2 py-1 rounded mx-1'>${s.name}</div>`).join('');
             stream = watchmodeLogos;
           }
         }
-
         if (!stream && !buy) return null;
         return { stream, buy };
-
       } catch (err) {
         console.error('Error fetching availability:', err);
         return null;
@@ -119,10 +123,9 @@
 
     async function showMore() {
       const container = document.getElementById('searchResults');
-      const typeFilter = document.getElementById('mediaTypeFilter').value;
       const batch = fullResults.slice(displayedCount).filter(item => {
-        if (typeFilter === 'all') return true;
-        return item.media_type === typeFilter;
+        if (mediaTypeFilter === 'all') return true;
+        return item.media_type === mediaTypeFilter;
       }).slice(0, 12);
 
       for (const item of batch) {
@@ -132,24 +135,25 @@
         const card = document.createElement('div');
         card.className = 'bg-gray-800 p-4 rounded-lg shadow';
         if (!availability) {
-          card.innerHTML = `
-            <img src="${poster}" alt="${title}" class="rounded mb-4">
+          card.innerHTML = `<img src="${poster}" alt="${title}" class="rounded mb-4">
             <h3 class="text-lg font-semibold">${title}</h3>
-            <div class="text-sm text-yellow-400 mt-4">Not yet available to stream or buy in the UK.</div>
-          `;
+            <div class="text-sm text-yellow-400 mt-4">Not yet available to stream or buy in the UK.</div>`;
         } else {
-          card.innerHTML = `
-            <img src="${poster}" alt="${title}" class="rounded mb-4">
+          card.innerHTML = `<img src="${poster}" alt="${title}" class="rounded mb-4">
             <h3 class="text-lg font-semibold">${title}</h3>
             <div class="text-sm text-gray-300">
               ${availability.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center'>${availability.stream}</div></div>` : ''}
               ${availability.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center'>${availability.buy}</div></div>` : ''}
-            </div>
-          `;
+            </div>`;
         }
         container.appendChild(card);
         displayedCount++;
       }
+    }
+
+    function setActiveTab(tab) {
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active-tab'));
+      tab.classList.add('active-tab');
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -157,8 +161,7 @@
       showMore();
 
       document.getElementById('searchInput').addEventListener('input', async (e) => {
-        const searchQuery = e.target.value;
-        const query = searchQuery.trim().toLowerCase();
+        const query = e.target.value.trim().toLowerCase();
         const container = document.getElementById('searchResults');
         container.innerHTML = '';
         fullResults = [];
@@ -172,44 +175,25 @@
           isSearchMode = true;
           currentQuery = query;
           await searchTMDB(query);
-
           const normalize = (t) => t.toLowerCase().replace(/^the\s+/i, '');
           const queryNorm = normalize(query);
           const seenTitles = new Set();
-          const typeFilter = document.getElementById('mediaTypeFilter').value;
 
           fullResults = fullResults.filter(item => {
             const title = (item.title || item.name || '').toLowerCase();
             const mediaType = item.media_type;
-            if (typeFilter !== 'all' && mediaType !== typeFilter) return false;
+            if (mediaTypeFilter !== 'all' && mediaType !== mediaTypeFilter) return false;
             if (seenTitles.has(title)) return false;
             seenTitles.add(title);
             return true;
           }).sort((a, b) => {
             const aTitle = normalize(a.title || a.name || '');
             const bTitle = normalize(b.title || b.name || '');
-            const aExact = aTitle === queryNorm;
-            const bExact = bTitle === queryNorm;
-            if (aExact && !bExact) return -1;
-            if (!aExact && bExact) return 1;
-            const aStarts = aTitle.startsWith(queryNorm);
-            const bStarts = bTitle.startsWith(queryNorm);
-            if (aStarts && !bStarts) return -1;
-            if (!aStarts && bStarts) return 1;
-            const aIncludes = aTitle.includes(queryNorm);
-            const bIncludes = bTitle.includes(queryNorm);
-            if (aIncludes && !bIncludes) return -1;
-            if (!aIncludes && bIncludes) return 1;
+            if (aTitle === queryNorm) return -1;
+            if (bTitle === queryNorm) return 1;
             return (b.popularity || 0) - (a.popularity || 0);
           });
         }
-        showMore();
-      });
-
-      document.getElementById('mediaTypeFilter').addEventListener('change', () => {
-        displayedCount = 0;
-        const container = document.getElementById('searchResults');
-        container.innerHTML = '';
         showMore();
       });
 
@@ -220,6 +204,37 @@
         } else {
           await fetchPopular();
         }
+        showMore();
+      });
+
+      document.getElementById('allTab').addEventListener('click', async () => {
+        mediaTypeFilter = 'all';
+        setActiveTab(document.getElementById('allTab'));
+        fullResults = [];
+        displayedCount = 0;
+        currentPage = 1;
+        document.getElementById('searchResults').innerHTML = '';
+        if (!isSearchMode) await fetchPopular();
+        showMore();
+      });
+      document.getElementById('movieTab').addEventListener('click', async () => {
+        mediaTypeFilter = 'movie';
+        setActiveTab(document.getElementById('movieTab'));
+        fullResults = [];
+        displayedCount = 0;
+        currentPage = 1;
+        document.getElementById('searchResults').innerHTML = '';
+        if (!isSearchMode) await fetchPopular();
+        showMore();
+      });
+      document.getElementById('tvTab').addEventListener('click', async () => {
+        mediaTypeFilter = 'tv';
+        setActiveTab(document.getElementById('tvTab'));
+        fullResults = [];
+        displayedCount = 0;
+        currentPage = 1;
+        document.getElementById('searchResults').innerHTML = '';
+        if (!isSearchMode) await fetchPopular();
         showMore();
       });
     });
