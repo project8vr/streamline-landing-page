@@ -81,7 +81,7 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/hedgehog_1f994.png" alt="Hedgehog" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/koala_1f428.png" alt="Koala" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
@@ -95,23 +95,20 @@
     let isSearchMode = false;
     let currentType = 'all';
     let currentRegion = 'GB';
-    let isLoadingMore = false; // Prevents rapid Show More clicks
+    let isLoadingMore = false;
 
-    // Helper: build correct API URL for popular
     function getPopularUrl() {
       if (currentType === 'tv') {
         return `https://api.themoviedb.org/3/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${currentPage}`;
       } else if (currentType === 'movie') {
         return `https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${currentPage}`;
       } else {
-        // 'all': fetch both movies and TV for page 1 only, otherwise just movies
         if (currentPage === 1) {
           return [
             `https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=1`,
             `https://api.themoviedb.org/3/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=1`
           ];
         } else {
-          // Fallback to movie only for page > 1
           return [`https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${currentPage}`];
         }
       }
@@ -125,7 +122,6 @@
         const data = await res.json();
         if (data.results) {
           fullResults = fullResults.concat(data.results.map(item => {
-            // Add media_type property for sorting/filtering
             if (url.includes('/tv/')) item.media_type = 'tv';
             else item.media_type = 'movie';
             return item;
@@ -199,6 +195,42 @@
       displayedCount = 0;
     }
 
+    // *** MAINSTREAM FILTER LOGIC ADDED HERE ***
+    function deduplicateAndSort(input) {
+      const normalize = (t) => t.toLowerCase().replace(/^the\s+/i, '');
+      const queryNorm = normalize(input.trim().toLowerCase());
+      const seenTitles = new Set();
+
+      // Mainstream filter: must have at least 200 votes (adjust as needed)
+      let arr = fullResults.filter(item => {
+        const title = (item.title || item.name || '').toLowerCase();
+        if (seenTitles.has(title)) return false;
+        seenTitles.add(title);
+        if ((item.vote_count || 0) < 200) return false; // mainstream threshold!
+        return currentType === 'all' || item.media_type === currentType;
+      }).sort((a, b) => {
+        const aTitle = normalize(a.title || a.name || '');
+        const bTitle = normalize(b.title || b.name || '');
+
+        const aExact = aTitle === queryNorm;
+        const bExact = bTitle === queryNorm;
+        if (aExact && !bExact) return -1;
+        if (!aExact && bExact) return 1;
+
+        const aStarts = aTitle.startsWith(queryNorm);
+        const bStarts = bTitle.startsWith(queryNorm);
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+
+        // Prioritise vote_count, then popularity
+        if ((b.vote_count || 0) !== (a.vote_count || 0)) {
+          return (b.vote_count || 0) - (a.vote_count || 0);
+        }
+        return (b.popularity || 0) - (a.popularity || 0);
+      });
+      return arr;
+    }
+
     async function renderBatch(batch) {
       const container = document.getElementById('searchResults');
       for (const item of batch) {
@@ -237,14 +269,12 @@
 
       let batch = fullResults.slice(displayedCount, displayedCount + 12);
       if (batch.length === 0 && (isSearchMode || currentPage === 1)) {
-        // Try to fetch next page and add to results
         currentPage++;
         if (isSearchMode) {
           await searchTMDB(currentQuery);
         } else {
           await fetchPopular();
         }
-        // Deduplicate results on fetch
         fullResults = deduplicateAndSort(document.getElementById('searchInput').value);
         batch = fullResults.slice(displayedCount, displayedCount + 12);
       }
@@ -262,35 +292,6 @@
     function setRegionButton(regionBtn) {
       document.querySelectorAll('.flag-tab').forEach(btn => btn.classList.remove('selected'));
       regionBtn.classList.add('selected');
-    }
-
-    function deduplicateAndSort(input) {
-      const normalize = (t) => t.toLowerCase().replace(/^the\s+/i, '');
-      const queryNorm = normalize(input.trim().toLowerCase());
-      const seenTitles = new Set();
-
-      let arr = fullResults.filter(item => {
-        const title = (item.title || item.name || '').toLowerCase();
-        if (seenTitles.has(title)) return false;
-        seenTitles.add(title);
-        return currentType === 'all' || item.media_type === currentType;
-      }).sort((a, b) => {
-        const aTitle = normalize(a.title || a.name || '');
-        const bTitle = normalize(b.title || b.name || '');
-
-        const aExact = aTitle === queryNorm;
-        const bExact = bTitle === queryNorm;
-        if (aExact && !bExact) return -1;
-        if (!aExact && bExact) return 1;
-
-        const aStarts = aTitle.startsWith(queryNorm);
-        const bStarts = bTitle.startsWith(queryNorm);
-        if (aStarts && !bStarts) return -1;
-        if (!aStarts && bStarts) return 1;
-
-        return (b.popularity || 0) - (a.popularity || 0);
-      });
-      return arr;
     }
 
     async function runSearch() {
