@@ -19,6 +19,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Streamline</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(to bottom, #0f0f1b, #1a1a2e);
+    }
+  </style>
+</head>
+<body class="text-white">
+  <section class="text-center py-20 px-6">
+    <h1 class="text-6xl font-bold mb-4">Streamline</h1>
+    <p class="text-xl text-gray-400 mb-6">Smarter streaming, simplified.</p>
+    <div class="mb-4">
+      <label class="mr-2">Show:</label>
+      <select id="mediaTypeFilter" class="text-black px-3 py-1 rounded">
+        <option value="all">All</option>
+        <option value="movie">Movies only</option>
+        <option value="tv">Series only</option>
+      </select>
+    </div>
+    <input id="searchInput" type="text" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded mb-8" />
+    <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
+    <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
+  </section>
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/leopard_1f406.png" alt="Leopard" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <footer class="text-center p-4 text-gray-400">
+    This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
+  </footer>
   <script defer>
     const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
     const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
@@ -76,7 +102,7 @@
             });
             const sourceData = await sourceRes.json();
             const watchmodeLogos = sourceData.filter(s => s.type === 'sub' || s.type === 'buy')
-              .map(s => `<div class='text-sm text-white border px-2 py-1 rounded mx-1'>${s.name}</div>`)
+              .map(s => `<div class='text-sm text-white border px-2 py-1 rounded mx-1'>${s.name}</div>`) 
               .join('');
             stream = watchmodeLogos;
           }
@@ -93,7 +119,12 @@
 
     async function showMore() {
       const container = document.getElementById('searchResults');
-      const batch = fullResults.slice(displayedCount, displayedCount + 12);
+      const typeFilter = document.getElementById('mediaTypeFilter').value;
+      const batch = fullResults.slice(displayedCount).filter(item => {
+        if (typeFilter === 'all') return true;
+        return item.media_type === typeFilter;
+      }).slice(0, 12);
+
       for (const item of batch) {
         const title = item.title || item.name || 'Untitled';
         const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
@@ -127,15 +158,6 @@
 
       document.getElementById('searchInput').addEventListener('input', async (e) => {
         const searchQuery = e.target.value;
-        if (window.dataLayer) {
-          window.dataLayer.push({
-            event: 'search',
-            event_category: 'engagement',
-            event_label: searchQuery,
-            value: searchQuery.length
-          });
-        }
-
         const query = searchQuery.trim().toLowerCase();
         const container = document.getElementById('searchResults');
         container.innerHTML = '';
@@ -181,6 +203,13 @@
         showMore();
       });
 
+      document.getElementById('mediaTypeFilter').addEventListener('change', () => {
+        displayedCount = 0;
+        const container = document.getElementById('searchResults');
+        container.innerHTML = '';
+        showMore();
+      });
+
       document.getElementById('showMoreBtn').addEventListener('click', async () => {
         currentPage++;
         if (isSearchMode) {
@@ -192,24 +221,6 @@
       });
     });
   </script>
-  <style>
-    body {
-      background: linear-gradient(to bottom, #0f0f1b, #1a1a2e);
-    }
-  </style>
-</head>
-<body class="text-white">
-  <section class="text-center py-20 px-6">
-    <h1 class="text-6xl font-bold mb-4">Streamline</h1>
-    <p class="text-xl text-gray-400 mb-6">Smarter streaming, simplified.</p>
-    <input id="searchInput" type="text" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded mb-8" />
-    <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
-    <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
-  </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/gorilla_1f98d.png" alt="Gorilla" class="fixed top-4 right-4 h-16 w-16 z-50">
-  <footer class="text-center p-4 text-gray-400">
-    This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
-  </footer>
 </body>
 </html>
 
