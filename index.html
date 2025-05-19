@@ -24,13 +24,24 @@
       background: linear-gradient(to bottom, #1b103f, #090d28);
     }
     .tab-button {
-      @apply px-4 py-2 rounded-t-lg font-semibold focus:outline-none shadow-md transition-colors duration-300;
+      padding: 0.75rem 1.5rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
     }
     .active-tab {
-      @apply bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 text-white;
+      background: linear-gradient(to right, #7f5af0, #2cb67d);
+      color: white;
+      box-shadow: 0 0 10px rgba(127, 90, 240, 0.6);
     }
     .inactive-tab {
-      @apply bg-gray-700 text-gray-300 hover:bg-gray-600;
+      background-color: #2e2e3a;
+      color: #a0aec0;
+    }
+    .inactive-tab:hover {
+      background-color: #3a3a4d;
+      color: #ffffff;
     }
   </style>
 </head>
@@ -38,7 +49,7 @@
   <section class="text-center py-20 px-6">
     <h1 class="text-6xl font-bold mb-4 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent">Streamline</h1>
     <p class="text-xl text-gray-300 mb-6">Smarter streaming, simplified.</p>
-    <div class="mb-4 flex justify-center space-x-2">
+    <div class="mb-8 flex justify-center gap-4">
       <button id="allTab" class="tab-button active-tab">All</button>
       <button id="movieTab" class="tab-button inactive-tab">Movies</button>
       <button id="tvTab" class="tab-button inactive-tab">Series</button>
@@ -51,7 +62,7 @@
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
-  <script defer>
+  <script>
     const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
     const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
     let fullResults = [];
@@ -220,5 +231,4 @@
   </script>
 </body>
 </html>
-
 
