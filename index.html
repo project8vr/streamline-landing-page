@@ -81,7 +81,7 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/unicorn_1f984.png" alt="Unicorn" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/hedgehog_1f994.png" alt="Hedgehog" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
@@ -95,6 +95,7 @@
     let isSearchMode = false;
     let currentType = 'all';
     let currentRegion = 'GB';
+    let isLoadingMore = false; // Prevents rapid Show More clicks
 
     // Helper: build correct API URL for popular
     function getPopularUrl() {
@@ -117,7 +118,6 @@
     }
 
     async function fetchPopular() {
-      fullResults = [];
       let urls = getPopularUrl();
       if (!Array.isArray(urls)) urls = [urls];
       for (const url of urls) {
@@ -231,7 +231,10 @@
     }
 
     async function showMore() {
-      // Show next 12 results, or fetch new results if needed
+      if (isLoadingMore) return; // Prevent rapid spamming
+      isLoadingMore = true;
+      document.getElementById('showMoreBtn').disabled = true;
+
       let batch = fullResults.slice(displayedCount, displayedCount + 12);
       if (batch.length === 0 && (isSearchMode || currentPage === 1)) {
         // Try to fetch next page and add to results
@@ -241,9 +244,14 @@
         } else {
           await fetchPopular();
         }
+        // Deduplicate results on fetch
+        fullResults = deduplicateAndSort(document.getElementById('searchInput').value);
         batch = fullResults.slice(displayedCount, displayedCount + 12);
       }
       await renderBatch(batch);
+
+      isLoadingMore = false;
+      document.getElementById('showMoreBtn').disabled = false;
     }
 
     function setActiveTab(tab) {
