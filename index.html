@@ -21,149 +21,55 @@
   <title>Streamline</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script defer>
-    const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
-    let fullResults = [];
-    let displayedCount = 0;
-    let currentPage = 1;
-    let currentQuery = '';
-    let isSearchMode = false;
+    const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
 
-    async function fetchPopular() {
-      const res = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=en-GB&page=${currentPage}`);
-      const data = await res.json();
-      fullResults = fullResults.concat(data.results);
-    }
-
-    async function searchTMDB(query) {
-      const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${tmdbApiKey}&language=en-GB&query=${encodeURIComponent(query)}&page=${currentPage}`);
-      const data = await res.json();
-      fullResults = fullResults.concat(data.results);
-    }
-
-    async function fetchAvailability(id, mediaType) {
-      const type = mediaType === 'tv' ? 'tv' : 'movie';
+    async function searchWatchmode(query) {
       try {
-        const res = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
-        const data = await res.json();
-        const gb = data.results?.GB;
-        if (!gb) return null;
+        const searchRes = await fetch(`https://watchmode.p.rapidapi.com/search/?search_value=${encodeURIComponent(query)}&search_type=1`, {
+          method: 'GET',
+          headers: {
+            'X-RapidAPI-Key': watchmodeApiKey,
+            'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
+          }
+        });
+        const searchData = await searchRes.json();
 
-        const render = (items) => items.map(p => `<img src='https://image.tmdb.org/t/p/w45${p.logo_path}' alt='${p.provider_name}' title='${p.provider_name}' class='inline-block h-8 mx-2'>`).join('');
-
-        return {
-          stream: gb.flatrate ? render(gb.flatrate) : '',
-          buy: gb.buy ? render(gb.buy) : ''
-        };
-      } catch (err) {
-        console.error('Error fetching availability:', err);
-        return null;
-      }
-    }
-
-    async function showMore() {
-      const container = document.getElementById('searchResults');
-      const batch = fullResults.slice(displayedCount, displayedCount + 12);
-      for (const item of batch) {
-        const title = item.title || item.name || 'Untitled';
-        const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
-        const availability = await fetchAvailability(item.id, item.media_type);
-        const card = document.createElement('div');
-        card.className = 'bg-gray-800 p-4 rounded-lg shadow';
-        if (!availability) {
-          card.innerHTML = `
-            <img src="${poster}" alt="${title}" class="rounded mb-4">
-            <h3 class="text-lg font-semibold">${title}</h3>
-            <div class="text-sm text-yellow-400 mt-4">Not yet available to stream or buy in the UK.</div>
-          `;
-        } else {
-          card.innerHTML = `
-            <img src="${poster}" alt="${title}" class="rounded mb-4">
-            <h3 class="text-lg font-semibold">${title}</h3>
-            <div class="text-sm text-gray-300">
-              ${availability.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center'>${availability.stream}</div></div>` : ''}
-              ${availability.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center'>${availability.buy}</div></div>` : ''}
-            </div>
-          `;
-        }
-        container.appendChild(card);
-        displayedCount++;
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      await fetchPopular();
-      showMore();
-
-      document.getElementById('searchInput').addEventListener('input', async (e) => {
-        console.log('Search input triggered:', e.target.value);
-        const searchQuery = e.target.value;
-        if (window.dataLayer) {
-          window.dataLayer.push({
-            event: 'search',
-            event_category: 'engagement',
-            event_label: searchQuery,
-            value: searchQuery.length
-          });
-        }
-
-        const query = e.target.value.trim().toLowerCase();
+        const results = searchData.title_results.slice(0, 12); // limit initial batch
         const container = document.getElementById('searchResults');
         container.innerHTML = '';
-        fullResults = [];
-        displayedCount = 0;
-        currentPage = 1;
 
-        if (query === '') {
-          isSearchMode = false;
-          await fetchPopular();
-        } else {
-          isSearchMode = true;
-          currentQuery = query;
-          await searchTMDB(query);
-
-          const normalize = (t) => t.toLowerCase().replace(/^the\s+/i, '');
-          const queryNorm = normalize(query);
-          const seenTitles = new Set();
-
-          fullResults = fullResults.filter(item => {
-            const title = (item.title || item.name || '').toLowerCase();
-            if (seenTitles.has(title)) return false;
-            seenTitles.add(title);
-            return true;
-          }).sort((a, b) => {
-            const aTitle = normalize(a.title || a.name || '');
-            const bTitle = normalize(b.title || b.name || '');
-
-            const aExact = aTitle === queryNorm;
-            const bExact = bTitle === queryNorm;
-            if (aExact && !bExact) return -1;
-            if (!aExact && bExact) return 1;
-
-            const aStarts = aTitle.startsWith(queryNorm);
-            const bStarts = bTitle.startsWith(queryNorm);
-            if (aStarts && !bStarts) return -1;
-            if (!aStarts && bStarts) return 1;
-
-            const aIncludes = aTitle.includes(queryNorm);
-            const bIncludes = bTitle.includes(queryNorm);
-            if (aIncludes && !bIncludes) return -1;
-            if (!aIncludes && bIncludes) return 1;
-
-            return (b.popularity || 0) - (a.popularity || 0);
+        for (const item of results) {
+          const sourcesRes = await fetch(`https://watchmode.p.rapidapi.com/title/${item.id}/sources/`, {
+            method: 'GET',
+            headers: {
+              'X-RapidAPI-Key': watchmodeApiKey,
+              'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
+            }
           });
-        }
+          const sources = await sourcesRes.json();
 
-        showMore();
-      });
+          const streamSources = sources.filter(s => s.type === 'sub');
+          const logos = streamSources.map(s => `<div class='text-sm text-white border px-2 py-1 rounded mx-1'>${s.name}</div>`).join('');
 
-      document.getElementById('showMoreBtn').addEventListener('click', async () => {
-        currentPage++;
-        if (isSearchMode) {
-          await searchTMDB(currentQuery);
-        } else {
-          await fetchPopular();
+          const card = document.createElement('div');
+          card.className = 'bg-gray-800 p-4 rounded-lg shadow';
+          card.innerHTML = `
+            <h3 class="text-lg font-semibold mb-2">${item.name}</h3>
+            <div class="text-sm text-gray-300">${logos ? `<div class='flex flex-wrap justify-center'>${logos}</div>` : '<span class="text-yellow-400">No streaming data found</span>'}</div>
+          `;
+          container.appendChild(card);
         }
-        showMore();
+      } catch (err) {
+        console.error('Error fetching from Watchmode:', err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('searchInput').addEventListener('input', async (e) => {
+        const query = e.target.value.trim();
+        if (query.length > 2) {
+          await searchWatchmode(query);
+        }
       });
     });
   </script>
@@ -183,13 +89,11 @@
     <p class="text-xl text-gray-400 mb-6">Smarter streaming, simplified.</p>
     <input id="searchInput" type="text" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded mb-8" />
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
-    <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/dolphin_1f42c.png" alt="Dolphin" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/fox_1f98a.png" alt="Fox" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Utelly APIs but is not endorsed or certified by either.
   </footer>
 </body>
 </html>
-
 
