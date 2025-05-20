@@ -6,60 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
-    body {
-      background: linear-gradient(to bottom, #1b103f, #090d28);
-    }
-    .tab-button {
-      padding: 0.75rem 1.5rem;
-      border-radius: 9999px;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
-      font-size: 1.1rem;
-    }
-    .active-tab {
-      background: linear-gradient(to right, #7f5af0, #2cb67d);
-      color: white;
-      box-shadow: 0 0 10px rgba(127, 90, 240, 0.6);
-    }
-    .inactive-tab {
-      background-color: #2e2e3a;
-      color: #a0aec0;
-    }
-    .inactive-tab:hover {
-      background-color: #3a3a4d;
-      color: #ffffff;
-    }
-    .flag-tab {
-      border-radius: 9999px;
-      padding: 0.5rem 0.9rem;
-      font-size: 1.85rem;
-      background: #222;
-      border: 2px solid transparent;
-      margin: 0 0.25rem;
-      transition: 0.2s;
-      box-shadow: 0 2px 12px 0 rgba(90,90,120,0.06);
-      outline: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 1;
-      height: 3.2rem;
-      width: 3.7rem;
-    }
-    .flag-tab.selected {
-      background: linear-gradient(to right, #7f5af0, #2cb67d);
-      color: white;
-      border-color: #fff;
-      filter: brightness(1.15) drop-shadow(0 2px 8px #7f5af088);
-    }
-    .flag-img {
-      width: 2.2rem;
-      height: 1.6rem;
-      border-radius: 0.4rem;
-      object-fit: cover;
-      display: block;
-    }
+    body { background: linear-gradient(to bottom, #1b103f, #090d28); }
+    .tab-button { padding: 0.75rem 1.5rem; border-radius: 9999px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 0 0 1px rgba(255,255,255,0.1); font-size: 1.1rem; }
+    .active-tab { background: linear-gradient(to right, #7f5af0, #2cb67d); color: white; box-shadow: 0 0 10px rgba(127, 90, 240, 0.6);}
+    .inactive-tab { background-color: #2e2e3a; color: #a0aec0;}
+    .inactive-tab:hover { background-color: #3a3a4d; color: #ffffff;}
+    .flag-tab { border-radius: 9999px; padding: 0.5rem 0.9rem; font-size: 1.85rem; background: #222; border: 2px solid transparent; margin: 0 0.25rem; transition: 0.2s; box-shadow: 0 2px 12px 0 rgba(90,90,120,0.06); outline: none; display: flex; align-items: center; justify-content: center; line-height: 1; height: 3.2rem; width: 3.7rem; }
+    .flag-tab.selected { background: linear-gradient(to right, #7f5af0, #2cb67d); color: white; border-color: #fff; filter: brightness(1.15) drop-shadow(0 2px 8px #7f5af088);}
+    .flag-img { width: 2.2rem; height: 1.6rem; border-radius: 0.4rem; object-fit: cover; display: block;}
     @media (max-width: 480px) {
       .flag-tab { padding: 0.4rem 0.6rem; font-size: 1.15rem; height: 2.2rem; width: 2.6rem; }
       .flag-img { width: 1.2rem; height: 0.9rem; }
@@ -71,7 +25,6 @@
   <section class="text-center py-20 px-6">
     <h1 class="text-6xl font-bold mb-4 leading-tight bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent">Stream 2 Night</h1>
     <p class="text-xl text-gray-300 mb-6">Smarter streaming, simplified.</p>
-    <!-- Flag Tabs -->
     <div class="mb-6 flex justify-center gap-3">
       <button id="regionUK" class="flag-tab selected" title="United Kingdom" aria-label="United Kingdom">
         <img src="https://hatscripts.github.io/circle-flags/flags/gb.svg" alt="UK" class="flag-img" />
@@ -80,7 +33,6 @@
         <img src="https://hatscripts.github.io/circle-flags/flags/us.svg" alt="US" class="flag-img" />
       </button>
     </div>
-    <!-- Media Type Tabs -->
     <div class="mb-8 flex justify-center gap-4">
       <button id="allTab" class="tab-button active-tab">All</button>
       <button id="movieTab" class="tab-button inactive-tab">Movies</button>
@@ -90,69 +42,89 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/panda_1f43c.png" alt="Panda" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/octopus_1f419.png" alt="Octopus" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
   <script>
     const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
     const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
-    let fullResults = [];
-    let displayedCount = 0;
-    let currentPage = 1;
-    let currentQuery = '';
-    let isSearchMode = false;
     let currentType = 'all';
     let currentRegion = 'GB';
-    let isLoadingMore = false;
-    let shownIDs = new Set();
-    let debounceTimeout = null;
-    let searchVersion = 0;
+    let currentQuery = '';
+    let currentPage = 1;
+    let results = [];
+    let isLoading = false;
+    let maxShowMore = 4;
+    let showMoreCount = 0;
+    let mediaCache = {}; // For pagination caching
 
-    function getPopularUrl() {
-      if (currentType === 'tv') {
-        return [`https://api.themoviedb.org/3/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${currentPage}`];
-      } else if (currentType === 'movie') {
-        return [`https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${currentPage}`];
+    function getEndpoint(type, query, page) {
+      let base = 'https://api.themoviedb.org/3';
+      if (query) {
+        if (type === 'movie') return `${base}/search/movie?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${page}`;
+        if (type === 'tv') return `${base}/search/tv?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${page}`;
+        return `${base}/search/multi?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${page}`;
       } else {
-        if (currentPage === 1) {
-          return [
-            `https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=1`,
-            `https://api.themoviedb.org/3/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=1`
-          ];
-        } else {
-          return [`https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${currentPage}`];
-        }
+        if (type === 'movie') return `${base}/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`;
+        if (type === 'tv') return `${base}/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`;
+        // All: both movies and TV
+        return [
+          `${base}/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`,
+          `${base}/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`
+        ];
       }
     }
 
-    async function fetchPopular() {
-      let urls = getPopularUrl();
-      fullResults = [];
-      shownIDs.clear();
-      for (const url of urls) {
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.results) {
-          fullResults = fullResults.concat(data.results.map(item => {
-            if (url.includes('/tv/')) item.media_type = 'tv';
+    async function fetchMedia(type, query, page) {
+      if (mediaCache[type + '|' + query + '|' + page]) return mediaCache[type + '|' + query + '|' + page];
+      let res, data, arr = [];
+      let endpoints = getEndpoint(type, query, page);
+      if (Array.isArray(endpoints)) {
+        for (let ep of endpoints) {
+          res = await fetch(ep);
+          data = await res.json();
+          arr = arr.concat((data.results || []).map(item => {
+            if (ep.includes('/tv/')) item.media_type = 'tv';
             else item.media_type = 'movie';
             return item;
           }));
         }
-      }
-    }
-
-    async function searchTMDB(query, type) {
-      let url = `https://api.themoviedb.org/3/search/${type === 'all' ? 'multi' : (type === 'movie' ? 'movie' : 'tv')}?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${currentPage}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data.results) {
-        fullResults = data.results.map(item => {
-          if (type === 'all' && !item.media_type) item.media_type = item.title ? 'movie' : 'tv';
+      } else {
+        res = await fetch(endpoints);
+        data = await res.json();
+        arr = (data.results || []).map(item => {
+          if (!item.media_type) item.media_type = type === 'all' ? (item.title ? 'movie' : 'tv') : type;
           return item;
         });
       }
+      mediaCache[type + '|' + query + '|' + page] = arr;
+      return arr;
+    }
+
+    function deduplicateAndSort(arr, query) {
+      const norm = s => (s || '').toLowerCase().replace(/^the\s+/i, '');
+      const seen = new Set();
+      const queryNorm = norm(query);
+      let filtered = arr.filter(item => {
+        let idKey = (item.media_type || '') + ':' + item.id;
+        if (seen.has(idKey)) return false;
+        seen.add(idKey);
+        // Filter out non-mainstream in Popular pages
+        if (!query && (item.vote_count || 0) < 100) return false;
+        if (currentType !== 'all' && item.media_type !== currentType) return false;
+        return true;
+      });
+      // Sorting: exact, prefix, vote count, popularity
+      return filtered.sort((a, b) => {
+        let aT = norm(a.title || a.name || ''), bT = norm(b.title || b.name || '');
+        let aExact = aT === queryNorm, bExact = bT === queryNorm;
+        if (aExact && !bExact) return -1; if (!aExact && bExact) return 1;
+        let aStarts = aT.startsWith(queryNorm), bStarts = bT.startsWith(queryNorm);
+        if (aStarts && !bStarts) return -1; if (!aStarts && bStarts) return 1;
+        if ((b.vote_count || 0) !== (a.vote_count || 0)) return (b.vote_count || 0) - (a.vote_count || 0);
+        return (b.popularity || 0) - (a.popularity || 0);
+      });
     }
 
     async function fetchAvailability(id, mediaType, title) {
@@ -161,16 +133,12 @@
         const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
         const tmdbData = await tmdbRes.json();
         const countryData = tmdbData.results?.[currentRegion];
-
-        let stream = '';
-        let buy = '';
-
+        let stream = '', buy = '';
         if (countryData) {
           const render = (items) => items.map(p => `<img src='https://image.tmdb.org/t/p/w45${p.logo_path}' alt='${p.provider_name}' title='${p.provider_name}' class='inline-block h-8 mx-2'>`).join('');
           stream = countryData.flatrate ? render(countryData.flatrate) : '';
           buy = countryData.buy ? render(countryData.buy) : '';
         }
-
         if (!stream && !buy && title) {
           const searchRes = await fetch(`https://watchmode.p.rapidapi.com/search/?search_value=${encodeURIComponent(title)}&search_type=1`, {
             method: 'GET',
@@ -196,70 +164,20 @@
             stream = watchmodeLogos;
           }
         }
-
         if (!stream && !buy) return null;
         return { stream, buy };
-
       } catch (err) {
-        console.error('Error fetching availability:', err);
         return null;
       }
     }
 
     function clearResults() {
       document.getElementById('searchResults').innerHTML = '';
-      displayedCount = 0;
-      shownIDs.clear();
-    }
-
-    // Mainstream filter: Only for "Popular" (not search)
-    function deduplicateAndSort(input, isPopular) {
-      const normalize = (t) => t.toLowerCase().replace(/^the\s+/i, '');
-      const queryNorm = normalize(input.trim().toLowerCase());
-      const seenTypeAndId = new Set();
-
-      let arr = fullResults.filter(item => {
-        if (!item) return false;
-        // Deduplicate by media_type + id, so TV/movie with same title aren't removed
-        const unique = (item.media_type || '') + ':' + item.id;
-        if (seenTypeAndId.has(unique)) return false;
-        seenTypeAndId.add(unique);
-
-        // For "popular", filter by vote_count; for search, show all
-        if (isPopular && (item.vote_count || 0) < 100) return false;
-        if (currentType === 'all') return true;
-        return item.media_type === currentType;
-      }).sort((a, b) => {
-        const aTitle = normalize(a.title || a.name || '');
-        const bTitle = normalize(b.title || b.name || '');
-
-        // Exact match, then prefix, then vote count, then popularity
-        const aExact = aTitle === queryNorm;
-        const bExact = bTitle === queryNorm;
-        if (aExact && !bExact) return -1;
-        if (!aExact && bExact) return 1;
-
-        const aStarts = aTitle.startsWith(queryNorm);
-        const bStarts = bTitle.startsWith(queryNorm);
-        if (aStarts && !bStarts) return -1;
-        if (!aStarts && bStarts) return 1;
-
-        if ((b.vote_count || 0) !== (a.vote_count || 0)) {
-          return (b.vote_count || 0) - (a.vote_count || 0);
-        }
-        return (b.popularity || 0) - (a.popularity || 0);
-      });
-
-      return arr;
     }
 
     async function renderBatch(batch) {
       const container = document.getElementById('searchResults');
       for (const item of batch) {
-        if (!item || shownIDs.has(item.media_type + ':' + item.id)) continue;
-        if (currentType !== 'all' && item.media_type !== currentType) continue;
-        shownIDs.add(item.media_type + ':' + item.id);
-
         const title = item.title || item.name || 'Untitled';
         const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
         const availability = await fetchAvailability(item.id, item.media_type, title);
@@ -282,105 +200,93 @@
           `;
         }
         container.appendChild(card);
-        displayedCount++;
       }
     }
 
+    async function showResults(isNewSearch) {
+      clearResults();
+      showMoreCount = 0;
+      let arr = deduplicateAndSort(results, currentQuery);
+      await renderBatch(arr.slice(0, 12));
+    }
+
+    async function runSearch(isNewSearch = false) {
+      if (isLoading) return;
+      isLoading = true;
+      let page = 1;
+      if (!isNewSearch) page = currentPage;
+      else currentPage = 1;
+      let query = currentQuery.trim();
+      results = await fetchMedia(currentType, query, page);
+      await showResults(true);
+      isLoading = false;
+    }
+
     async function showMore() {
-      if (isLoadingMore) return; // Prevent rapid spamming
-      isLoadingMore = true;
-      document.getElementById('showMoreBtn').disabled = true;
-
-      let batch = fullResults.slice(displayedCount, displayedCount + 12).filter(item => !shownIDs.has(item.media_type + ':' + item.id));
-      if (batch.length === 0 && (isSearchMode || currentPage === 1)) {
-        currentPage++;
-        if (isSearchMode) {
-          await searchTMDB(currentQuery, currentType);
-        } else {
-          await fetchPopular();
-          fullResults = deduplicateAndSort(document.getElementById('searchInput').value, true);
-        }
-        batch = fullResults.slice(displayedCount, displayedCount + 12).filter(item => !shownIDs.has(item.media_type + ':' + item.id));
-      }
-      await renderBatch(batch);
-
-      isLoadingMore = false;
-      document.getElementById('showMoreBtn').disabled = false;
+      if (isLoading || showMoreCount >= maxShowMore) return;
+      isLoading = true;
+      currentPage++;
+      let query = currentQuery.trim();
+      let newResults = await fetchMedia(currentType, query, currentPage);
+      results = results.concat(newResults);
+      let arr = deduplicateAndSort(results, currentQuery);
+      let container = document.getElementById('searchResults');
+      await renderBatch(arr.slice(container.childElementCount, container.childElementCount + 12));
+      showMoreCount++;
+      isLoading = false;
     }
 
     function setActiveTab(tab) {
       document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active-tab', 'inactive-tab'));
       tab.classList.add('active-tab');
     }
-
     function setRegionButton(regionBtn) {
       document.querySelectorAll('.flag-tab').forEach(btn => btn.classList.remove('selected'));
       regionBtn.classList.add('selected');
     }
 
-    async function runSearchDebounced(input, ver) {
-      isSearchMode = !!input.trim();
-      currentQuery = input.trim();
-      currentPage = 1;
-      fullResults = [];
-      displayedCount = 0;
-      clearResults();
-
-      if (isSearchMode) {
-        await searchTMDB(input, currentType);
-        if (ver !== searchVersion) return; // Only show latest search
-        fullResults = deduplicateAndSort(input, false);
-      } else {
-        await fetchPopular();
-        fullResults = deduplicateAndSort('', true);
-      }
-      await showMore();
-    }
-
-    function debouncedSearch(input) {
-      searchVersion++;
-      let thisVer = searchVersion;
-      clearTimeout(debounceTimeout);
-      debounceTimeout = setTimeout(() => runSearchDebounced(input, thisVer), 250);
-    }
-
     document.addEventListener('DOMContentLoaded', async () => {
-      await fetchPopular();
-      fullResults = deduplicateAndSort('', true);
-      await showMore();
+      await runSearch(true);
 
-      document.getElementById('searchInput').addEventListener('input', (e) => {
-        debouncedSearch(e.target.value);
+      document.getElementById('searchInput').addEventListener('input', async (e) => {
+        currentQuery = e.target.value;
+        currentPage = 1;
+        await runSearch(true);
       });
 
-      document.getElementById('movieTab').addEventListener('click', () => {
+      document.getElementById('movieTab').addEventListener('click', async () => {
         currentType = 'movie';
         setActiveTab(document.getElementById('movieTab'));
-        debouncedSearch(document.getElementById('searchInput').value);
+        currentPage = 1;
+        await runSearch(true);
       });
 
-      document.getElementById('tvTab').addEventListener('click', () => {
+      document.getElementById('tvTab').addEventListener('click', async () => {
         currentType = 'tv';
         setActiveTab(document.getElementById('tvTab'));
-        debouncedSearch(document.getElementById('searchInput').value);
+        currentPage = 1;
+        await runSearch(true);
       });
 
-      document.getElementById('allTab').addEventListener('click', () => {
+      document.getElementById('allTab').addEventListener('click', async () => {
         currentType = 'all';
         setActiveTab(document.getElementById('allTab'));
-        debouncedSearch(document.getElementById('searchInput').value);
+        currentPage = 1;
+        await runSearch(true);
       });
 
-      document.getElementById('regionUK').addEventListener('click', () => {
+      document.getElementById('regionUK').addEventListener('click', async () => {
         currentRegion = 'GB';
         setRegionButton(document.getElementById('regionUK'));
-        debouncedSearch(document.getElementById('searchInput').value);
+        currentPage = 1;
+        await runSearch(true);
       });
 
-      document.getElementById('regionUS').addEventListener('click', () => {
+      document.getElementById('regionUS').addEventListener('click', async () => {
         currentRegion = 'US';
         setRegionButton(document.getElementById('regionUS'));
-        debouncedSearch(document.getElementById('searchInput').value);
+        currentPage = 1;
+        await runSearch(true);
       });
 
       document.getElementById('showMoreBtn').addEventListener('click', async () => {
