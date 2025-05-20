@@ -32,11 +32,11 @@
     }
     .flag-tab {
       border-radius: 9999px;
-      padding: 0.75rem 1.5rem;
-      font-size: 2.2rem;
+      padding: 0.5rem 0.9rem;
+      font-size: 1.85rem;
       background: #222;
       border: 2px solid transparent;
-      margin: 0 0.2rem;
+      margin: 0 0.25rem;
       transition: 0.2s;
       box-shadow: 0 2px 12px 0 rgba(90,90,120,0.06);
       outline: none;
@@ -44,8 +44,8 @@
       align-items: center;
       justify-content: center;
       line-height: 1;
-      height: 3.5rem;
-      width: 4.5rem;
+      height: 3.2rem;
+      width: 3.7rem;
     }
     .flag-tab.selected {
       background: linear-gradient(to right, #7f5af0, #2cb67d);
@@ -53,12 +53,17 @@
       border-color: #fff;
       filter: brightness(1.15) drop-shadow(0 2px 8px #7f5af088);
     }
-    .flag-tab:focus {
-      outline: 2px solid #fff;
+    .flag-img {
+      width: 2.2rem;
+      height: 1.6rem;
+      border-radius: 0.4rem;
+      object-fit: cover;
+      display: block;
     }
     @media (max-width: 480px) {
-      .flag-tab { padding: 0.6rem 0.7rem; font-size: 1.4rem; height: 2.4rem; width: 2.4rem; }
-      .tab-button { padding: 0.5rem 1rem; font-size: 0.93rem;}
+      .flag-tab { padding: 0.4rem 0.6rem; font-size: 1.15rem; height: 2.2rem; width: 2.6rem; }
+      .flag-img { width: 1.2rem; height: 0.9rem; }
+      .tab-button { padding: 0.45rem 0.7rem; font-size: 0.93rem;}
     }
   </style>
 </head>
@@ -68,8 +73,12 @@
     <p class="text-xl text-gray-300 mb-6">Smarter streaming, simplified.</p>
     <!-- Flag Tabs -->
     <div class="mb-6 flex justify-center gap-3">
-      <button id="regionUK" class="flag-tab selected" title="United Kingdom" aria-label="United Kingdom">🇬🇧</button>
-      <button id="regionUS" class="flag-tab" title="United States" aria-label="United States">🇺🇸</button>
+      <button id="regionUK" class="flag-tab selected" title="United Kingdom" aria-label="United Kingdom">
+        <img src="https://hatscripts.github.io/circle-flags/flags/gb.svg" alt="UK" class="flag-img" />
+      </button>
+      <button id="regionUS" class="flag-tab" title="United States" aria-label="United States">
+        <img src="https://hatscripts.github.io/circle-flags/flags/us.svg" alt="US" class="flag-img" />
+      </button>
     </div>
     <!-- Media Type Tabs -->
     <div class="mb-8 flex justify-center gap-4">
@@ -77,11 +86,11 @@
       <button id="movieTab" class="tab-button inactive-tab">Movies</button>
       <button id="tvTab" class="tab-button inactive-tab">Series</button>
     </div>
-    <input id="searchInput" type="text" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded mb-8" />
+    <input id="searchInput" type="text" autocomplete="off" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded mb-8" />
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/koala_1f428.png" alt="Koala" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/fox_1f98a.png" alt="Fox" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
@@ -96,12 +105,15 @@
     let currentType = 'all';
     let currentRegion = 'GB';
     let isLoadingMore = false;
+    let shownIDs = new Set();
+    let debounceTimeout = null;
+    let searchVersion = 0;
 
     function getPopularUrl() {
       if (currentType === 'tv') {
-        return `https://api.themoviedb.org/3/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${currentPage}`;
+        return [`https://api.themoviedb.org/3/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${currentPage}`];
       } else if (currentType === 'movie') {
-        return `https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${currentPage}`;
+        return [`https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${currentPage}`];
       } else {
         if (currentPage === 1) {
           return [
@@ -116,7 +128,8 @@
 
     async function fetchPopular() {
       let urls = getPopularUrl();
-      if (!Array.isArray(urls)) urls = [urls];
+      fullResults = [];
+      shownIDs.clear();
       for (const url of urls) {
         const res = await fetch(url);
         const data = await res.json();
@@ -130,12 +143,15 @@
       }
     }
 
-    async function searchTMDB(query) {
-      let url = `https://api.themoviedb.org/3/search/multi?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${currentPage}`;
+    async function searchTMDB(query, type) {
+      let url = `https://api.themoviedb.org/3/search/${type === 'all' ? 'multi' : (type === 'movie' ? 'movie' : 'tv')}?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${currentPage}`;
       const res = await fetch(url);
       const data = await res.json();
       if (data.results) {
-        fullResults = fullResults.concat(data.results);
+        fullResults = data.results.map(item => {
+          if (type === 'all' && !item.media_type) item.media_type = item.title ? 'movie' : 'tv';
+          return item;
+        });
       }
     }
 
@@ -193,25 +209,30 @@
     function clearResults() {
       document.getElementById('searchResults').innerHTML = '';
       displayedCount = 0;
+      shownIDs.clear();
     }
 
-    // *** MAINSTREAM FILTER LOGIC ADDED HERE ***
-    function deduplicateAndSort(input) {
+    // Mainstream filter: Only for "Popular" (not search)
+    function deduplicateAndSort(input, isPopular) {
       const normalize = (t) => t.toLowerCase().replace(/^the\s+/i, '');
       const queryNorm = normalize(input.trim().toLowerCase());
       const seenTitles = new Set();
 
-      // Mainstream filter: must have at least 200 votes (adjust as needed)
       let arr = fullResults.filter(item => {
+        if (!item) return false;
         const title = (item.title || item.name || '').toLowerCase();
         if (seenTitles.has(title)) return false;
         seenTitles.add(title);
-        if ((item.vote_count || 0) < 200) return false; // mainstream threshold!
-        return currentType === 'all' || item.media_type === currentType;
+
+        // For "popular", filter by vote_count; for search, show all
+        if (isPopular && (item.vote_count || 0) < 100) return false;
+        if (currentType === 'all') return true;
+        return item.media_type === currentType;
       }).sort((a, b) => {
         const aTitle = normalize(a.title || a.name || '');
         const bTitle = normalize(b.title || b.name || '');
 
+        // Exact match, then prefix, then vote count, then popularity
         const aExact = aTitle === queryNorm;
         const bExact = bTitle === queryNorm;
         if (aExact && !bExact) return -1;
@@ -222,19 +243,21 @@
         if (aStarts && !bStarts) return -1;
         if (!aStarts && bStarts) return 1;
 
-        // Prioritise vote_count, then popularity
         if ((b.vote_count || 0) !== (a.vote_count || 0)) {
           return (b.vote_count || 0) - (a.vote_count || 0);
         }
         return (b.popularity || 0) - (a.popularity || 0);
       });
+
       return arr;
     }
 
     async function renderBatch(batch) {
       const container = document.getElementById('searchResults');
       for (const item of batch) {
+        if (!item || shownIDs.has(item.id)) continue;
         if (currentType !== 'all' && item.media_type !== currentType) continue;
+        shownIDs.add(item.id);
 
         const title = item.title || item.name || 'Untitled';
         const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
@@ -267,16 +290,16 @@
       isLoadingMore = true;
       document.getElementById('showMoreBtn').disabled = true;
 
-      let batch = fullResults.slice(displayedCount, displayedCount + 12);
+      let batch = fullResults.slice(displayedCount, displayedCount + 12).filter(item => !shownIDs.has(item.id));
       if (batch.length === 0 && (isSearchMode || currentPage === 1)) {
         currentPage++;
         if (isSearchMode) {
-          await searchTMDB(currentQuery);
+          await searchTMDB(currentQuery, currentType);
         } else {
           await fetchPopular();
+          fullResults = deduplicateAndSort(document.getElementById('searchInput').value, true);
         }
-        fullResults = deduplicateAndSort(document.getElementById('searchInput').value);
-        batch = fullResults.slice(displayedCount, displayedCount + 12);
+        batch = fullResults.slice(displayedCount, displayedCount + 12).filter(item => !shownIDs.has(item.id));
       }
       await renderBatch(batch);
 
@@ -294,58 +317,69 @@
       regionBtn.classList.add('selected');
     }
 
-    async function runSearch() {
-      const input = document.getElementById('searchInput').value;
+    async function runSearchDebounced(input, ver) {
       isSearchMode = !!input.trim();
       currentQuery = input.trim();
       currentPage = 1;
       fullResults = [];
       displayedCount = 0;
       clearResults();
+
       if (isSearchMode) {
-        await searchTMDB(input);
+        await searchTMDB(input, currentType);
+        if (ver !== searchVersion) return; // Only show latest search
+        fullResults = deduplicateAndSort(input, false);
       } else {
         await fetchPopular();
+        fullResults = deduplicateAndSort('', true);
       }
-      fullResults = deduplicateAndSort(input);
       await showMore();
+    }
+
+    function debouncedSearch(input) {
+      searchVersion++;
+      let thisVer = searchVersion;
+      clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(() => runSearchDebounced(input, thisVer), 250);
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
       await fetchPopular();
-      fullResults = deduplicateAndSort('');
+      fullResults = deduplicateAndSort('', true);
       await showMore();
 
-      document.getElementById('searchInput').addEventListener('input', runSearch);
+      document.getElementById('searchInput').addEventListener('input', (e) => {
+        debouncedSearch(e.target.value);
+      });
 
       document.getElementById('movieTab').addEventListener('click', () => {
         currentType = 'movie';
         setActiveTab(document.getElementById('movieTab'));
-        runSearch();
+        debouncedSearch(document.getElementById('searchInput').value);
       });
 
       document.getElementById('tvTab').addEventListener('click', () => {
         currentType = 'tv';
         setActiveTab(document.getElementById('tvTab'));
-        runSearch();
+        debouncedSearch(document.getElementById('searchInput').value);
       });
 
       document.getElementById('allTab').addEventListener('click', () => {
         currentType = 'all';
         setActiveTab(document.getElementById('allTab'));
-        runSearch();
+        debouncedSearch(document.getElementById('searchInput').value);
       });
 
       document.getElementById('regionUK').addEventListener('click', () => {
         currentRegion = 'GB';
         setRegionButton(document.getElementById('regionUK'));
-        runSearch();
+        debouncedSearch(document.getElementById('searchInput').value);
       });
 
       document.getElementById('regionUS').addEventListener('click', () => {
         currentRegion = 'US';
         setRegionButton(document.getElementById('regionUS'));
-        runSearch();
+        debouncedSearch(document.getElementById('searchInput').value);
       });
 
       document.getElementById('showMoreBtn').addEventListener('click', async () => {
@@ -355,5 +389,6 @@
   </script>
 </body>
 </html>
+
 
 
