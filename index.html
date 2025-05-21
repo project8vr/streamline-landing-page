@@ -56,6 +56,9 @@
       <button id="regionUS" class="flag-tab" title="United States" aria-label="United States">
         <img src="https://hatscripts.github.io/circle-flags/flags/us.svg" alt="US" class="flag-img" />
       </button>
+      <button id="regionCA" class="flag-tab" title="Canada" aria-label="Canada">
+        <img src="https://hatscripts.github.io/circle-flags/flags/ca.svg" alt="Canada" class="flag-img" />
+      </button>
     </div>
     <div class="mb-8 flex justify-center gap-4">
       <button id="allTab" class="tab-button active-tab">All</button>
@@ -107,7 +110,7 @@
     }
 
     async function fetchMedia(type, query, page) {
-      if (mediaCache[type + '|' + query + '|' + page]) return mediaCache[type + '|' + query + '|' + page];
+      if (mediaCache[type + '|' + query + '|' + page + '|' + currentRegion]) return mediaCache[type + '|' + query + '|' + page + '|' + currentRegion];
       let res, data, arr = [];
       let endpoints = getEndpoint(type, query, page);
       if (Array.isArray(endpoints)) {
@@ -128,7 +131,7 @@
           return item;
         });
       }
-      mediaCache[type + '|' + query + '|' + page] = arr;
+      mediaCache[type + '|' + query + '|' + page + '|' + currentRegion] = arr;
       return arr;
     }
 
@@ -275,10 +278,9 @@
       currentPage++;
       let query = currentQuery.trim();
       let newResults = await fetchMedia(currentType, query, currentPage);
-      results = results.concat(newResults);
-      let arr = deduplicateAndSort(results, currentQuery);
-      let container = document.getElementById('searchResults');
-      await renderBatch(arr.slice(container.childElementCount, container.childElementCount + 12));
+      let all = deduplicateAndSort(results.concat(newResults), currentQuery);
+      results = all;
+      await renderBatch(all.slice((currentPage - 1) * 12, currentPage * 12));
       showMoreCount++;
       isLoading = false;
     }
@@ -364,6 +366,13 @@
         if (currentRegion !== 'US') {
           setRegionButton(this);
           currentRegion = 'US';
+          await runSearch(true);
+        }
+      };
+      document.getElementById('regionCA').onclick = async function () {
+        if (currentRegion !== 'CA') {
+          setRegionButton(this);
+          currentRegion = 'CA';
           await runSearch(true);
         }
       };
