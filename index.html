@@ -203,8 +203,27 @@
       document.getElementById('searchResults').innerHTML = '';
     }
 
-    async function renderBatch(batch) {
+    async function renderBatch(batch, centerWildCard = false) {
       const container = document.getElementById('searchResults');
+      if (centerWildCard && batch.length === 1) {
+        const found = batch[0];
+        const title = found.title || found.name || 'Untitled';
+        const poster = found.poster_path ? `https://image.tmdb.org/t/p/w500${found.poster_path}` : '';
+        const availability = found.availability;
+        container.innerHTML = `
+          <div class="wild-card-center">
+            <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center max-w-xs mx-auto">
+              <img src="${poster}" alt="${title}" class="rounded mb-5 mx-auto" style="max-height:290px; width:auto;">
+              <h3 class="text-2xl font-bold mb-3">${title}</h3>
+              <div class="text-md text-gray-300 mb-3">
+                ${availability.stream ? `<div class='mb-2'>Stream on:<div class='flex flex-wrap justify-center mt-2'>${availability.stream}</div></div>` : ''}
+                ${availability.buy ? `<div class='mb-2'>Buy on:<div class='flex flex-wrap justify-center mt-2'>${availability.buy}</div></div>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
       for (const item of batch) {
         const title = item.title || item.name || 'Untitled';
         const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
@@ -275,7 +294,6 @@
 
     // Wild Card / Randomize Feature - Centered Display
     async function wildCard() {
-      // Show overlay
       document.getElementById('wildOverlay').style.display = "flex";
       let tries = 0, found = null;
       while (tries < 10 && !found) {
@@ -283,7 +301,6 @@
         let media = await fetchMedia(currentType, '', randPage);
         media = deduplicateAndSort(media, '').filter(i => (i.vote_count || 0) >= 100);
         if (!media.length) { tries++; continue; }
-        // shuffle array
         for (let i = media.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [media[i], media[j]] = [media[j], media[i]];
@@ -295,6 +312,81 @@
             break;
           }
         }
+        tries++;
+      }
+      setTimeout(async () => {
+        document.getElementById('wildOverlay').style.display = "none";
+        clearResults();
+        if (found) {
+          await renderBatch([found], true); // center!
+        } else {
+          document.getElementById('searchResults').innerHTML = `<div class="wild-card-center"><div class="text-lg font-bold text-yellow-400">Sorry, nothing found for your region and settings!</div></div>`;
+        }
+      }, 1700);
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Initial
+      await runSearch(true);
+
+      // Tabs
+      document.getElementById('allTab').onclick = async function () {
+        if (currentType !== 'all') {
+          setActiveTab(this);
+          currentType = 'all';
+          await runSearch(true);
+        }
+      };
+      document.getElementById('movieTab').onclick = async function () {
+        if (currentType !== 'movie') {
+          setActiveTab(this);
+          currentType = 'movie';
+          await runSearch(true);
+        }
+      };
+      document.getElementById('tvTab').onclick = async function () {
+        if (currentType !== 'tv') {
+          setActiveTab(this);
+          currentType = 'tv';
+          await runSearch(true);
+        }
+      };
+
+      // Region
+      document.getElementById('regionUK').onclick = async function () {
+        if (currentRegion !== 'GB') {
+          setRegionButton(this);
+          currentRegion = 'GB';
+          await runSearch(true);
+        }
+      };
+      document.getElementById('regionUS').onclick = async function () {
+        if (currentRegion !== 'US') {
+          setRegionButton(this);
+          currentRegion = 'US';
+          await runSearch(true);
+        }
+      };
+
+      // Search
+      document.getElementById('searchInput').addEventListener('input', async function (e) {
+        currentQuery = e.target.value;
+        await runSearch(true);
+      });
+
+      // Show More
+      document.getElementById('showMoreBtn').onclick = async function () {
+        await showMore();
+      };
+
+      // Wild Card
+      document.getElementById('wildBtn').onclick = async function () {
+        await wildCard();
+      };
+    });
+  </script>
+</body>
+</html>
 
 
 
