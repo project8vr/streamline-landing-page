@@ -33,6 +33,16 @@
       margin-bottom: 1.3rem;
     }
     @keyframes spin { 100% { transform: rotate(360deg);} }
+    .wild-card-center {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 350px;
+      grid-column: 1 / -1;
+    }
+    @media (max-width: 1024px) {
+      .wild-card-center { min-height: 220px; }
+    }
   </style>
 </head>
 <body class="text-white">
@@ -59,7 +69,7 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/squirrel_1f43f.png" alt="Squirrel" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/otter_1f9a6.png" alt="Otter" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
@@ -263,16 +273,14 @@
       regionBtn.classList.add('selected');
     }
 
-    // Wild Card / Randomize Feature
+    // Wild Card / Randomize Feature - Centered Display
     async function wildCard() {
       // Show overlay
       document.getElementById('wildOverlay').style.display = "flex";
       let tries = 0, found = null;
       while (tries < 10 && !found) {
-        // pick a random page from top 4 pages for freshness
         let randPage = 1 + Math.floor(Math.random() * 4);
         let media = await fetchMedia(currentType, '', randPage);
-        // Only use items with vote_count >= 100 and available to stream
         media = deduplicateAndSort(media, '').filter(i => (i.vote_count || 0) >= 100);
         if (!media.length) { tries++; continue; }
         // shuffle array
@@ -287,54 +295,6 @@
             break;
           }
         }
-        tries++;
-      }
-      setTimeout(() => {
-        document.getElementById('wildOverlay').style.display = "none";
-        if (found) {
-          clearResults();
-          renderBatch([found]);
-        } else {
-          clearResults();
-          document.getElementById('searchResults').innerHTML = `<div class="col-span-full text-center py-8 text-yellow-300 text-xl">Sorry, no wild card pick found. Try again!</div>`;
-        }
-      }, 1600);
-    }
-
-    // INIT
-    document.addEventListener('DOMContentLoaded', async () => {
-      document.getElementById('allTab').onclick = async function() {
-        currentType = 'all'; setActiveTab(this);
-        await runSearch(true);
-      };
-      document.getElementById('movieTab').onclick = async function() {
-        currentType = 'movie'; setActiveTab(this);
-        await runSearch(true);
-      };
-      document.getElementById('tvTab').onclick = async function() {
-        currentType = 'tv'; setActiveTab(this);
-        await runSearch(true);
-      };
-      document.getElementById('regionUK').onclick = async function() {
-        currentRegion = 'GB'; setRegionButton(this);
-        await runSearch(true);
-      };
-      document.getElementById('regionUS').onclick = async function() {
-        currentRegion = 'US'; setRegionButton(this);
-        await runSearch(true);
-      };
-      document.getElementById('searchInput').addEventListener('input', async function() {
-        currentQuery = this.value;
-        await runSearch(true);
-      });
-      document.getElementById('showMoreBtn').onclick = showMore;
-      document.getElementById('wildBtn').onclick = wildCard;
-
-      await runSearch(true);
-    });
-  </script>
-</body>
-</html>
 
 
 
