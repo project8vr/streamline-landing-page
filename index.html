@@ -14,11 +14,25 @@
     .flag-tab { border-radius: 9999px; padding: 0.5rem 0.9rem; font-size: 1.85rem; background: #222; border: 2px solid transparent; margin: 0 0.25rem; transition: 0.2s; box-shadow: 0 2px 12px 0 rgba(90,90,120,0.06); outline: none; display: flex; align-items: center; justify-content: center; line-height: 1; height: 3.2rem; width: 3.7rem; }
     .flag-tab.selected { background: linear-gradient(to right, #7f5af0, #2cb67d); color: white; border-color: #fff; filter: brightness(1.15) drop-shadow(0 2px 8px #7f5af088);}
     .flag-img { width: 2.2rem; height: 1.6rem; border-radius: 0.4rem; object-fit: cover; display: block;}
-    @media (max-width: 480px) {
-      .flag-tab { padding: 0.4rem 0.6rem; font-size: 1.15rem; height: 2.2rem; width: 2.6rem; }
-      .flag-img { width: 1.2rem; height: 0.9rem; }
-      .tab-button { padding: 0.45rem 0.7rem; font-size: 0.93rem;}
+    .wild-btn { margin-left: 0.75rem; background: linear-gradient(to right, #ffde57, #fc7e1e); color: #1b103f; font-weight: 700; border-radius: 2rem; padding: 0.7rem 1.3rem; font-size: 1.2rem; box-shadow: 0 2px 10px #0003; border: none; transition: 0.2s; }
+    .wild-btn:hover { background: linear-gradient(to right, #fc7e1e, #ffde57); color: #111; }
+    .overlay-spin {
+      position: fixed; z-index: 100; inset: 0; background: rgba(26,18,48,0.94); display: flex; align-items: center; justify-content: center; flex-direction: column;
+      animation: fadeIn 0.4s;
     }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .spin-wheel {
+      border: 8px solid #fff;
+      border-radius: 50%;
+      width: 130px; height: 130px;
+      border-top: 8px solid #ffde57;
+      border-right: 8px solid #2cb67d;
+      border-bottom: 8px solid #7f5af0;
+      border-left: 8px solid #fc7e1e;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1.3rem;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg);} }
   </style>
 </head>
 <body class="text-white">
@@ -38,14 +52,21 @@
       <button id="movieTab" class="tab-button inactive-tab">Movies</button>
       <button id="tvTab" class="tab-button inactive-tab">Series</button>
     </div>
-    <input id="searchInput" type="text" autocomplete="off" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded mb-8" />
+    <div class="flex justify-center items-center mb-8">
+      <input id="searchInput" type="text" autocomplete="off" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded" />
+      <button id="wildBtn" class="wild-btn" title="Spin the wheel for a random pick!">🎲 Wild Card</button>
+    </div>
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/octopus_1f419.png" alt="Octopus" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/squirrel_1f43f.png" alt="Squirrel" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
+  <div id="wildOverlay" style="display:none;" class="overlay-spin">
+    <div class="spin-wheel"></div>
+    <div class="text-xl font-bold mt-2">Picking something great for you…</div>
+  </div>
   <script>
     const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
     const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
@@ -57,7 +78,7 @@
     let isLoading = false;
     let maxShowMore = 4;
     let showMoreCount = 0;
-    let mediaCache = {}; // For pagination caching
+    let mediaCache = {};
 
     function getEndpoint(type, query, page) {
       let base = 'https://api.themoviedb.org/3';
@@ -68,7 +89,6 @@
       } else {
         if (type === 'movie') return `${base}/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`;
         if (type === 'tv') return `${base}/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`;
-        // All: both movies and TV
         return [
           `${base}/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`,
           `${base}/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`
@@ -110,12 +130,10 @@
         let idKey = (item.media_type || '') + ':' + item.id;
         if (seen.has(idKey)) return false;
         seen.add(idKey);
-        // Filter out non-mainstream in Popular pages
         if (!query && (item.vote_count || 0) < 100) return false;
         if (currentType !== 'all' && item.media_type !== currentType) return false;
         return true;
       });
-      // Sorting: exact, prefix, vote count, popularity
       return filtered.sort((a, b) => {
         let aT = norm(a.title || a.name || ''), bT = norm(b.title || b.name || '');
         let aExact = aT === queryNorm, bExact = bT === queryNorm;
@@ -245,57 +263,79 @@
       regionBtn.classList.add('selected');
     }
 
+    // Wild Card / Randomize Feature
+    async function wildCard() {
+      // Show overlay
+      document.getElementById('wildOverlay').style.display = "flex";
+      let tries = 0, found = null;
+      while (tries < 10 && !found) {
+        // pick a random page from top 4 pages for freshness
+        let randPage = 1 + Math.floor(Math.random() * 4);
+        let media = await fetchMedia(currentType, '', randPage);
+        // Only use items with vote_count >= 100 and available to stream
+        media = deduplicateAndSort(media, '').filter(i => (i.vote_count || 0) >= 100);
+        if (!media.length) { tries++; continue; }
+        // shuffle array
+        for (let i = media.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [media[i], media[j]] = [media[j], media[i]];
+        }
+        for (let m of media) {
+          const avail = await fetchAvailability(m.id, m.media_type, m.title || m.name || '');
+          if (avail && avail.stream) {
+            found = { ...m, availability: avail };
+            break;
+          }
+        }
+        tries++;
+      }
+      setTimeout(() => {
+        document.getElementById('wildOverlay').style.display = "none";
+        if (found) {
+          clearResults();
+          renderBatch([found]);
+        } else {
+          clearResults();
+          document.getElementById('searchResults').innerHTML = `<div class="col-span-full text-center py-8 text-yellow-300 text-xl">Sorry, no wild card pick found. Try again!</div>`;
+        }
+      }, 1600);
+    }
+
+    // INIT
     document.addEventListener('DOMContentLoaded', async () => {
+      document.getElementById('allTab').onclick = async function() {
+        currentType = 'all'; setActiveTab(this);
+        await runSearch(true);
+      };
+      document.getElementById('movieTab').onclick = async function() {
+        currentType = 'movie'; setActiveTab(this);
+        await runSearch(true);
+      };
+      document.getElementById('tvTab').onclick = async function() {
+        currentType = 'tv'; setActiveTab(this);
+        await runSearch(true);
+      };
+      document.getElementById('regionUK').onclick = async function() {
+        currentRegion = 'GB'; setRegionButton(this);
+        await runSearch(true);
+      };
+      document.getElementById('regionUS').onclick = async function() {
+        currentRegion = 'US'; setRegionButton(this);
+        await runSearch(true);
+      };
+      document.getElementById('searchInput').addEventListener('input', async function() {
+        currentQuery = this.value;
+        await runSearch(true);
+      });
+      document.getElementById('showMoreBtn').onclick = showMore;
+      document.getElementById('wildBtn').onclick = wildCard;
+
       await runSearch(true);
-
-      document.getElementById('searchInput').addEventListener('input', async (e) => {
-        currentQuery = e.target.value;
-        currentPage = 1;
-        await runSearch(true);
-      });
-
-      document.getElementById('movieTab').addEventListener('click', async () => {
-        currentType = 'movie';
-        setActiveTab(document.getElementById('movieTab'));
-        currentPage = 1;
-        await runSearch(true);
-      });
-
-      document.getElementById('tvTab').addEventListener('click', async () => {
-        currentType = 'tv';
-        setActiveTab(document.getElementById('tvTab'));
-        currentPage = 1;
-        await runSearch(true);
-      });
-
-      document.getElementById('allTab').addEventListener('click', async () => {
-        currentType = 'all';
-        setActiveTab(document.getElementById('allTab'));
-        currentPage = 1;
-        await runSearch(true);
-      });
-
-      document.getElementById('regionUK').addEventListener('click', async () => {
-        currentRegion = 'GB';
-        setRegionButton(document.getElementById('regionUK'));
-        currentPage = 1;
-        await runSearch(true);
-      });
-
-      document.getElementById('regionUS').addEventListener('click', async () => {
-        currentRegion = 'US';
-        setRegionButton(document.getElementById('regionUS'));
-        currentPage = 1;
-        await runSearch(true);
-      });
-
-      document.getElementById('showMoreBtn').addEventListener('click', async () => {
-        await showMore();
-      });
     });
   </script>
 </body>
 </html>
+
 
 
 
