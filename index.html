@@ -40,6 +40,35 @@
       min-height: 350px;
       grid-column: 1 / -1;
     }
+    .provider-btn {
+      border-radius: 2rem;
+      background: #232334;
+      color: #eee;
+      font-weight: 600;
+      border: 2px solid transparent;
+      margin: 0 0.18rem;
+      padding: 0.48rem 1.1rem 0.48rem 0.7rem;
+      font-size: 1rem;
+      transition: 0.2s;
+      display: flex; align-items: center; gap: 0.55rem;
+      min-width: 52px;
+      box-shadow: 0 1px 6px #0002;
+      cursor: pointer;
+    }
+    .provider-btn.selected {
+      background: linear-gradient(90deg, #2cb67d 0%, #7f5af0 100%);
+      color: #fff;
+      border: 2px solid #fff;
+      filter: brightness(1.15);
+      box-shadow: 0 2px 12px #7f5af088;
+    }
+    .provider-btn:hover {
+      filter: brightness(1.12);
+    }
+    .provider-logo {
+      width: 1.6rem; height: 1.6rem; object-fit: contain; border-radius: 0.3rem;
+      background: #222;
+    }
     @media (max-width: 1024px) {
       .wild-card-center { min-height: 220px; }
     }
@@ -49,6 +78,7 @@
   <section class="text-center py-20 px-6">
     <h1 class="text-6xl font-bold mb-4 leading-tight bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent">Stream 2 Night</h1>
     <p class="text-xl text-gray-300 mb-6">Smarter streaming, simplified.</p>
+    <!-- Region flags -->
     <div class="mb-6 flex justify-center gap-3">
       <button id="regionUK" class="flag-tab selected" title="United Kingdom" aria-label="United Kingdom">
         <img src="https://hatscripts.github.io/circle-flags/flags/gb.svg" alt="UK" class="flag-img" />
@@ -60,11 +90,21 @@
         <img src="https://hatscripts.github.io/circle-flags/flags/ca.svg" alt="Canada" class="flag-img" />
       </button>
     </div>
+    <!-- Provider filters -->
+    <div id="providersRow" class="mb-7 flex justify-center gap-1">
+      <button class="provider-btn" id="provider-netflix"><img src="https://cdn.jsdelivr.net/gh/streamline-cdn/logos/netflix.png" class="provider-logo" alt="Netflix" />Netflix</button>
+      <button class="provider-btn" id="provider-prime"><img src="https://cdn.jsdelivr.net/gh/streamline-cdn/logos/primevideo.png" class="provider-logo" alt="Prime Video" />Prime</button>
+      <button class="provider-btn" id="provider-disney"><img src="https://cdn.jsdelivr.net/gh/streamline-cdn/logos/disneyplus.png" class="provider-logo" alt="Disney+" />Disney+</button>
+      <button class="provider-btn" id="provider-apple"><img src="https://cdn.jsdelivr.net/gh/streamline-cdn/logos/appletv.png" class="provider-logo" alt="Apple TV+" />Apple TV+</button>
+      <button class="provider-btn" id="provider-hulu"><img src="https://cdn.jsdelivr.net/gh/streamline-cdn/logos/hulu.png" class="provider-logo" alt="Hulu" />Hulu</button>
+    </div>
+    <!-- Tabs -->
     <div class="mb-8 flex justify-center gap-4">
       <button id="allTab" class="tab-button active-tab">All</button>
       <button id="movieTab" class="tab-button inactive-tab">Movies</button>
       <button id="tvTab" class="tab-button inactive-tab">Series</button>
     </div>
+    <!-- Search & Wildcard -->
     <div class="flex justify-center items-center mb-8">
       <input id="searchInput" type="text" autocomplete="off" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded" />
       <button id="wildBtn" class="wild-btn" title="Spin the wheel for a random pick!">🎲 Wild Card</button>
@@ -72,7 +112,7 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/otter_1f9a6.png" alt="Otter" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/llama_1f999.png" alt="Llama" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
@@ -81,8 +121,20 @@
     <div class="text-xl font-bold mt-2">Picking something great for you…</div>
   </div>
   <script>
+    // --- API KEYS ---
     const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
     const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
+
+    // --- PROVIDER FILTERING ---
+    // Service: id in TMDB, matching id or string for Watchmode, display name.
+    const streamingProviders = [
+      { id: 8, wmid: 203, key: 'netflix', name: 'Netflix' },
+      { id: 9, wmid: 157, key: 'prime', name: 'Prime Video' },
+      { id: 337, wmid: 372, key: 'disney', name: 'Disney+' },
+      { id: 2, wmid: 248, key: 'apple', name: 'Apple TV+' },
+      { id: 15, wmid: 387, key: 'hulu', name: 'Hulu' }
+    ];
+
     let currentType = 'all';
     let currentRegion = 'GB';
     let currentQuery = '';
@@ -92,6 +144,7 @@
     let maxShowMore = 4;
     let showMoreCount = 0;
     let mediaCache = {};
+    let selectedProviders = [];
 
     function getEndpoint(type, query, page) {
       let base = 'https://api.themoviedb.org/3';
@@ -158,6 +211,23 @@
       });
     }
 
+    function filterByProvider(availability) {
+      if (!selectedProviders.length) return true;
+      let availableProviderIds = [];
+      if (availability && availability.stream) {
+        // parse out provider TMDB ids from the stream logos' alt/title attributes
+        let match = availability.stream.match(/alt='([^']+)'/g);
+        if (match) {
+          availableProviderIds = match.map(s => {
+            let alt = s.replace("alt='", '').replace("'", '').toLowerCase();
+            return streamingProviders.find(p => p.name.toLowerCase() === alt || alt.includes(p.key))?.key;
+          }).filter(Boolean);
+        }
+      }
+      // If any selected provider matches, keep it
+      return selectedProviders.some(sel => availableProviderIds.includes(sel));
+    }
+
     async function fetchAvailability(id, mediaType, title) {
       const type = mediaType === 'tv' ? 'tv' : 'movie';
       try {
@@ -181,7 +251,7 @@
           const searchData = await searchRes.json();
           const match = searchData.title_results?.find(r => r.name.toLowerCase() === title.toLowerCase());
           if (match) {
-            const sourceRes = await fetch(`https://watchmode.p.rapidapi.com/title/${match.id}/sources/`, {
+            const sourceRes = await fetch(`https://watchmode.p.rapidapi.com/title/${match.id}/sources/?region=${currentRegion}`, {
               method: 'GET',
               headers: {
                 'X-RapidAPI-Key': watchmodeApiKey,
@@ -190,8 +260,7 @@
             });
             const sourceData = await sourceRes.json();
             const watchmodeLogos = sourceData.filter(s => s.type === 'sub' || s.type === 'buy')
-              .map(s => `<div class='text-sm text-white border px-2 py-1 rounded mx-1'>${s.name}</div>`)
-              .join('');
+              .map(s => `<div class='text-sm text-white border px-2 py-1 rounded mx-1'>${s.name}</div>`).join('');
             stream = watchmodeLogos;
           }
         }
@@ -202,85 +271,75 @@
       }
     }
 
-    function clearResults() {
-      document.getElementById('searchResults').innerHTML = '';
-    }
-
-    async function renderBatch(batch, centerWildCard = false) {
+    async function renderBatch(arr, center = false) {
       const container = document.getElementById('searchResults');
-      if (centerWildCard && batch.length === 1) {
-        const found = batch[0];
-        const title = found.title || found.name || 'Untitled';
-        const poster = found.poster_path ? `https://image.tmdb.org/t/p/w500${found.poster_path}` : '';
-        const availability = found.availability;
-        container.innerHTML = `
-          <div class="wild-card-center">
-            <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center max-w-xs mx-auto">
-              <img src="${poster}" alt="${title}" class="rounded mb-5 mx-auto" style="max-height:290px; width:auto;">
-              <h3 class="text-2xl font-bold mb-3">${title}</h3>
-              <div class="text-md text-gray-300 mb-3">
-                ${availability.stream ? `<div class='mb-2'>Stream on:<div class='flex flex-wrap justify-center mt-2'>${availability.stream}</div></div>` : ''}
-                ${availability.buy ? `<div class='mb-2'>Buy on:<div class='flex flex-wrap justify-center mt-2'>${availability.buy}</div></div>` : ''}
-              </div>
-            </div>
-          </div>
-        `;
+      if (!center) container.innerHTML = '';
+      if (arr.length === 0) {
+        container.innerHTML = `<div class="col-span-full text-yellow-300 text-xl py-12">No results found for your settings.</div>`;
         return;
       }
-      for (const item of batch) {
+      for (const item of arr) {
         const title = item.title || item.name || 'Untitled';
         const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
         const availability = await fetchAvailability(item.id, item.media_type, title);
+        if (!filterByProvider(availability)) continue;
         const card = document.createElement('div');
-        card.className = 'bg-gray-800 p-4 rounded-lg shadow';
-        if (!availability) {
-          card.innerHTML = `
-            <img src="${poster}" alt="${title}" class="rounded mb-4">
-            <h3 class="text-lg font-semibold">${title}</h3>
-            <div class="text-sm text-yellow-400 mt-4">Not yet available to stream or buy in selected region.</div>
-          `;
-        } else {
-          card.innerHTML = `
-            <img src="${poster}" alt="${title}" class="rounded mb-4">
-            <h3 class="text-lg font-semibold">${title}</h3>
-            <div class="text-sm text-gray-300">
-              ${availability.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center'>${availability.stream}</div></div>` : ''}
-              ${availability.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center'>${availability.buy}</div></div>` : ''}
-            </div>
-          `;
-        }
+        card.className = (center ? 'wild-card-center' : '') + ' bg-gray-800 p-4 rounded-lg shadow flex flex-col items-center';
+        card.innerHTML = `
+          <img src="${poster}" alt="${title}" class="rounded mb-4 h-48 w-auto mx-auto object-cover">
+          <h3 class="text-lg font-semibold mb-2 text-center">${title}</h3>
+          ${availability && availability.stream
+            ? `<div class="text-sm text-gray-300 mb-1">Stream on:<div class='flex flex-wrap justify-center'>${availability.stream}</div></div>` : ''}
+          ${availability && availability.buy
+            ? `<div class="text-sm text-gray-300 mb-1">Buy on:<div class='flex flex-wrap justify-center'>${availability.buy}</div></div>` : ''}
+          ${!availability ? `<div class="text-sm text-yellow-400 mt-2">Not yet available to stream or buy in this country.</div>` : ''}
+        `;
+        if (center) container.innerHTML = ''; // only one
         container.appendChild(card);
+        if (center) break;
       }
     }
 
-    async function showResults(isNewSearch) {
-      clearResults();
-      showMoreCount = 0;
-      let arr = deduplicateAndSort(results, currentQuery);
-      await renderBatch(arr.slice(0, 12));
-    }
-
-    async function runSearch(isNewSearch = false) {
+    async function runSearch(reset = false) {
       if (isLoading) return;
+      if (reset) {
+        currentPage = 1;
+        showMoreCount = 0;
+        results = [];
+        mediaCache = {};
+        document.getElementById('searchResults').innerHTML = '';
+      }
       isLoading = true;
-      let page = 1;
-      if (!isNewSearch) page = currentPage;
-      else currentPage = 1;
-      let query = currentQuery.trim();
-      results = await fetchMedia(currentType, query, page);
-      await showResults(true);
+      let newResults = await fetchMedia(currentType, currentQuery, currentPage);
+      let all = deduplicateAndSort(results.concat(newResults), currentQuery);
+      results = all;
+      // Filter by provider selection
+      let filtered = [];
+      for (const item of all) {
+        const title = item.title || item.name || '';
+        const avail = await fetchAvailability(item.id, item.media_type, title);
+        if (filterByProvider(avail)) filtered.push(item);
+        if (filtered.length >= 12) break;
+      }
+      await renderBatch(filtered);
       isLoading = false;
     }
 
     async function showMore() {
-      if (isLoading || showMoreCount >= maxShowMore) return;
+      if (isLoading) return;
+      if (showMoreCount >= maxShowMore) return;
       isLoading = true;
       currentPage++;
-      let query = currentQuery.trim();
-      let newResults = await fetchMedia(currentType, query, currentPage);
+      let newResults = await fetchMedia(currentType, currentQuery, currentPage);
       let all = deduplicateAndSort(results.concat(newResults), currentQuery);
       results = all;
-      await renderBatch(all.slice((currentPage - 1) * 12, currentPage * 12));
+      let filtered = [];
+      for (const item of all.slice((currentPage - 1) * 12, currentPage * 12)) {
+        const title = item.title || item.name || '';
+        const avail = await fetchAvailability(item.id, item.media_type, title);
+        if (filterByProvider(avail)) filtered.push(item);
+      }
+      await renderBatch(filtered);
       showMoreCount++;
       isLoading = false;
     }
@@ -294,7 +353,19 @@
       regionBtn.classList.add('selected');
     }
 
-    // Wild Card / Randomize Feature - Centered Display
+    // --- Provider button logic ---
+    function toggleProvider(providerKey, btn) {
+      if (selectedProviders.includes(providerKey)) {
+        selectedProviders = selectedProviders.filter(p => p !== providerKey);
+        btn.classList.remove('selected');
+      } else {
+        selectedProviders.push(providerKey);
+        btn.classList.add('selected');
+      }
+      runSearch(true);
+    }
+
+    // --- Wild Card / Randomize Feature (centered display) ---
     async function wildCard() {
       document.getElementById('wildOverlay').style.display = "flex";
       let tries = 0, found = null;
@@ -302,14 +373,10 @@
         let randPage = 1 + Math.floor(Math.random() * 4);
         let media = await fetchMedia(currentType, '', randPage);
         media = deduplicateAndSort(media, '').filter(i => (i.vote_count || 0) >= 100);
-        if (!media.length) { tries++; continue; }
-        for (let i = media.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [media[i], media[j]] = [media[j], media[i]];
-        }
+        // filter by provider
         for (let m of media) {
           const avail = await fetchAvailability(m.id, m.media_type, m.title || m.name || '');
-          if (avail && avail.stream) {
+          if (avail && avail.stream && filterByProvider(avail)) {
             found = { ...m, availability: avail };
             break;
           }
@@ -322,9 +389,13 @@
         if (found) {
           await renderBatch([found], true); // center!
         } else {
-          document.getElementById('searchResults').innerHTML = `<div class="wild-card-center"><div class="text-lg font-bold text-yellow-400">Sorry, nothing found for your region and settings!</div></div>`;
+          document.getElementById('searchResults').innerHTML = `<div class="wild-card-center"><div class="text-lg font-bold text-yellow-400">Sorry, nothing found for your region/settings/providers!</div></div>`;
         }
       }, 1700);
+    }
+
+    function clearResults() {
+      document.getElementById('searchResults').innerHTML = '';
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -377,6 +448,12 @@
         }
       };
 
+      // Provider filters
+      streamingProviders.forEach(p => {
+        const btn = document.getElementById('provider-' + p.key);
+        btn.onclick = () => toggleProvider(p.key, btn);
+      });
+
       // Search
       document.getElementById('searchInput').addEventListener('input', async function (e) {
         currentQuery = e.target.value;
@@ -396,6 +473,7 @@
   </script>
 </body>
 </html>
+
 
 
 
