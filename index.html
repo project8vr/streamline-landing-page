@@ -16,386 +16,392 @@
     .flag-img { width: 2.2rem; height: 1.6rem; border-radius: 0.4rem; object-fit: cover; display: block;}
     .wild-btn { margin-left: 0.75rem; background: linear-gradient(to right, #ffde57, #fc7e1e); color: #1b103f; font-weight: 700; border-radius: 2rem; padding: 0.7rem 1.3rem; font-size: 1.2rem; box-shadow: 0 2px 10px #0003; border: none; transition: 0.2s; }
     .wild-btn:hover { background: linear-gradient(to right, #fc7e1e, #ffde57); color: #111; }
-    .overlay-spin {
-      position: fixed; z-index: 100; inset: 0; background: rgba(26,18,48,0.94); display: flex; align-items: center; justify-content: center; flex-direction: column;
-      animation: fadeIn 0.4s;
+    .wild-modal-bg {
+      position: fixed; inset: 0; z-index: 1000; background: rgba(16,12,34,0.97);
+      display: flex; align-items: center; justify-content: center; flex-direction: column;
+      transition: background 0.3s;
     }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .spin-wheel {
-      border: 8px solid #fff;
-      border-radius: 50%;
-      width: 130px; height: 130px;
-      border-top: 8px solid #ffde57;
-      border-right: 8px solid #2cb67d;
-      border-bottom: 8px solid #7f5af0;
-      border-left: 8px solid #fc7e1e;
-      animation: spin 1s linear infinite;
-      margin-bottom: 1.3rem;
-    }
-    @keyframes spin { 100% { transform: rotate(360deg);} }
-    .wild-card-center {
+    .wild-cards-stack {
       display: flex;
+      gap: 1.5rem;
       justify-content: center;
-      align-items: center;
-      min-height: 350px;
-      grid-column: 1 / -1;
+      align-items: flex-end;
+      margin-bottom: 1.8rem;
     }
-    @media (max-width: 1024px) {
-      .wild-card-center { min-height: 220px; }
+    .wild-card {
+      width: 170px;
+      height: 250px;
+      background: #181621;
+      border-radius: 1.2rem;
+      box-shadow: 0 10px 40px #0007;
+      border: 4px solid gold;
+      cursor: pointer;
+      transition: transform 0.25s, box-shadow 0.25s;
+      position: relative;
+      perspective: 1000px;
+      z-index: 5;
+      user-select: none;
+    }
+    .wild-card:not(.active) {
+      filter: blur(0.5px) grayscale(0.2) brightness(0.94);
+      opacity: 0.78;
+      z-index: 3;
+      pointer-events: none;
+      transform: scale(0.93);
+    }
+    .wild-card.flipped .wild-card-inner {
+      transform: rotateY(180deg);
+    }
+    .wild-card-inner {
+      width: 100%; height: 100%;
+      position: absolute; top: 0; left: 0;
+      transition: transform 0.6s cubic-bezier(.58,.04,.46,1.29);
+      transform-style: preserve-3d;
+    }
+    .wild-card-front, .wild-card-back {
+      width: 100%; height: 100%;
+      border-radius: 1rem;
+      position: absolute; top: 0; left: 0;
+      backface-visibility: hidden;
+      display: flex; align-items: center; justify-content: center; flex-direction: column;
+      font-weight: bold;
+    }
+    .wild-card-back {
+      background: #191624;
+      border: 3px solid gold;
+      color: gold;
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+      font-family: 'Arial Black', Arial, sans-serif;
+      background-image: url('https://cdn.pixabay.com/photo/2014/04/03/10/32/golden-313474_1280.png');
+      background-size: cover;
+      box-shadow: 0 2px 16px #0009;
+    }
+    .wild-card-front {
+      background: #232145;
+      color: #fff;
+      transform: rotateY(180deg);
+      overflow: hidden;
+      padding: 0.5rem;
+      text-align: center;
+      box-shadow: 0 0 14px #FFD70044;
+    }
+    .wild-card-front img {
+      border-radius: 0.7rem;
+      margin-bottom: 0.4rem;
+      object-fit: cover;
+      width: 90%;
+      height: 145px;
+      background: #24222a;
+    }
+    .wild-card-actions {
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1.7rem;
+    }
+    .wild-card-btn {
+      border: none;
+      background: #221e3b;
+      font-size: 2.2rem;
+      color: #fc7e1e;
+      padding: 0.2em 0.7em;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+      box-shadow: 0 2px 12px #0003;
+      opacity: 0.86;
+    }
+    .wild-card-btn.keep {
+      color: #2cb67d;
+      background: #1b2930;
+    }
+    .wild-card-btn:hover { filter: brightness(1.2) scale(1.13);}
+    .wild-hand {
+      display: flex; gap: 1.1rem; justify-content: center; margin-bottom: 2rem;
+    }
+    .wild-hand .wild-card {
+      width: 120px; height: 180px; border-width: 3px; cursor: pointer;
+    }
+    .wild-winner {
+      text-align: center;
+      color: #fc7e1e;
+      margin: 2.2rem 0 1.2rem;
+      font-size: 2.2rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+    .wild-close-btn {
+      background: #181621; color: #fff; font-size: 1.7rem; border: 2px solid #444;
+      border-radius: 999px; padding: 0.2em 0.8em; position: absolute; top: 1.4rem; right: 2.6rem; z-index: 2001;
+      cursor: pointer; opacity: 0.7; transition: opacity 0.15s;
+    }
+    .wild-close-btn:hover { opacity: 1;}
+    @media (max-width: 768px) {
+      .wild-cards-stack { flex-direction: column; align-items: center; gap: 0.7rem;}
+      .wild-card { width: 93vw; height: 210px; }
+      .wild-card-front img { height: 90px;}
+      .wild-hand .wild-card { width: 45vw; height: 110px;}
     }
   </style>
 </head>
 <body class="text-white">
-  <section class="text-center py-20 px-6">
-    <h1 class="text-6xl font-bold mb-4 leading-tight bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent">Stream 2 Night</h1>
-    <p class="text-xl text-gray-300 mb-6">Smarter streaming, simplified.</p>
-    <div class="mb-6 flex justify-center gap-3">
-      <button id="regionUK" class="flag-tab selected" title="United Kingdom" aria-label="United Kingdom">
-        <img src="https://hatscripts.github.io/circle-flags/flags/gb.svg" alt="UK" class="flag-img" />
-      </button>
-      <button id="regionUS" class="flag-tab" title="United States" aria-label="United States">
-        <img src="https://hatscripts.github.io/circle-flags/flags/us.svg" alt="US" class="flag-img" />
-      </button>
-      <button id="regionCA" class="flag-tab" title="Canada" aria-label="Canada">
-        <img src="https://hatscripts.github.io/circle-flags/flags/ca.svg" alt="Canada" class="flag-img" />
-      </button>
-    </div>
-    <div class="mb-8 flex justify-center gap-4">
-      <button id="allTab" class="tab-button active-tab">All</button>
-      <button id="movieTab" class="tab-button inactive-tab">Movies</button>
-      <button id="tvTab" class="tab-button inactive-tab">Series</button>
-    </div>
-    <div class="flex justify-center items-center mb-8">
-      <input id="searchInput" type="text" autocomplete="off" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded" />
-      <button id="wildBtn" class="wild-btn" title="Spin the wheel for a random pick!">🎲 Wild Card</button>
-    </div>
-    <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
-    <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
-  </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/otter_1f9a6.png" alt="Otter" class="fixed top-4 right-4 h-16 w-16 z-50">
-  <footer class="text-center p-4 text-gray-400">
-    This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
-  </footer>
-  <div id="wildOverlay" style="display:none;" class="overlay-spin">
-    <div class="spin-wheel"></div>
-    <div class="text-xl font-bold mt-2">Picking something great for you…</div>
+  <!-- ... keep the rest of your current code here up to your <footer> ... -->
+
+  <!-- Wild Cards Overlay Modal -->
+  <div id="wildModal" style="display:none;" class="wild-modal-bg">
+    <button class="wild-close-btn" id="wildCloseBtn" title="Close">✕</button>
+    <div id="wildGameArea"></div>
   </div>
-  <script>
-    const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
-    const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
-    let currentType = 'all';
-    let currentRegion = 'GB';
-    let currentQuery = '';
-    let currentPage = 1;
-    let results = [];
-    let isLoading = false;
-    let maxShowMore = 4;
-    let showMoreCount = 0;
-    let mediaCache = {};
 
-    function getEndpoint(type, query, page) {
-      let base = 'https://api.themoviedb.org/3';
-      if (query) {
-        if (type === 'movie') return `${base}/search/movie?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${page}`;
-        if (type === 'tv') return `${base}/search/tv?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${page}`;
-        return `${base}/search/multi?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${page}`;
-      } else {
-        if (type === 'movie') return `${base}/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`;
-        if (type === 'tv') return `${base}/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`;
-        return [
-          `${base}/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`,
-          `${base}/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`
-        ];
-      }
+  <!-- Add the rest of your HTML here, including your region/cat tabs and main results area, as you currently have -->
+
+  <!-- Sound FX (audio elements, will play in script) -->
+  <audio id="sfxFlip" src="https://cdn.pixabay.com/audio/2022/07/26/audio_124b3c6e77.mp3"></audio>
+  <audio id="sfxKeep" src="https://cdn.pixabay.com/audio/2022/03/15/audio_12bc7e30d3.mp3"></audio>
+  <audio id="sfxNope" src="https://cdn.pixabay.com/audio/2022/03/15/audio_12be01e730.mp3"></audio>
+  <audio id="sfxWin" src="https://cdn.pixabay.com/audio/2022/03/15/audio_12bd46ad83.mp3"></audio>
+
+<!-- PART 2: Script goes here (in the next message) -->
+<script>
+/** WILD CARD GAME LOGIC **/
+
+// Utility: play SFX by id
+function playSfx(id) {
+  const s = document.getElementById(id);
+  if (s) { s.currentTime = 0; s.play(); }
+}
+
+// Utility: sleep
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// "Logo" for Stream2Night card back (change if you have a real logo!)
+const wildCardLogoHTML = `<div style="display:flex;flex-direction:column;align-items:center;">
+  <span style="font-size:2.6rem;color:gold;">★</span>
+  <span style="font-size:1.1rem;letter-spacing:2px;">STREAM2NIGHT</span>
+  <span style="font-size:1.7rem;color:#7f5af0;">🎬</span>
+</div>`;
+
+// Hook up modal
+const wildModal = document.getElementById('wildModal');
+const wildGameArea = document.getElementById('wildGameArea');
+const wildCloseBtn = document.getElementById('wildCloseBtn');
+if (wildCloseBtn) wildCloseBtn.onclick = () => { wildModal.style.display = 'none'; wildGameArea.innerHTML = ''; };
+
+// Helper: Get current settings
+function getWildContext() {
+  let type = 'all';
+  if (document.getElementById('movieTab').classList.contains('active-tab')) type = 'movie';
+  if (document.getElementById('tvTab').classList.contains('active-tab')) type = 'tv';
+  let region = 'GB';
+  if (document.getElementById('regionUS').classList.contains('selected')) region = 'US';
+  if (document.getElementById('regionCA').classList.contains('selected')) region = 'CA';
+  return { type, region };
+}
+
+// Helper: Fetch random N items (like your main fetch but faster/random)
+// For demo, just grabs first 4 pages, shuffles, filters
+async function fetchWildCards({type, region}) {
+  let tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
+  let endpoints = [];
+  let label = '';
+  if (type === 'all') {
+    endpoints = [
+      `https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=en-${region}&page=1`,
+      `https://api.themoviedb.org/3/tv/popular?api_key=${tmdbApiKey}&language=en-${region}&page=1`
+    ];
+    label = 'all';
+  } else if (type === 'movie') {
+    endpoints = [
+      `https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=en-${region}&page=1`
+    ];
+    label = 'movie';
+  } else {
+    endpoints = [
+      `https://api.themoviedb.org/3/tv/popular?api_key=${tmdbApiKey}&language=en-${region}&page=1`
+    ];
+    label = 'tv';
+  }
+  let results = [];
+  for (let ep of endpoints) {
+    const r = await fetch(ep); const data = await r.json();
+    if (data.results) results = results.concat(data.results.map(x => {
+      x.media_type = label === 'all'
+        ? (x.title ? 'movie' : 'tv')
+        : label;
+      return x;
+    }));
+  }
+  // Shuffle
+  for (let i = results.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [results[i], results[j]] = [results[j], results[i]];
+  }
+  // Keep only those with poster + popular enough
+  results = results.filter(x => (x.poster_path && (x.vote_count||0) > 90));
+  return results.slice(0, 8);
+}
+
+// Helper: Check availability in country (TMDB only for speed)
+async function fetchWildAvailability(id, mediaType, region) {
+  let tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
+  const type = mediaType === 'tv' ? 'tv' : 'movie';
+  try {
+    const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
+    const tmdbData = await tmdbRes.json();
+    const countryData = tmdbData.results?.[region];
+    let stream = '';
+    if (countryData && countryData.flatrate) stream = 'stream';
+    return !!stream;
+  } catch { return false; }
+}
+
+// MAIN: Wild Card Modal/Deck Flow
+async function startWildCards() {
+  // 1. Get context
+  const ctx = getWildContext();
+  wildModal.style.display = 'flex';
+  wildGameArea.innerHTML = `<div style="color:#ffde57;font-size:1.5rem;margin-bottom:2.2rem;">Shuffling your deck...</div>`;
+  // 2. Get ~5 titles
+  let all = await fetchWildCards(ctx);
+  let hand = [];
+  for (let t of all) {
+    if (await fetchWildAvailability(t.id, t.media_type, ctx.region)) {
+      hand.push(t);
+      if (hand.length >= 5) break;
     }
+  }
+  if (!hand.length) {
+    wildGameArea.innerHTML = `<div class="text-red-300 text-lg mt-12">No available titles found right now.<br>Please try again!</div>`;
+    return;
+  }
+  // 3. Game: Swipe/flip for 5 cards
+  let idx = 0, chosen = [];
+  renderWildStack(hand, idx, chosen);
+}
 
-    async function fetchMedia(type, query, page) {
-      if (mediaCache[type + '|' + query + '|' + page + '|' + currentRegion]) return mediaCache[type + '|' + query + '|' + page + '|' + currentRegion];
-      let res, data, arr = [];
-      let endpoints = getEndpoint(type, query, page);
-      if (Array.isArray(endpoints)) {
-        for (let ep of endpoints) {
-          res = await fetch(ep);
-          data = await res.json();
-          arr = arr.concat((data.results || []).map(item => {
-            if (ep.includes('/tv/')) item.media_type = 'tv';
-            else item.media_type = 'movie';
-            return item;
-          }));
-        }
-      } else {
-        res = await fetch(endpoints);
-        data = await res.json();
-        arr = (data.results || []).map(item => {
-          if (!item.media_type) item.media_type = type === 'all' ? (item.title ? 'movie' : 'tv') : type;
-          return item;
-        });
-      }
-      mediaCache[type + '|' + query + '|' + page + '|' + currentRegion] = arr;
-      return arr;
-    }
-
-    function deduplicateAndSort(arr, query) {
-      const norm = s => (s || '').toLowerCase().replace(/^the\s+/i, '');
-      const seen = new Set();
-      const queryNorm = norm(query);
-      let filtered = arr.filter(item => {
-        let idKey = (item.media_type || '') + ':' + item.id;
-        if (seen.has(idKey)) return false;
-        seen.add(idKey);
-        if (!query && (item.vote_count || 0) < 100) return false;
-        if (currentType !== 'all' && item.media_type !== currentType) return false;
-        return true;
-      });
-      return filtered.sort((a, b) => {
-        let aT = norm(a.title || a.name || ''), bT = norm(b.title || b.name || '');
-        let aExact = aT === queryNorm, bExact = bT === queryNorm;
-        if (aExact && !bExact) return -1; if (!aExact && bExact) return 1;
-        let aStarts = aT.startsWith(queryNorm), bStarts = bT.startsWith(queryNorm);
-        if (aStarts && !bStarts) return -1; if (!aStarts && bStarts) return 1;
-        if ((b.vote_count || 0) !== (a.vote_count || 0)) return (b.vote_count || 0) - (a.vote_count || 0);
-        return (b.popularity || 0) - (a.popularity || 0);
-      });
-    }
-
-    async function fetchAvailability(id, mediaType, title) {
-      const type = mediaType === 'tv' ? 'tv' : 'movie';
-      try {
-        const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
-        const tmdbData = await tmdbRes.json();
-        const countryData = tmdbData.results?.[currentRegion];
-        let stream = '', buy = '';
-        if (countryData) {
-          const render = (items) => items.map(p => `<img src='https://image.tmdb.org/t/p/w45${p.logo_path}' alt='${p.provider_name}' title='${p.provider_name}' class='inline-block h-8 mx-2'>`).join('');
-          stream = countryData.flatrate ? render(countryData.flatrate) : '';
-          buy = countryData.buy ? render(countryData.buy) : '';
-        }
-        if (!stream && !buy && title) {
-          const searchRes = await fetch(`https://watchmode.p.rapidapi.com/search/?search_value=${encodeURIComponent(title)}&search_type=1`, {
-            method: 'GET',
-            headers: {
-              'X-RapidAPI-Key': watchmodeApiKey,
-              'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
-            }
-          });
-          const searchData = await searchRes.json();
-          const match = searchData.title_results?.find(r => r.name.toLowerCase() === title.toLowerCase());
-          if (match) {
-            const sourceRes = await fetch(`https://watchmode.p.rapidapi.com/title/${match.id}/sources/`, {
-              method: 'GET',
-              headers: {
-                'X-RapidAPI-Key': watchmodeApiKey,
-                'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
-              }
-            });
-            const sourceData = await sourceRes.json();
-            const watchmodeLogos = sourceData.filter(s => s.type === 'sub' || s.type === 'buy')
-              .map(s => `<div class='text-sm text-white border px-2 py-1 rounded mx-1'>${s.name}</div>`)
-              .join('');
-            stream = watchmodeLogos;
-          }
-        }
-        if (!stream && !buy) return null;
-        return { stream, buy };
-      } catch (err) {
-        return null;
-      }
-    }
-
-    function clearResults() {
-      document.getElementById('searchResults').innerHTML = '';
-    }
-
-    async function renderBatch(batch, centerWildCard = false) {
-      const container = document.getElementById('searchResults');
-      if (centerWildCard && batch.length === 1) {
-        const found = batch[0];
-        const title = found.title || found.name || 'Untitled';
-        const poster = found.poster_path ? `https://image.tmdb.org/t/p/w500${found.poster_path}` : '';
-        const availability = found.availability;
-        container.innerHTML = `
-          <div class="wild-card-center">
-            <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center max-w-xs mx-auto">
-              <img src="${poster}" alt="${title}" class="rounded mb-5 mx-auto" style="max-height:290px; width:auto;">
-              <h3 class="text-2xl font-bold mb-3">${title}</h3>
-              <div class="text-md text-gray-300 mb-3">
-                ${availability.stream ? `<div class='mb-2'>Stream on:<div class='flex flex-wrap justify-center mt-2'>${availability.stream}</div></div>` : ''}
-                ${availability.buy ? `<div class='mb-2'>Buy on:<div class='flex flex-wrap justify-center mt-2'>${availability.buy}</div></div>` : ''}
+function renderWildStack(hand, idx, chosen) {
+  wildGameArea.innerHTML = `
+    <div class="wild-cards-stack">
+      ${hand.map((item, i) => `
+        <div class="wild-card${i===idx ? ' active' : ''}${i<idx ? ' flipped' : ''}" style="z-index:${10-i}">
+          <div class="wild-card-inner">
+            <div class="wild-card-back">${wildCardLogoHTML}</div>
+            <div class="wild-card-front">
+              <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" alt="${item.title||item.name}" />
+              <div class="text-lg mb-1 font-semibold">${item.title||item.name}</div>
+              <div style="font-size:1.03rem;color:#ffe7a7;">${item.media_type==='tv'?'Series':'Movie'}</div>
+              <div style="font-size:0.96rem;color:#bdbdbd; margin-top: 0.35rem;">${(item.release_date||item.first_air_date||'').slice(0,4)||''}</div>
+              <div class="wild-card-actions">
+                <button class="wild-card-btn nope" title="Nope" style="margin-right:0.6rem;">✖</button>
+                <button class="wild-card-btn keep" title="Keep">✔</button>
               </div>
             </div>
           </div>
-        `;
-        return;
-      }
-      for (const item of batch) {
-        const title = item.title || item.name || 'Untitled';
-        const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
-        const availability = await fetchAvailability(item.id, item.media_type, title);
-        const card = document.createElement('div');
-        card.className = 'bg-gray-800 p-4 rounded-lg shadow';
-        if (!availability) {
-          card.innerHTML = `
-            <img src="${poster}" alt="${title}" class="rounded mb-4">
-            <h3 class="text-lg font-semibold">${title}</h3>
-            <div class="text-sm text-yellow-400 mt-4">Not yet available to stream or buy in selected region.</div>
-          `;
-        } else {
-          card.innerHTML = `
-            <img src="${poster}" alt="${title}" class="rounded mb-4">
-            <h3 class="text-lg font-semibold">${title}</h3>
-            <div class="text-sm text-gray-300">
-              ${availability.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center'>${availability.stream}</div></div>` : ''}
-              ${availability.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center'>${availability.buy}</div></div>` : ''}
-            </div>
-          `;
-        }
-        container.appendChild(card);
-      }
-    }
-
-    async function showResults(isNewSearch) {
-      clearResults();
-      showMoreCount = 0;
-      let arr = deduplicateAndSort(results, currentQuery);
-      await renderBatch(arr.slice(0, 12));
-    }
-
-    async function runSearch(isNewSearch = false) {
-      if (isLoading) return;
-      isLoading = true;
-      let page = 1;
-      if (!isNewSearch) page = currentPage;
-      else currentPage = 1;
-      let query = currentQuery.trim();
-      results = await fetchMedia(currentType, query, page);
-      await showResults(true);
-      isLoading = false;
-    }
-
-    async function showMore() {
-      if (isLoading || showMoreCount >= maxShowMore) return;
-      isLoading = true;
-      currentPage++;
-      let query = currentQuery.trim();
-      let newResults = await fetchMedia(currentType, query, currentPage);
-      let all = deduplicateAndSort(results.concat(newResults), currentQuery);
-      results = all;
-      await renderBatch(all.slice((currentPage - 1) * 12, currentPage * 12));
-      showMoreCount++;
-      isLoading = false;
-    }
-
-    function setActiveTab(tab) {
-      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active-tab', 'inactive-tab'));
-      tab.classList.add('active-tab');
-    }
-    function setRegionButton(regionBtn) {
-      document.querySelectorAll('.flag-tab').forEach(btn => btn.classList.remove('selected'));
-      regionBtn.classList.add('selected');
-    }
-
-    // Wild Card / Randomize Feature - Centered Display
-    async function wildCard() {
-      document.getElementById('wildOverlay').style.display = "flex";
-      let tries = 0, found = null;
-      while (tries < 10 && !found) {
-        let randPage = 1 + Math.floor(Math.random() * 4);
-        let media = await fetchMedia(currentType, '', randPage);
-        media = deduplicateAndSort(media, '').filter(i => (i.vote_count || 0) >= 100);
-        if (!media.length) { tries++; continue; }
-        for (let i = media.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [media[i], media[j]] = [media[j], media[i]];
-        }
-        for (let m of media) {
-          const avail = await fetchAvailability(m.id, m.media_type, m.title || m.name || '');
-          if (avail && avail.stream) {
-            found = { ...m, availability: avail };
-            break;
-          }
-        }
-        tries++;
-      }
-      setTimeout(async () => {
-        document.getElementById('wildOverlay').style.display = "none";
-        clearResults();
-        if (found) {
-          await renderBatch([found], true); // center!
-        } else {
-          document.getElementById('searchResults').innerHTML = `<div class="wild-card-center"><div class="text-lg font-bold text-yellow-400">Sorry, nothing found for your region and settings!</div></div>`;
-        }
-      }, 1700);
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      // Initial
-      await runSearch(true);
-
-      // Tabs
-      document.getElementById('allTab').onclick = async function () {
-        if (currentType !== 'all') {
-          setActiveTab(this);
-          currentType = 'all';
-          await runSearch(true);
-        }
+        </div>
+      `).join('')}
+    </div>
+    <div class="text-center text-gray-300" style="margin-bottom:1.5rem;">${idx+1}/5 - Swipe or tap ✔ or ✖</div>
+  `;
+  // Card flip on click
+  document.querySelectorAll('.wild-card').forEach((el, i) => {
+    if (i === idx && !el.classList.contains('flipped')) {
+      el.onclick = () => {
+        el.classList.add('flipped');
+        playSfx('sfxFlip');
       };
-      document.getElementById('movieTab').onclick = async function () {
-        if (currentType !== 'movie') {
-          setActiveTab(this);
-          currentType = 'movie';
-          await runSearch(true);
-        }
-      };
-      document.getElementById('tvTab').onclick = async function () {
-        if (currentType !== 'tv') {
-          setActiveTab(this);
-          currentType = 'tv';
-          await runSearch(true);
-        }
-      };
+    } else { el.onclick = null; }
+  });
+  // Action btns
+  setTimeout(()=>{
+    let actions = document.querySelectorAll('.wild-card.active .wild-card-actions button');
+    if (!actions.length) return;
+    // ✔ Keep
+    actions[1].onclick = async () => {
+      playSfx('sfxKeep');
+      chosen.push(hand[idx]);
+      nextWildCard(hand, idx, chosen);
+    };
+    // ✖ Nope
+    actions[0].onclick = async () => {
+      playSfx('sfxNope');
+      nextWildCard(hand, idx, chosen);
+    };
+  }, 400);
+}
 
-      // Region
-      document.getElementById('regionUK').onclick = async function () {
-        if (currentRegion !== 'GB') {
-          setRegionButton(this);
-          currentRegion = 'GB';
-          await runSearch(true);
-        }
-      };
-      document.getElementById('regionUS').onclick = async function () {
-        if (currentRegion !== 'US') {
-          setRegionButton(this);
-          currentRegion = 'US';
-          await runSearch(true);
-        }
-      };
-      document.getElementById('regionCA').onclick = async function () {
-        if (currentRegion !== 'CA') {
-          setRegionButton(this);
-          currentRegion = 'CA';
-          await runSearch(true);
-        }
-      };
+// Next step in deck
+function nextWildCard(hand, idx, chosen) {
+  if (idx+1 < hand.length) {
+    renderWildStack(hand, idx+1, chosen);
+  } else {
+    setTimeout(()=> renderWildHand(chosen), 500);
+  }
+}
 
-      // Search
-      document.getElementById('searchInput').addEventListener('input', async function (e) {
-        currentQuery = e.target.value;
-        await runSearch(true);
-      });
+// Show picked hand for final round
+function renderWildHand(chosen) {
+  if (!chosen.length) {
+    wildGameArea.innerHTML = `<div class="text-red-200 text-lg mt-12">No titles selected!<br>Try again.</div>`;
+    return;
+  }
+  wildGameArea.innerHTML = `
+    <div class="wild-hand">${chosen.map((item,i) => `
+      <div class="wild-card" data-wi="${i}" style="z-index:${9-i};">
+        <div class="wild-card-inner flipped">
+          <div class="wild-card-back">${wildCardLogoHTML}</div>
+          <div class="wild-card-front">
+            <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" alt="${item.title||item.name}" />
+            <div class="text-md font-semibold">${item.title||item.name}</div>
+            <div style="font-size:0.93rem;color:#ffe7a7;">${item.media_type==='tv'?'Series':'Movie'}</div>
+            <div style="font-size:0.88rem;color:#c0c0c0;">${(item.release_date||item.first_air_date||'').slice(0,4)||''}</div>
+          </div>
+        </div>
+      </div>
+    `).join('')}</div>
+    <div class="text-center text-gray-300" style="margin-bottom:1.4rem;">
+      Click a card to pick your winner!
+    </div>
+  `;
+  // Card click = pick winner
+  document.querySelectorAll('.wild-hand .wild-card').forEach((el, idx) => {
+    el.onclick = () => {
+      renderWildWinner(chosen[idx]);
+    };
+  });
+}
 
-      // Show More
-      document.getElementById('showMoreBtn').onclick = async function () {
-        await showMore();
-      };
+// Winner celebration
+function renderWildWinner(item) {
+  wildGameArea.innerHTML = `
+    <div class="wild-winner">Your Wild Card Pick!</div>
+    <div class="flex flex-col items-center justify-center">
+      <div class="bg-gray-800 p-7 rounded-xl shadow-xl text-center max-w-sm mx-auto" style="border:5px solid gold;">
+        <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" alt="${item.title||item.name}" class="rounded mb-5 mx-auto" style="max-height:290px; width:auto;">
+        <h3 class="text-2xl font-bold mb-3">${item.title||item.name}</h3>
+        <div class="text-md text-gray-300 mb-3">
+          ${item.media_type==='tv'?'Series':'Movie'}
+          ${item.release_date||item.first_air_date ? ` • ${(item.release_date||item.first_air_date).slice(0,4)}` : ''}
+        </div>
+      </div>
+      <div class="mt-6 text-3xl" style="color:#FFD700;">
+        🎉 🎊 🥳
+      </div>
+      <button class="wild-close-btn" onclick="wildModal.style.display='none';wildGameArea.innerHTML='';" style="position:static; margin-top:2.4rem;">✕ Back to site</button>
+    </div>
+  `;
+  playSfx('sfxWin');
+}
 
-      // Wild Card
-      document.getElementById('wildBtn').onclick = async function () {
-        await wildCard();
-      };
-    });
-  </script>
+// Launch from button
+document.getElementById('wildBtn').onclick = startWildCards;
+
+</script>
+
 </body>
 </html>
+
 
 
 
