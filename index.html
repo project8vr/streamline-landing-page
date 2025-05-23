@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -33,6 +32,7 @@
       animation: spin 1s linear infinite;
       margin-bottom: 1.3rem;
     }
+    @keyframes spin { 100% { transform: rotate(360deg);} }
     .wild-card-center {
       display: flex;
       justify-content: center;
@@ -42,71 +42,6 @@
     }
     @media (max-width: 1024px) {
       .wild-card-center { min-height: 220px; }
-    }
-    /* Wild Card Styles */
-    #wildModal {
-      display: none; position: fixed; inset: 0; z-index: 110;
-      background: rgba(21,12,38,0.98); align-items: center; justify-content: center;
-      animation: fadeIn 0.3s;
-    }
-    .wild-cards-stack {
-      display: flex; justify-content: center; align-items: center; margin-top: 1.2rem; position: relative; min-height: 380px;
-    }
-    .wild-card {
-      width: 220px; height: 315px; position: absolute; left: 50%; transform: translateX(-50%);
-      background: none; border-radius: 16px; box-shadow: 0 3px 25px #000a;
-      transition: all 0.48s cubic-bezier(.76,1.66,.49,1.01);
-      cursor: pointer;
-      perspective: 1000px;
-      border: 2.5px solid gold;
-      background: linear-gradient(120deg, #201943 70%, #392c61 99%);
-    }
-    .wild-card:not(.active) { filter: blur(1.5px) grayscale(0.2) brightness(0.75); opacity: 0.7; pointer-events:none; }
-    .wild-card-inner {
-      width: 100%; height: 100%; border-radius: inherit;
-      transition: transform 0.55s cubic-bezier(.53,1.5,.58,1.02); transform-style: preserve-3d;
-      position:relative;
-    }
-    .wild-card:not(.flipped) .wild-card-inner { transform: rotateY(0deg);}
-    .wild-card.flipped .wild-card-inner { transform: rotateY(180deg);}
-    .wild-card-front, .wild-card-back {
-      width: 100%; height: 100%; border-radius: inherit;
-      position: absolute; top: 0; left: 0; backface-visibility: hidden;
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
-    }
-    .wild-card-back {
-      background: linear-gradient(140deg,#22104a 80%, #886aff 95%);
-      border: 2.5px solid gold;
-      color: gold; font-weight: bold;
-      font-size: 1.22rem;
-      letter-spacing: 1.5px;
-      z-index: 2;
-    }
-    .wild-card-front {
-      background: #23213b; color: white;
-      transform: rotateY(180deg);
-      padding: 1rem 0.5rem;
-      box-shadow: 0 2px 15px #0004;
-    }
-    .wild-card-front img {
-      border-radius: 8px; margin-bottom: 0.8rem; width: 90%; max-height: 210px; object-fit:cover;
-      border: 2.5px solid #ffd70066;
-      box-shadow: 0 4px 20px #0003;
-    }
-    .wild-card-actions { margin-top: 1.2rem; display: flex; justify-content: center; gap: 1.4rem;}
-    .wild-card-btn {
-      font-size: 2.3rem; border:none; background: none; color: #ffe580; transition:0.15s; cursor: pointer;
-      padding:0 0.13rem;
-    }
-    .wild-card-btn:hover { color: #7f5af0; transform: scale(1.12);}
-    .wild-hand { display: flex; justify-content: center; gap: 1.1rem; margin-bottom: 2.2rem;}
-    .wild-hand .wild-card { position:relative; transform: none; left:0; box-shadow:0 4px 14px #0007;}
-    .wild-winner { font-size:2.2rem; color:gold; text-align:center; margin-bottom: 1.7rem; }
-    .wild-close-btn { background: #1b103f; color:#ffe580; font-size:1.25rem; font-weight:700; padding:0.67rem 2.1rem; border-radius:2rem; border:none; transition:0.2s;}
-    .wild-close-btn:hover { background:#7f5af0; color:#fff;}
-    @media (max-width:700px) {
-      .wild-card, .wild-card-front, .wild-card-back { width: 98vw; height: 180px; max-width: 320px; min-width: 175px;}
-      .wild-hand { gap: 0.55rem; }
     }
   </style>
 </head>
@@ -132,7 +67,7 @@
     </div>
     <div class="flex justify-center items-center mb-8">
       <input id="searchInput" type="text" autocomplete="off" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded" />
-      <button id="wildBtn" class="wild-btn" title="Spin the wheel for a random pick!">🎲 Wild Cards</button>
+      <button id="wildBtn" class="wild-btn" title="Spin the wheel for a random pick!">🎲 Wild Card</button>
     </div>
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
@@ -141,28 +76,11 @@
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
-
-  <!-- Wild Card Modal Overlay (hidden by default) -->
-  <div id="wildModal" style="display:none;align-items:center;justify-content:center;">
-    <div style="position:relative;width:100vw;min-height:100vh;display:flex;align-items:center;justify-content:center;">
-      <button id="wildCloseBtn" style="position:absolute;top:12px;right:20px;font-size:2rem;color:#ffe580;background:none;border:none;z-index:11;cursor:pointer;">✕</button>
-      <div id="wildGameArea" style="width:100vw;max-width:800px;"></div>
-    </div>
-    <!-- Sound FX -->
-    <audio id="sfxFlip" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12d7b82b7c.mp3"></audio>
-    <audio id="sfxNope" src="https://cdn.pixabay.com/audio/2022/10/16/audio_121fa2379f.mp3"></audio>
-    <audio id="sfxKeep" src="https://cdn.pixabay.com/audio/2022/10/16/audio_126cbd7b25.mp3"></audio>
-    <audio id="sfxWin" src="https://cdn.pixabay.com/audio/2022/10/16/audio_127b1e7eab.mp3"></audio>
-  </div>
-  <!-- Overlay for spinning original wild card (optional/legacy) -->
   <div id="wildOverlay" style="display:none;" class="overlay-spin">
     <div class="spin-wheel"></div>
     <div class="text-xl font-bold mt-2">Picking something great for you…</div>
   </div>
   <script>
-    // ... [Insert all your previous script code for tabs, region, search, show more, etc.]
-    // The wild card "game" JS is below and compatible with the main search logic.
-
     const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
     const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
     let currentType = 'all';
@@ -197,7 +115,8 @@
       let endpoints = getEndpoint(type, query, page);
       if (Array.isArray(endpoints)) {
         for (let ep of endpoints) {
-          res = await fetch(ep); data = await res.json();
+          res = await fetch(ep);
+          data = await res.json();
           arr = arr.concat((data.results || []).map(item => {
             if (ep.includes('/tv/')) item.media_type = 'tv';
             else item.media_type = 'movie';
@@ -205,7 +124,8 @@
           }));
         }
       } else {
-        res = await fetch(endpoints); data = await res.json();
+        res = await fetch(endpoints);
+        data = await res.json();
         arr = (data.results || []).map(item => {
           if (!item.media_type) item.media_type = type === 'all' ? (item.title ? 'movie' : 'tv') : type;
           return item;
@@ -250,8 +170,36 @@
           stream = countryData.flatrate ? render(countryData.flatrate) : '';
           buy = countryData.buy ? render(countryData.buy) : '';
         }
-        return (!stream && !buy) ? null : { stream, buy };
-      } catch (err) { return null; }
+        if (!stream && !buy && title) {
+          const searchRes = await fetch(`https://watchmode.p.rapidapi.com/search/?search_value=${encodeURIComponent(title)}&search_type=1`, {
+            method: 'GET',
+            headers: {
+              'X-RapidAPI-Key': watchmodeApiKey,
+              'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
+            }
+          });
+          const searchData = await searchRes.json();
+          const match = searchData.title_results?.find(r => r.name.toLowerCase() === title.toLowerCase());
+          if (match) {
+            const sourceRes = await fetch(`https://watchmode.p.rapidapi.com/title/${match.id}/sources/`, {
+              method: 'GET',
+              headers: {
+                'X-RapidAPI-Key': watchmodeApiKey,
+                'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
+              }
+            });
+            const sourceData = await sourceRes.json();
+            const watchmodeLogos = sourceData.filter(s => s.type === 'sub' || s.type === 'buy')
+              .map(s => `<div class='text-sm text-white border px-2 py-1 rounded mx-1'>${s.name}</div>`)
+              .join('');
+            stream = watchmodeLogos;
+          }
+        }
+        if (!stream && !buy) return null;
+        return { stream, buy };
+      } catch (err) {
+        return null;
+      }
     }
 
     function clearResults() {
@@ -346,7 +294,41 @@
       regionBtn.classList.add('selected');
     }
 
+    // Wild Card / Randomize Feature - Centered Display
+    async function wildCard() {
+      document.getElementById('wildOverlay').style.display = "flex";
+      let tries = 0, found = null;
+      while (tries < 10 && !found) {
+        let randPage = 1 + Math.floor(Math.random() * 4);
+        let media = await fetchMedia(currentType, '', randPage);
+        media = deduplicateAndSort(media, '').filter(i => (i.vote_count || 0) >= 100);
+        if (!media.length) { tries++; continue; }
+        for (let i = media.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [media[i], media[j]] = [media[j], media[i]];
+        }
+        for (let m of media) {
+          const avail = await fetchAvailability(m.id, m.media_type, m.title || m.name || '');
+          if (avail && avail.stream) {
+            found = { ...m, availability: avail };
+            break;
+          }
+        }
+        tries++;
+      }
+      setTimeout(async () => {
+        document.getElementById('wildOverlay').style.display = "none";
+        clearResults();
+        if (found) {
+          await renderBatch([found], true); // center!
+        } else {
+          document.getElementById('searchResults').innerHTML = `<div class="wild-card-center"><div class="text-lg font-bold text-yellow-400">Sorry, nothing found for your region and settings!</div></div>`;
+        }
+      }, 1700);
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
+      // Initial
       await runSearch(true);
 
       // Tabs
@@ -407,119 +389,13 @@
       };
 
       // Wild Card
-      // See large script below!
+      document.getElementById('wildBtn').onclick = async function () {
+        await wildCard();
+      };
     });
-
-    /** WILD CARD GAME LOGIC **/
-    // Utility: play SFX by id
-    function playSfx(id) {
-      const s = document.getElementById(id);
-      if (s) { s.currentTime = 0; s.play(); }
-    }
-    // Utility: sleep
-    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-    // "Logo" for Stream2Night card back
-    const wildCardLogoHTML = `<div style="display:flex;flex-direction:column;align-items:center;">
-      <span style="font-size:2.6rem;color:gold;">★</span>
-      <span style="font-size:1.1rem;letter-spacing:2px;">STREAM2NIGHT</span>
-      <span style="font-size:1.7rem;color:#7f5af0;">🎬</span>
-    </div>`;
-
-    // Modal and Game Logic
-    const wildModal = document.getElementById('wildModal');
-    const wildGameArea = document.getElementById('wildGameArea');
-    const wildCloseBtn = document.getElementById('wildCloseBtn');
-    if (wildCloseBtn) wildCloseBtn.onclick = () => { wildModal.style.display = 'none'; wildGameArea.innerHTML = ''; };
-    // Get settings
-    function getWildContext() {
-      let type = 'all';
-      if (document.getElementById('movieTab').classList.contains('active-tab')) type = 'movie';
-      if (document.getElementById('tvTab').classList.contains('active-tab')) type = 'tv';
-      let region = 'GB';
-      if (document.getElementById('regionUS').classList.contains('selected')) region = 'US';
-      if (document.getElementById('regionCA').classList.contains('selected')) region = 'CA';
-      return { type, region };
-    }
-    // Fetch N random cards
-    async function fetchWildCards({type, region}) {
-      let endpoints = [];
-      let label = '';
-      if (type === 'all') {
-        endpoints = [
-          `https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=en-${region}&page=1`,
-          `https://api.themoviedb.org/3/tv/popular?api_key=${tmdbApiKey}&language=en-${region}&page=1`
-        ];
-        label = 'all';
-      } else if (type === 'movie') {
-        endpoints = [
-          `https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=en-${region}&page=1`
-        ];
-        label = 'movie';
-      } else {
-        endpoints = [
-          `https://api.themoviedb.org/3/tv/popular?api_key=${tmdbApiKey}&language=en-${region}&page=1`
-        ];
-        label = 'tv';
-      }
-      let results = [];
-      for (let ep of endpoints) {
-        const r = await fetch(ep); const data = await r.json();
-        if (data.results) results = results.concat(data.results.map(x => {
-          x.media_type = label === 'all'
-            ? (x.title ? 'movie' : 'tv')
-            : label;
-          return x;
-        }));
-      }
-      for (let i = results.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [results[i], results[j]] = [results[j], results[i]];
-      }
-      results = results.filter(x => (x.poster_path && (x.vote_count||0) > 90));
-      return results.slice(0, 8);
-    }
-    // Check availability
-    async function fetchWildAvailability(id, mediaType, region) {
-      const type = mediaType === 'tv' ? 'tv' : 'movie';
-      try {
-        const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
-        const tmdbData = await tmdbRes.json();
-        const countryData = tmdbData.results?.[region];
-        let stream = '';
-        if (countryData && countryData.flatrate) stream = 'stream';
-        return !!stream;
-      } catch { return false; }
-    }
-    // MAIN: Wild Card Modal/Deck Flow
-    async function startWildCards() {
-      const ctx = getWildContext();
-      wildModal.style.display = 'flex';
-      wildGameArea.innerHTML = `<div style="color:#ffde57;font-size:1.5rem;margin-bottom:2.2rem;">Shuffling your deck...</div>`;
-      let all = await fetchWildCards(ctx);
-      let hand = [];
-      for (let t of all) {
-        if (await fetchWildAvailability(t.id, t.media_type, ctx.region)) {
-          hand.push(t);
-          if (hand.length >= 5) break;
-        }
-      }
-      if (!hand.length) {
-        wildGameArea.innerHTML = `<div class="text-red-300 text-lg mt-12">No available titles found right now.<br>Please try again!</div>`;
-        return;
-      }
-      let idx = 0, chosen = [];
-      renderWildStack(hand, idx, chosen);
-    }
-    function renderWildStack(hand, idx, chosen) {
-      wildGameArea.innerHTML = `
-        <div class="wild-cards-stack">
-          ${hand.map((item, i) => `
-            <div class="wild-card${i===idx ? ' active' : ''}${i<idx ? ' flipped' : ''}" style="z-index:${10-i}">
-              <div class="wild-card-inner">
-                <div class="wild-card-back">${wildCardLogoHTML}</div>
-                <div class="wild-card-front">
-                  <img src="https://image.tmdb.org
-
+  </script>
+</body>
+</html>
 
 
 
