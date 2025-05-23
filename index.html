@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Stream2Night - Wild Cards Test</title>
+  <title>Stream2Night</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
@@ -29,45 +29,15 @@
       background-color: #3a3a4d;
       color: #fff;
     }
-    .wild-card-area {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      min-height: 340px; min-width: 220px;
-      margin: 1rem auto 0 auto;
-    }
-    .wild-card-stack {
-      position: relative;
-      height: 320px; width: 220px;
-      margin-bottom: 16px;
-    }
-    .wild-card {
-      position: absolute; top: 0; left: 0;
-      width: 220px; height: 320px;
-      background: #222345; border-radius: 20px; box-shadow: 0 6px 32px rgba(0,0,0,0.2);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      transition: transform 0.4s cubic-bezier(.68,-0.55,.27,1.55), opacity 0.4s;
-      z-index: 5;
-    }
-    .wild-card.flipped { background: #161825; }
-    .wild-card.hide { opacity: 0; pointer-events: none; transform: translateX(500px) rotate(30deg);}
-    .wild-card.reject { opacity: 0; pointer-events: none; transform: translateX(-500px) rotate(-30deg);}
-    .wild-card img { border-radius: 12px; margin-bottom: 16px; max-width: 180px; max-height: 240px; }
-    .shortlist-row {
-      display: flex; gap: 24px; justify-content: center; margin-bottom: 32px;
-    }
-    .shortlist-card {
-      background: #181A32; border-radius: 14px; box-shadow: 0 2px 12px #0007; padding: 12px 18px; 
-      display: flex; flex-direction: column; align-items: center;
-    }
-    .shortlist-card img { border-radius: 10px; max-width: 130px; max-height: 180px; }
-    .tick-x-btn { 
-      background: #fff; border-radius: 9999px; width: 48px; height: 48px; font-size: 2rem; font-weight: 700; 
-      color: #111; margin: 0 18px; box-shadow: 0 2px 8px #0004; 
-      display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;
-    }
-    .tick-x-btn:hover { background: #7f5af0; color: #fff;}
-    @media (max-width: 640px) {
-      .wild-card-area { min-width: unset; }
-      .wild-card, .wild-card-stack { width: 95vw; min-width: 0; }
+    .provider-btn { min-width: 80px;}
+    .flag-tab { font-size: 2rem; }
+    .grid .content-card img {
+      width: 180px;
+      height: 270px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin: 0 auto 16px auto;
+      background: #222;
     }
   </style>
 </head>
@@ -81,9 +51,9 @@
       <button id="tvTab" class="tab-button inactive-tab">Series</button>
     </div>
     <div class="mb-6 flex flex-wrap justify-center gap-4">
-      <button id="regionUK" class="flag-tab selected" title="United Kingdom" style="font-size:2rem;">🇬🇧</button>
-      <button id="regionUS" class="flag-tab" title="United States" style="font-size:2rem;">🇺🇸</button>
-      <button id="regionCA" class="flag-tab" title="Canada" style="font-size:2rem;">🇨🇦</button>
+      <button id="regionUK" class="flag-tab selected" title="United Kingdom">🇬🇧</button>
+      <button id="regionUS" class="flag-tab" title="United States">🇺🇸</button>
+      <button id="regionCA" class="flag-tab" title="Canada">🇨🇦</button>
     </div>
     <div class="mb-6 flex flex-wrap justify-center gap-2">
       <span class="mr-2 font-semibold text-gray-400">Your services:</span>
@@ -95,19 +65,13 @@
     </div>
     <div class="flex flex-wrap items-center justify-center gap-4 mb-10">
       <input id="searchInput" type="text" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded" />
-      <button id="wildBtn" class="ml-4 py-2 px-7 bg-pink-600 hover:bg-pink-700 font-bold rounded-full shadow-lg transition-all">Wild Cards 🎲</button>
-    </div>
-    <div id="wildArea" class="wild-card-area hidden">
-      <div class="shortlist-row" id="shortlistRow"></div>
-      <div class="wild-card-stack" id="wildStack"></div>
     </div>
     <div id="mainResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/hedgehog_1f994.png" alt="Hedgehog" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/falcon_1f985.png" alt="Falcon" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.</footer>
-
-<script>
+  <script>
 const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
 const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
 
@@ -117,7 +81,6 @@ let selectedProviders = ['netflix','prime','disney','hulu','apple'];
 const providerMap = {
   netflix: 'Netflix', prime: 'Prime Video', disney: 'Disney+', hulu: 'Hulu', apple: 'Apple TV+'
 };
-const regionMap = { 'regionUK': 'GB', 'regionUS': 'US', 'regionCA': 'CA' };
 
 function setActiveTab(tab) {
   document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active-tab', 'inactive-tab'));
@@ -219,6 +182,7 @@ async function runSearch(clear = false) {
     results = [];
     document.getElementById('mainResults').innerHTML = '';
     currentPage = 1; showMoreCount = 0;
+    document.getElementById('showMoreBtn').disabled = false;
   }
   let query = currentQuery, type = currentType;
   let batch = await fetchMedia(type, query, currentPage);
@@ -244,8 +208,8 @@ function renderResults() {
   container.innerHTML = '';
   results.forEach(item => {
     container.innerHTML += `
-      <div class="bg-gray-800 p-4 rounded-lg shadow flex flex-col items-center">
-        <img src="${item.poster}" alt="${item.title}" class="rounded mb-4" style="max-height:220px;object-fit:cover;">
+      <div class="bg-gray-800 p-4 rounded-lg shadow flex flex-col items-center content-card">
+        <img src="${item.poster}" alt="${item.title}" />
         <h3 class="text-lg font-semibold">${item.title}</h3>
         <div class="text-sm text-gray-300">
           ${item.availability.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center'>${item.availability.stream}</div></div>` : ''}
@@ -255,51 +219,6 @@ function renderResults() {
     `;
   });
 }
-// --- Wild Cards Deck Feature ---
-let wildCards = [], likedCards = [], wildIdx = 0;
-function setupWildCards(arr) {
-  wildCards = arr.slice(0,5); likedCards = []; wildIdx = 0;
-  document.getElementById('wildArea').classList.remove('hidden');
-  document.getElementById('mainResults').classList.add('hidden');
-  document.getElementById('showMoreBtn').classList.add('hidden');
-  renderWildCard();
-}
-function renderWildCard() {
-  const stack = document.getElementById('wildStack');
-  stack.innerHTML = '';
-  if (wildIdx >= wildCards.length) {
-    renderShortlist();
-    return;
-  }
-  const card = wildCards[wildIdx];
-  stack.innerHTML = `
-    <div class="wild-card flipped" id="theWildCard">
-      <img src="${card.poster}" alt="${card.title}" />
-      <h3 class="text-lg font-bold mb-2">${card.title}</h3>
-      <div class="mb-2">${card.availability.stream ? `<span class='text-green-300'>Stream on: ${card.availability.stream}</span>` : ''}</div>
-      <div class="mb-2">${card.availability.buy ? `<span class='text-blue-300'>Buy on: ${card.availability.buy}</span>` : ''}</div>
-      <div class="flex w-full justify-between mt-4">
-        <div class="tick-x-btn" onclick="rejectWild()">❌</div>
-        <div class="tick-x-btn" onclick="acceptWild()">✅</div>
-      </div>
-    </div>`;
-}
-function renderShortlist() {
-  const row = document.getElementById('shortlistRow');
-  row.innerHTML = '';
-  likedCards.forEach((c, i) => {
-    row.innerHTML += `<div class="shortlist-card" id="shortlist-${i}">
-      <img src="${c.poster}" alt="${c.title}"/><div class="font-bold mt-2">${c.title}</div>
-      <div class="flex justify-between w-full mt-1">
-        <div class="tick-x-btn" onclick="removeShortlist(${i})">❌</div>
-      </div>
-    </div>`;
-  });
-  document.getElementById('wildStack').innerHTML = `<div class="text-lg text-pink-300 font-bold">Your Picks! (remove more until you're ready to decide)</div>`;
-}
-function rejectWild() { wildIdx++; renderWildCard(); }
-function acceptWild() { likedCards.push(wildCards[wildIdx]); wildIdx++; renderWildCard(); }
-function removeShortlist(idx) { likedCards.splice(idx,1); renderShortlist(); }
 
 // --- Event Listeners & Initial Setup ---
 document.addEventListener('DOMContentLoaded', function () {
@@ -322,20 +241,6 @@ document.addEventListener('DOMContentLoaded', function () {
     currentQuery = e.target.value.trim();
     runSearch(true);
   };
-  // Wild Cards Button
-  document.getElementById('wildBtn').onclick = async function () {
-    let media = await fetchMedia(currentType, '', 1);
-    let cards = [];
-    for (let m of media) {
-      let avail = await fetchAvailability(m.id, m.media_type || currentType, m.title || m.name);
-      if (filterByProvider(avail)) {
-        cards.push({ ...m, poster: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : '', availability: avail, title: m.title || m.name });
-        if (cards.length === 5) break;
-      }
-    }
-    if (!cards.length) { alert("No wild cards available for your filters!"); return; }
-    setupWildCards(cards);
-  };
   // Show More Button
   document.getElementById('showMoreBtn').onclick = async function() {
     if (showMoreCount >= maxShowMore) { this.disabled = true; return; }
@@ -345,9 +250,10 @@ document.addEventListener('DOMContentLoaded', function () {
   // Start initial search
   runSearch(true);
 });
-</script>
+  </script>
 </body>
 </html>
+
 
 
 
