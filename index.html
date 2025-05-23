@@ -77,6 +77,15 @@
       background: linear-gradient(90deg,#fc7e1e 0,#ffde57 80%);
       color: #522; box-shadow: 0 2px 14px #ffde5744;
     }
+    /* --- ADDED: Clear highlight for selected card --- */
+    .wildcards-card-selected {
+      outline: 4px solid #ffde57 !important;
+      box-shadow: 0 0 0 9px #ffde5744, 0 0 30px #ffde5770 !important;
+      position: relative;
+      z-index: 2;
+      transform: scale(1.09);
+      transition: outline 0.18s, box-shadow 0.18s, transform 0.13s;
+    }
   </style>
 </head>
 <body class="text-white">
@@ -121,6 +130,7 @@
     <div id="wildcardsGameContainer" style="width:100vw;min-height:100vh;display:flex;justify-content:center;align-items:center;flex-direction:column;position:relative;"></div>
   </div>
   <script>
+    // ... (All your original JS code is here up to the overlay logic)
     // ------------------ FULL JS CODE BELOW ------------------
 
     const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
@@ -440,7 +450,6 @@
         openWildcardsOverlay();
       };
     });
-
     // --- Wild Cards Overlay Game Logic ---
     let wildcardsOverlayOpen = false;
     let wildcardsDeck = [];
@@ -507,19 +516,21 @@
       let cardsHTML = `<div style="display:flex;gap:2vw;justify-content:center;">`;
       for (let i = 0; i < wildcardsDeck.length; i++) {
         const card = wildcardsDeck[i];
+        // --- Highlight selected card ---
         cardsHTML += `
-          <div style="background:#1b103f;border-radius:14px;border:2.5px solid #ffde57;width:135px;height:200px;box-shadow:0 4px 18px #000a;padding:11px 4px;display:flex;flex-direction:column;align-items:center;${i===wildcardsCurrent?'outline:3px solid #7f5af0;':''}" data-idx="${i}">
+          <div class="${i===wildcardsCurrent?'wildcards-card-selected ':''}" style="background:#1b103f;border-radius:14px;border:2.5px solid #ffde57;width:135px;height:200px;box-shadow:0 4px 18px #000a;padding:11px 4px;display:flex;flex-direction:column;align-items:center;cursor:pointer;" data-idx="${i}">
             <img src="${card.poster_path ? `https://image.tmdb.org/t/p/w500${card.poster_path}` : ''}" alt="" style="width:90px;height:133px;object-fit:cover;border-radius:9px;margin-bottom:7px;">
             <div style="font-size:1.01rem;font-weight:700;color:#ffe178;margin-bottom:4px;text-align:center;">${card.title || card.name || "Untitled"}</div>
             <div style="font-size:0.93rem;font-weight:400;color:#7f5af0;">${card.media_type==='tv'?'Series':'Movie'}</div>
           </div>`;
       }
       cardsHTML += `</div>`;
+      // --- Keep button on left, Reject on right ---
       cont.innerHTML += cardsHTML;
       cont.innerHTML += `
         <div style="display:flex;justify-content:center;gap:2rem;margin-top:2rem;">
-          <button class="wildcards-swipe-btn reject" id="wcRejectBtn">✗ Reject</button>
           <button class="wildcards-swipe-btn" id="wcKeepBtn">✓ Keep</button>
+          <button class="wildcards-swipe-btn reject" id="wcRejectBtn">✗ Reject</button>
         </div>
         <div class="text-xs mt-2 text-gray-300 text-center">Click a card to select, then keep or reject. (Only one at a time)</div>
       `;
@@ -558,7 +569,7 @@
       let cardsHTML = `<div style="display:flex;justify-content:center;gap:2vw;">`;
       for(let i=0;i<wildcardsHand.length;i++) {
         cardsHTML += `
-          <div style="background:#1b103f;border-radius:14px;border:2.5px solid #ffde57;width:135px;height:200px;box-shadow:0 4px 18px #000a;padding:11px 4px;display:flex;flex-direction:column;align-items:center;" data-idx="${i}">
+          <div style="background:#1b103f;border-radius:14px;border:2.5px solid #ffde57;width:135px;height:200px;box-shadow:0 4px 18px #000a;padding:11px 4px;display:flex;flex-direction:column;align-items:center;cursor:pointer;" data-idx="${i}">
             <img src="${wildcardsHand[i].poster_path ? `https://image.tmdb.org/t/p/w500${wildcardsHand[i].poster_path}` : ''}" alt="" style="width:90px;height:133px;object-fit:cover;border-radius:9px;margin-bottom:7px;">
             <div style="font-size:1.01rem;font-weight:700;color:#ffe178;margin-bottom:4px;text-align:center;">${wildcardsHand[i].title || wildcardsHand[i].name || "Untitled"}</div>
             <div style="font-size:0.93rem;font-weight:400;color:#7f5af0;">${wildcardsHand[i].media_type==='tv'?'Series':'Movie'}</div>
