@@ -2,254 +2,397 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Stream2Night</title>
+  <title>Stream 2 Night</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
     body { background: linear-gradient(to bottom, #1b103f, #090d28); }
-    .tab-button, .flag-tab, .provider-btn {
-      padding: 0.75rem 1.5rem;
-      border-radius: 9999px;
-      font-weight: 600;
-      transition: all 0.3s;
-      margin: 0 0.25rem;
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
-      cursor: pointer;
+    .tab-button { padding: 0.75rem 1.5rem; border-radius: 9999px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 0 0 1px rgba(255,255,255,0.1); font-size: 1.1rem; }
+    .active-tab { background: linear-gradient(to right, #7f5af0, #2cb67d); color: white; box-shadow: 0 0 10px rgba(127, 90, 240, 0.6);}
+    .inactive-tab { background-color: #2e2e3a; color: #a0aec0;}
+    .inactive-tab:hover { background-color: #3a3a4d; color: #ffffff;}
+    .flag-tab { border-radius: 9999px; padding: 0.5rem 0.9rem; font-size: 1.85rem; background: #222; border: 2px solid transparent; margin: 0 0.25rem; transition: 0.2s; box-shadow: 0 2px 12px 0 rgba(90,90,120,0.06); outline: none; display: flex; align-items: center; justify-content: center; line-height: 1; height: 3.2rem; width: 3.7rem; }
+    .flag-tab.selected { background: linear-gradient(to right, #7f5af0, #2cb67d); color: white; border-color: #fff; filter: brightness(1.15) drop-shadow(0 2px 8px #7f5af088);}
+    .flag-img { width: 2.2rem; height: 1.6rem; border-radius: 0.4rem; object-fit: cover; display: block;}
+    .wild-btn { margin-left: 0.75rem; background: linear-gradient(to right, #ffde57, #fc7e1e); color: #1b103f; font-weight: 700; border-radius: 2rem; padding: 0.7rem 1.3rem; font-size: 1.2rem; box-shadow: 0 2px 10px #0003; border: none; transition: 0.2s; }
+    .wild-btn:hover { background: linear-gradient(to right, #fc7e1e, #ffde57); color: #111; }
+    .overlay-spin {
+      position: fixed; z-index: 100; inset: 0; background: rgba(26,18,48,0.94); display: flex; align-items: center; justify-content: center; flex-direction: column;
+      animation: fadeIn 0.4s;
     }
-    .active-tab, .flag-tab.selected, .provider-btn.selected {
-      background: linear-gradient(to right, #7f5af0, #2cb67d);
-      color: white;
-      box-shadow: 0 0 10px rgba(127, 90, 240, 0.6);
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .spin-wheel {
+      border: 8px solid #fff;
+      border-radius: 50%;
+      width: 130px; height: 130px;
+      border-top: 8px solid #ffde57;
+      border-right: 8px solid #2cb67d;
+      border-bottom: 8px solid #7f5af0;
+      border-left: 8px solid #fc7e1e;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1.3rem;
     }
-    .inactive-tab, .flag-tab, .provider-btn {
-      background-color: #2e2e3a;
-      color: #a0aec0;
+    @keyframes spin { 100% { transform: rotate(360deg);} }
+    .wild-card-center {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 350px;
+      grid-column: 1 / -1;
     }
-    .inactive-tab:hover, .flag-tab:hover, .provider-btn:hover {
-      background-color: #3a3a4d;
-      color: #fff;
-    }
-    .provider-btn { min-width: 80px;}
-    .flag-tab { font-size: 2rem; }
-    .grid .content-card img {
-      width: 180px;
-      height: 270px;
-      object-fit: cover;
-      border-radius: 12px;
-      margin: 0 auto 16px auto;
-      background: #222;
+    @media (max-width: 1024px) {
+      .wild-card-center { min-height: 220px; }
     }
   </style>
 </head>
 <body class="text-white">
-  <section class="text-center py-14 px-2 max-w-5xl mx-auto">
-    <h1 class="text-5xl font-extrabold mb-4 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent">Stream2Night</h1>
+  <section class="text-center py-20 px-6">
+    <h1 class="text-6xl font-bold mb-4 leading-tight bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent">Stream 2 Night</h1>
     <p class="text-xl text-gray-300 mb-6">Smarter streaming, simplified.</p>
-    <div class="mb-6 flex flex-wrap justify-center gap-4">
+    <div class="mb-6 flex justify-center gap-3">
+      <button id="regionUK" class="flag-tab selected" title="United Kingdom" aria-label="United Kingdom">
+        <img src="https://hatscripts.github.io/circle-flags/flags/gb.svg" alt="UK" class="flag-img" />
+      </button>
+      <button id="regionUS" class="flag-tab" title="United States" aria-label="United States">
+        <img src="https://hatscripts.github.io/circle-flags/flags/us.svg" alt="US" class="flag-img" />
+      </button>
+      <button id="regionCA" class="flag-tab" title="Canada" aria-label="Canada">
+        <img src="https://hatscripts.github.io/circle-flags/flags/ca.svg" alt="Canada" class="flag-img" />
+      </button>
+    </div>
+    <div class="mb-8 flex justify-center gap-4">
       <button id="allTab" class="tab-button active-tab">All</button>
       <button id="movieTab" class="tab-button inactive-tab">Movies</button>
       <button id="tvTab" class="tab-button inactive-tab">Series</button>
     </div>
-    <div class="mb-6 flex flex-wrap justify-center gap-4">
-      <button id="regionUK" class="flag-tab selected" title="United Kingdom">🇬🇧</button>
-      <button id="regionUS" class="flag-tab" title="United States">🇺🇸</button>
-      <button id="regionCA" class="flag-tab" title="Canada">🇨🇦</button>
+    <div class="flex justify-center items-center mb-8">
+      <input id="searchInput" type="text" autocomplete="off" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded" />
+      <button id="wildBtn" class="wild-btn" title="Spin the wheel for a random pick!">🎲 Wild Card</button>
     </div>
-    <div class="mb-6 flex flex-wrap justify-center gap-2">
-      <span class="mr-2 font-semibold text-gray-400">Your services:</span>
-      <button class="provider-btn selected" id="provider-netflix">Netflix</button>
-      <button class="provider-btn selected" id="provider-prime">Prime Video</button>
-      <button class="provider-btn selected" id="provider-disney">Disney+</button>
-      <button class="provider-btn selected" id="provider-hulu">Hulu</button>
-      <button class="provider-btn selected" id="provider-apple">Apple TV+</button>
-    </div>
-    <div class="flex flex-wrap items-center justify-center gap-4 mb-10">
-      <input id="searchInput" type="text" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded" />
-    </div>
-    <div id="mainResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
-    <button id="showMoreBtn" class="mt-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
+    <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
+    <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/falcon_1f985.png" alt="Falcon" class="fixed top-4 right-4 h-16 w-16 z-50">
-  <footer class="text-center p-4 text-gray-400">This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.</footer>
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/otter_1f9a6.png" alt="Otter" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <footer class="text-center p-4 text-gray-400">
+    This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
+  </footer>
+  <div id="wildOverlay" style="display:none;" class="overlay-spin">
+    <div class="spin-wheel"></div>
+    <div class="text-xl font-bold mt-2">Picking something great for you…</div>
+  </div>
   <script>
-const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
-const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
+    const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
+    const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
+    let currentType = 'all';
+    let currentRegion = 'GB';
+    let currentQuery = '';
+    let currentPage = 1;
+    let results = [];
+    let isLoading = false;
+    let maxShowMore = 4;
+    let showMoreCount = 0;
+    let mediaCache = {};
 
-let currentType = 'all', currentRegion = 'GB', currentQuery = '', currentPage = 1, isLoading = false, showMoreCount = 0, maxShowMore = 4;
-let results = [];
-let selectedProviders = ['netflix','prime','disney','hulu','apple'];
-const providerMap = {
-  netflix: 'Netflix', prime: 'Prime Video', disney: 'Disney+', hulu: 'Hulu', apple: 'Apple TV+'
-};
-
-function setActiveTab(tab) {
-  document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active-tab', 'inactive-tab'));
-  tab.classList.add('active-tab');
-}
-function setRegionButton(regionBtn) {
-  document.querySelectorAll('.flag-tab').forEach(btn => btn.classList.remove('selected'));
-  regionBtn.classList.add('selected');
-}
-function toggleProvider(providerKey, btn) {
-  if (selectedProviders.includes(providerKey)) {
-    selectedProviders = selectedProviders.filter(p => p !== providerKey);
-    btn.classList.remove('selected');
-  } else {
-    selectedProviders.push(providerKey);
-    btn.classList.add('selected');
-  }
-  runSearch(true);
-}
-function filterByProvider(availability) {
-  if (!availability) return false;
-  // Only allow if at least one streaming service matches
-  return selectedProviders.some(prov => (availability.stream || '').toLowerCase().includes(providerMap[prov].toLowerCase()));
-}
-function deduplicateAndSort(arr, query = '') {
-  const seen = new Set();
-  const norm = t => t?.toLowerCase().replace(/^the\s+/, '');
-  return arr.filter(x => {
-    let t = norm(x.title || x.name || '');
-    if (seen.has(t)) return false;
-    seen.add(t); return true;
-  }).sort((a, b) => (b.popularity || b.vote_count || 0) - (a.popularity || a.vote_count || 0));
-}
-
-// --- API Fetching ---
-async function fetchMedia(type, query, page) {
-  let url = '', data = [];
-  if (!query) {
-    url = `https://api.themoviedb.org/3/${type === 'tv' ? 'tv/popular' : type === 'movie' ? 'movie/popular' : 'trending/all/week'}?api_key=${tmdbApiKey}&language=en-US&page=${page}`;
-    const res = await fetch(url);
-    const json = await res.json();
-    data = json.results || [];
-  } else {
-    url = `https://api.themoviedb.org/3/search/${type === 'tv' ? 'tv' : type === 'movie' ? 'movie' : 'multi'}?api_key=${tmdbApiKey}&language=en-US&query=${encodeURIComponent(query)}&page=${page}`;
-    const res = await fetch(url);
-    const json = await res.json();
-    data = json.results || [];
-  }
-  return deduplicateAndSort(data, query);
-}
-
-async function fetchAvailability(id, mediaType, title) {
-  let type = mediaType === 'tv' ? 'tv' : 'movie';
-  try {
-    // Try TMDB first
-    let tmdbUrl = `https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`;
-    const tmdbRes = await fetch(tmdbUrl);
-    const tmdbData = await tmdbRes.json();
-    const region = currentRegion;
-    const gb = tmdbData.results?.[region];
-
-    let stream = '', buy = '';
-
-    if (gb) {
-      const render = (items) => items.map(p => `<img src='https://image.tmdb.org/t/p/w45${p.logo_path}' alt='${p.provider_name}' title='${p.provider_name}' class='inline-block h-8 mx-2'>`).join('');
-      stream = gb.flatrate ? render(gb.flatrate) : '';
-      buy = gb.buy ? render(gb.buy) : '';
-    }
-
-    // Try Watchmode as backup if TMDB fails
-    if (!stream && !buy && title) {
-      let searchRes = await fetch(`https://watchmode.p.rapidapi.com/search/?search_value=${encodeURIComponent(title)}&search_type=1`, {
-        method: 'GET',
-        headers: { 'X-RapidAPI-Key': watchmodeApiKey, 'X-RapidAPI-Host': 'watchmode.p.rapidapi.com' }
-      });
-      let searchData = await searchRes.json();
-      const match = searchData.title_results?.find(r => r.name.toLowerCase() === title.toLowerCase());
-      if (match) {
-        let sourceRes = await fetch(`https://watchmode.p.rapidapi.com/title/${match.id}/sources/`, {
-          method: 'GET',
-          headers: { 'X-RapidAPI-Key': watchmodeApiKey, 'X-RapidAPI-Host': 'watchmode.p.rapidapi.com' }
-        });
-        let sourceData = await sourceRes.json();
-        const logos = sourceData.filter(s => s.type === 'sub' || s.type === 'buy')
-          .map(s => `<div class='text-sm text-white border px-2 py-1 rounded mx-1'>${s.name}</div>`).join('');
-        stream = logos;
+    function getEndpoint(type, query, page) {
+      let base = 'https://api.themoviedb.org/3';
+      if (query) {
+        if (type === 'movie') return `${base}/search/movie?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${page}`;
+        if (type === 'tv') return `${base}/search/tv?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${page}`;
+        return `${base}/search/multi?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${page}`;
+      } else {
+        if (type === 'movie') return `${base}/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`;
+        if (type === 'tv') return `${base}/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`;
+        return [
+          `${base}/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`,
+          `${base}/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`
+        ];
       }
     }
-    if (!stream && !buy) return null;
-    return { stream, buy };
-  } catch (e) { return null; }
-}
 
-// --- Main Results Rendering ---
-async function runSearch(clear = false) {
-  if (isLoading) return;
-  isLoading = true;
-  if (clear) {
-    results = [];
-    document.getElementById('mainResults').innerHTML = '';
-    currentPage = 1; showMoreCount = 0;
-    document.getElementById('showMoreBtn').disabled = false;
-  }
-  let query = currentQuery, type = currentType;
-  let batch = await fetchMedia(type, query, currentPage);
-  let filtered = [];
-  for (let item of batch) {
-    let avail = await fetchAvailability(item.id, item.media_type || type, item.title || item.name);
-    if (filterByProvider(avail)) {
-      filtered.push({
-        ...item,
-        poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
-        availability: avail,
-        title: item.title || item.name
+    async function fetchMedia(type, query, page) {
+      if (mediaCache[type + '|' + query + '|' + page + '|' + currentRegion]) return mediaCache[type + '|' + query + '|' + page + '|' + currentRegion];
+      let res, data, arr = [];
+      let endpoints = getEndpoint(type, query, page);
+      if (Array.isArray(endpoints)) {
+        for (let ep of endpoints) {
+          res = await fetch(ep);
+          data = await res.json();
+          arr = arr.concat((data.results || []).map(item => {
+            if (ep.includes('/tv/')) item.media_type = 'tv';
+            else item.media_type = 'movie';
+            return item;
+          }));
+        }
+      } else {
+        res = await fetch(endpoints);
+        data = await res.json();
+        arr = (data.results || []).map(item => {
+          if (!item.media_type) item.media_type = type === 'all' ? (item.title ? 'movie' : 'tv') : type;
+          return item;
+        });
+      }
+      mediaCache[type + '|' + query + '|' + page + '|' + currentRegion] = arr;
+      return arr;
+    }
+
+    function deduplicateAndSort(arr, query) {
+      const norm = s => (s || '').toLowerCase().replace(/^the\s+/i, '');
+      const seen = new Set();
+      const queryNorm = norm(query);
+      let filtered = arr.filter(item => {
+        let idKey = (item.media_type || '') + ':' + item.id;
+        if (seen.has(idKey)) return false;
+        seen.add(idKey);
+        if (!query && (item.vote_count || 0) < 100) return false;
+        if (currentType !== 'all' && item.media_type !== currentType) return false;
+        return true;
+      });
+      return filtered.sort((a, b) => {
+        let aT = norm(a.title || a.name || ''), bT = norm(b.title || b.name || '');
+        let aExact = aT === queryNorm, bExact = bT === queryNorm;
+        if (aExact && !bExact) return -1; if (!aExact && bExact) return 1;
+        let aStarts = aT.startsWith(queryNorm), bStarts = bT.startsWith(queryNorm);
+        if (aStarts && !bStarts) return -1; if (!aStarts && bStarts) return 1;
+        if ((b.vote_count || 0) !== (a.vote_count || 0)) return (b.vote_count || 0) - (a.vote_count || 0);
+        return (b.popularity || 0) - (a.popularity || 0);
       });
     }
-    if (filtered.length >= 12) break;
-  }
-  results = results.concat(filtered);
-  renderResults();
-  isLoading = false;
-}
-function renderResults() {
-  const container = document.getElementById('mainResults');
-  container.innerHTML = '';
-  results.forEach(item => {
-    container.innerHTML += `
-      <div class="bg-gray-800 p-4 rounded-lg shadow flex flex-col items-center content-card">
-        <img src="${item.poster}" alt="${item.title}" />
-        <h3 class="text-lg font-semibold">${item.title}</h3>
-        <div class="text-sm text-gray-300">
-          ${item.availability.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center'>${item.availability.stream}</div></div>` : ''}
-          ${item.availability.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center'>${item.availability.buy}</div></div>` : ''}
-        </div>
-      </div>
-    `;
-  });
-}
 
-// --- Event Listeners & Initial Setup ---
-document.addEventListener('DOMContentLoaded', function () {
-  // Tab switching
-  document.getElementById('allTab').onclick = () => { currentType = 'all'; setActiveTab(allTab); runSearch(true); };
-  document.getElementById('movieTab').onclick = () => { currentType = 'movie'; setActiveTab(movieTab); runSearch(true); };
-  document.getElementById('tvTab').onclick = () => { currentType = 'tv'; setActiveTab(tvTab); runSearch(true); };
-  // Region buttons
-  document.getElementById('regionUK').onclick = () => { currentRegion = 'GB'; setRegionButton(regionUK); runSearch(true); };
-  document.getElementById('regionUS').onclick = () => { currentRegion = 'US'; setRegionButton(regionUS); runSearch(true); };
-  document.getElementById('regionCA').onclick = () => { currentRegion = 'CA'; setRegionButton(regionCA); runSearch(true); };
-  // Provider buttons
-  document.getElementById('provider-netflix').onclick = function(){ toggleProvider('netflix', this); };
-  document.getElementById('provider-prime').onclick = function(){ toggleProvider('prime', this); };
-  document.getElementById('provider-disney').onclick = function(){ toggleProvider('disney', this); };
-  document.getElementById('provider-hulu').onclick = function(){ toggleProvider('hulu', this); };
-  document.getElementById('provider-apple').onclick = function(){ toggleProvider('apple', this); };
-  // Search bar
-  document.getElementById('searchInput').oninput = function(e) {
-    currentQuery = e.target.value.trim();
-    runSearch(true);
-  };
-  // Show More Button
-  document.getElementById('showMoreBtn').onclick = async function() {
-    if (showMoreCount >= maxShowMore) { this.disabled = true; return; }
-    currentPage++; showMoreCount++;
-    await runSearch(false);
-  };
-  // Start initial search
-  runSearch(true);
-});
+    async function fetchAvailability(id, mediaType, title) {
+      const type = mediaType === 'tv' ? 'tv' : 'movie';
+      try {
+        const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
+        const tmdbData = await tmdbRes.json();
+        const countryData = tmdbData.results?.[currentRegion];
+        let stream = '', buy = '';
+        if (countryData) {
+          const render = (items) => items.map(p => `<img src='https://image.tmdb.org/t/p/w45${p.logo_path}' alt='${p.provider_name}' title='${p.provider_name}' class='inline-block h-8 mx-2'>`).join('');
+          stream = countryData.flatrate ? render(countryData.flatrate) : '';
+          buy = countryData.buy ? render(countryData.buy) : '';
+        }
+        if (!stream && !buy && title) {
+          const searchRes = await fetch(`https://watchmode.p.rapidapi.com/search/?search_value=${encodeURIComponent(title)}&search_type=1`, {
+            method: 'GET',
+            headers: {
+              'X-RapidAPI-Key': watchmodeApiKey,
+              'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
+            }
+          });
+          const searchData = await searchRes.json();
+          const match = searchData.title_results?.find(r => r.name.toLowerCase() === title.toLowerCase());
+          if (match) {
+            const sourceRes = await fetch(`https://watchmode.p.rapidapi.com/title/${match.id}/sources/`, {
+              method: 'GET',
+              headers: {
+                'X-RapidAPI-Key': watchmodeApiKey,
+                'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
+              }
+            });
+            const sourceData = await sourceRes.json();
+            const watchmodeLogos = sourceData.filter(s => s.type === 'sub' || s.type === 'buy')
+              .map(s => `<div class='text-sm text-white border px-2 py-1 rounded mx-1'>${s.name}</div>`)
+              .join('');
+            stream = watchmodeLogos;
+          }
+        }
+        if (!stream && !buy) return null;
+        return { stream, buy };
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function clearResults() {
+      document.getElementById('searchResults').innerHTML = '';
+    }
+
+    async function renderBatch(batch, centerWildCard = false) {
+      const container = document.getElementById('searchResults');
+      if (centerWildCard && batch.length === 1) {
+        const found = batch[0];
+        const title = found.title || found.name || 'Untitled';
+        const poster = found.poster_path ? `https://image.tmdb.org/t/p/w500${found.poster_path}` : '';
+        const availability = found.availability;
+        container.innerHTML = `
+          <div class="wild-card-center">
+            <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center max-w-xs mx-auto">
+              <img src="${poster}" alt="${title}" class="rounded mb-5 mx-auto" style="max-height:290px; width:auto;">
+              <h3 class="text-2xl font-bold mb-3">${title}</h3>
+              <div class="text-md text-gray-300 mb-3">
+                ${availability.stream ? `<div class='mb-2'>Stream on:<div class='flex flex-wrap justify-center mt-2'>${availability.stream}</div></div>` : ''}
+                ${availability.buy ? `<div class='mb-2'>Buy on:<div class='flex flex-wrap justify-center mt-2'>${availability.buy}</div></div>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+      for (const item of batch) {
+        const title = item.title || item.name || 'Untitled';
+        const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
+        const availability = await fetchAvailability(item.id, item.media_type, title);
+        const card = document.createElement('div');
+        card.className = 'bg-gray-800 p-4 rounded-lg shadow';
+        if (!availability) {
+          card.innerHTML = `
+            <img src="${poster}" alt="${title}" class="rounded mb-4">
+            <h3 class="text-lg font-semibold">${title}</h3>
+            <div class="text-sm text-yellow-400 mt-4">Not yet available to stream or buy in selected region.</div>
+          `;
+        } else {
+          card.innerHTML = `
+            <img src="${poster}" alt="${title}" class="rounded mb-4">
+            <h3 class="text-lg font-semibold">${title}</h3>
+            <div class="text-sm text-gray-300">
+              ${availability.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center'>${availability.stream}</div></div>` : ''}
+              ${availability.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center'>${availability.buy}</div></div>` : ''}
+            </div>
+          `;
+        }
+        container.appendChild(card);
+      }
+    }
+
+    async function showResults(isNewSearch) {
+      clearResults();
+      showMoreCount = 0;
+      let arr = deduplicateAndSort(results, currentQuery);
+      await renderBatch(arr.slice(0, 12));
+    }
+
+    async function runSearch(isNewSearch = false) {
+      if (isLoading) return;
+      isLoading = true;
+      let page = 1;
+      if (!isNewSearch) page = currentPage;
+      else currentPage = 1;
+      let query = currentQuery.trim();
+      results = await fetchMedia(currentType, query, page);
+      await showResults(true);
+      isLoading = false;
+    }
+
+    async function showMore() {
+      if (isLoading || showMoreCount >= maxShowMore) return;
+      isLoading = true;
+      currentPage++;
+      let query = currentQuery.trim();
+      let newResults = await fetchMedia(currentType, query, currentPage);
+      let all = deduplicateAndSort(results.concat(newResults), currentQuery);
+      results = all;
+      await renderBatch(all.slice((currentPage - 1) * 12, currentPage * 12));
+      showMoreCount++;
+      isLoading = false;
+    }
+
+    function setActiveTab(tab) {
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active-tab', 'inactive-tab'));
+      tab.classList.add('active-tab');
+    }
+    function setRegionButton(regionBtn) {
+      document.querySelectorAll('.flag-tab').forEach(btn => btn.classList.remove('selected'));
+      regionBtn.classList.add('selected');
+    }
+
+    // Wild Card / Randomize Feature - Centered Display
+    async function wildCard() {
+      document.getElementById('wildOverlay').style.display = "flex";
+      let tries = 0, found = null;
+      while (tries < 10 && !found) {
+        let randPage = 1 + Math.floor(Math.random() * 4);
+        let media = await fetchMedia(currentType, '', randPage);
+        media = deduplicateAndSort(media, '').filter(i => (i.vote_count || 0) >= 100);
+        if (!media.length) { tries++; continue; }
+        for (let i = media.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [media[i], media[j]] = [media[j], media[i]];
+        }
+        for (let m of media) {
+          const avail = await fetchAvailability(m.id, m.media_type, m.title || m.name || '');
+          if (avail && avail.stream) {
+            found = { ...m, availability: avail };
+            break;
+          }
+        }
+        tries++;
+      }
+      setTimeout(async () => {
+        document.getElementById('wildOverlay').style.display = "none";
+        clearResults();
+        if (found) {
+          await renderBatch([found], true); // center!
+        } else {
+          document.getElementById('searchResults').innerHTML = `<div class="wild-card-center"><div class="text-lg font-bold text-yellow-400">Sorry, nothing found for your region and settings!</div></div>`;
+        }
+      }, 1700);
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Initial
+      await runSearch(true);
+
+      // Tabs
+      document.getElementById('allTab').onclick = async function () {
+        if (currentType !== 'all') {
+          setActiveTab(this);
+          currentType = 'all';
+          await runSearch(true);
+        }
+      };
+      document.getElementById('movieTab').onclick = async function () {
+        if (currentType !== 'movie') {
+          setActiveTab(this);
+          currentType = 'movie';
+          await runSearch(true);
+        }
+      };
+      document.getElementById('tvTab').onclick = async function () {
+        if (currentType !== 'tv') {
+          setActiveTab(this);
+          currentType = 'tv';
+          await runSearch(true);
+        }
+      };
+
+      // Region
+      document.getElementById('regionUK').onclick = async function () {
+        if (currentRegion !== 'GB') {
+          setRegionButton(this);
+          currentRegion = 'GB';
+          await runSearch(true);
+        }
+      };
+      document.getElementById('regionUS').onclick = async function () {
+        if (currentRegion !== 'US') {
+          setRegionButton(this);
+          currentRegion = 'US';
+          await runSearch(true);
+        }
+      };
+      document.getElementById('regionCA').onclick = async function () {
+        if (currentRegion !== 'CA') {
+          setRegionButton(this);
+          currentRegion = 'CA';
+          await runSearch(true);
+        }
+      };
+
+      // Search
+      document.getElementById('searchInput').addEventListener('input', async function (e) {
+        currentQuery = e.target.value;
+        await runSearch(true);
+      });
+
+      // Show More
+      document.getElementById('showMoreBtn').onclick = async function () {
+        await showMore();
+      };
+
+      // Wild Card
+      document.getElementById('wildBtn').onclick = async function () {
+        await wildCard();
+      };
+    });
   </script>
 </body>
 </html>
