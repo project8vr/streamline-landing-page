@@ -121,8 +121,7 @@
     <div id="wildcardsGameContainer" style="width:100vw;min-height:100vh;display:flex;justify-content:center;align-items:center;flex-direction:column;position:relative;"></div>
   </div>
   <script>
-    // -------- ORIGINAL JS: UNCHANGED --------
-    // ... (use your original JS from your last working version here) ...
+    // ------------------ FULL JS CODE BELOW ------------------
 
     const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
     const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
@@ -136,17 +135,206 @@
     let showMoreCount = 0;
     let mediaCache = {};
 
-    function getEndpoint(type, query, page) { /* ... your function body ... */ }
-    async function fetchMedia(type, query, page) { /* ... your function body ... */ }
-    function deduplicateAndSort(arr, query) { /* ... your function body ... */ }
-    async function fetchAvailability(id, mediaType, title) { /* ... your function body ... */ }
-    function clearResults() { /* ... your function body ... */ }
-    async function renderBatch(batch, centerWildCard = false) { /* ... your function body ... */ }
-    async function showResults(isNewSearch) { /* ... your function body ... */ }
-    async function runSearch(isNewSearch = false) { /* ... your function body ... */ }
-    async function showMore() { /* ... your function body ... */ }
-    function setActiveTab(tab) { /* ... your function body ... */ }
-    function setRegionButton(regionBtn) { /* ... your function body ... */ }
+    function getEndpoint(type, query, page) {
+      let base = 'https://api.themoviedb.org/3';
+      if (query) {
+        if (type === 'movie') return `${base}/search/movie?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${page}`;
+        if (type === 'tv') return `${base}/search/tv?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${page}`;
+        return `${base}/search/multi?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${page}`;
+      } else {
+        if (type === 'movie') return `${base}/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`;
+        if (type === 'tv') return `${base}/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`;
+        return [
+          `${base}/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`,
+          `${base}/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`
+        ];
+      }
+    }
+
+    async function fetchMedia(type, query, page) {
+      if (mediaCache[type + '|' + query + '|' + page + '|' + currentRegion]) return mediaCache[type + '|' + query + '|' + page + '|' + currentRegion];
+      let res, data, arr = [];
+      let endpoints = getEndpoint(type, query, page);
+      if (Array.isArray(endpoints)) {
+        for (let ep of endpoints) {
+          res = await fetch(ep);
+          data = await res.json();
+          arr = arr.concat((data.results || []).map(item => {
+            if (ep.includes('/tv/')) item.media_type = 'tv';
+            else item.media_type = 'movie';
+            return item;
+          }));
+        }
+      } else {
+        res = await fetch(endpoints);
+        data = await res.json();
+        arr = (data.results || []).map(item => {
+          if (!item.media_type) item.media_type = type === 'all' ? (item.title ? 'movie' : 'tv') : type;
+          return item;
+        });
+      }
+      mediaCache[type + '|' + query + '|' + page + '|' + currentRegion] = arr;
+      return arr;
+    }
+
+    function deduplicateAndSort(arr, query) {
+      const norm = s => (s || '').toLowerCase().replace(/^the\s+/i, '');
+      const seen = new Set();
+      const queryNorm = norm(query);
+      let filtered = arr.filter(item => {
+        let idKey = (item.media_type || '') + ':' + item.id;
+        if (seen.has(idKey)) return false;
+        seen.add(idKey);
+        if (!query && (item.vote_count || 0) < 100) return false;
+        if (currentType !== 'all' && item.media_type !== currentType) return false;
+        return true;
+      });
+      return filtered.sort((a, b) => {
+        let aT = norm(a.title || a.name || ''), bT = norm(b.title || b.name || '');
+        let aExact = aT === queryNorm, bExact = bT === queryNorm;
+        if (aExact && !bExact) return -1; if (!aExact && bExact) return 1;
+        let aStarts = aT.startsWith(queryNorm), bStarts = bT.startsWith(queryNorm);
+        if (aStarts && !bStarts) return -1; if (!aStarts && bStarts) return 1;
+        if ((b.vote_count || 0) !== (a.vote_count || 0)) return (b.vote_count || 0) - (a.vote_count || 0);
+        return (b.popularity || 0) - (a.popularity || 0);
+      });
+    }
+
+    async function fetchAvailability(id, mediaType, title) {
+      const type = mediaType === 'tv' ? 'tv' : 'movie';
+      try {
+        const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
+        const tmdbData = await tmdbRes.json();
+        const countryData = tmdbData.results?.[currentRegion];
+        let stream = '', buy = '';
+        if (countryData) {
+          const render = (items) => items.map(p => `<img src='https://image.tmdb.org/t/p/w45${p.logo_path}' alt='${p.provider_name}' title='${p.provider_name}' class='inline-block h-8 mx-2'>`).join('');
+          stream = countryData.flatrate ? render(countryData.flatrate) : '';
+          buy = countryData.buy ? render(countryData.buy) : '';
+        }
+        if (!stream && !buy && title) {
+          const searchRes = await fetch(`https://watchmode.p.rapidapi.com/search/?search_value=${encodeURIComponent(title)}&search_type=1`, {
+            method: 'GET',
+            headers: {
+              'X-RapidAPI-Key': watchmodeApiKey,
+              'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
+            }
+          });
+          const searchData = await searchRes.json();
+          const match = searchData.title_results?.find(r => r.name.toLowerCase() === title.toLowerCase());
+          if (match) {
+            const sourceRes = await fetch(`https://watchmode.p.rapidapi.com/title/${match.id}/sources/`, {
+              method: 'GET',
+              headers: {
+                'X-RapidAPI-Key': watchmodeApiKey,
+                'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
+              }
+            });
+            const sourceData = await sourceRes.json();
+            const watchmodeLogos = sourceData.filter(s => s.type === 'sub' || s.type === 'buy')
+              .map(s => `<div class='text-sm text-white border px-2 py-1 rounded mx-1'>${s.name}</div>`)
+              .join('');
+            stream = watchmodeLogos;
+          }
+        }
+        if (!stream && !buy) return null;
+        return { stream, buy };
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function clearResults() {
+      document.getElementById('searchResults').innerHTML = '';
+    }
+
+    async function renderBatch(batch, centerWildCard = false) {
+      const container = document.getElementById('searchResults');
+      if (centerWildCard && batch.length === 1) {
+        const found = batch[0];
+        const title = found.title || found.name || 'Untitled';
+        const poster = found.poster_path ? `https://image.tmdb.org/t/p/w500${found.poster_path}` : '';
+        const availability = found.availability;
+        container.innerHTML = `
+          <div class="wild-card-center">
+            <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center max-w-xs mx-auto">
+              <img src="${poster}" alt="${title}" class="rounded mb-5 mx-auto" style="max-height:290px; width:auto;">
+              <h3 class="text-2xl font-bold mb-3">${title}</h3>
+              <div class="text-md text-gray-300 mb-3">
+                ${availability.stream ? `<div class='mb-2'>Stream on:<div class='flex flex-wrap justify-center mt-2'>${availability.stream}</div></div>` : ''}
+                ${availability.buy ? `<div class='mb-2'>Buy on:<div class='flex flex-wrap justify-center mt-2'>${availability.buy}</div></div>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+      for (const item of batch) {
+        const title = item.title || item.name || 'Untitled';
+        const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
+        const availability = await fetchAvailability(item.id, item.media_type, title);
+        const card = document.createElement('div');
+        card.className = 'bg-gray-800 p-4 rounded-lg shadow';
+        if (!availability) {
+          card.innerHTML = `
+            <img src="${poster}" alt="${title}" class="rounded mb-4">
+            <h3 class="text-lg font-semibold">${title}</h3>
+            <div class="text-sm text-yellow-400 mt-4">Not yet available to stream or buy in selected region.</div>
+          `;
+        } else {
+          card.innerHTML = `
+            <img src="${poster}" alt="${title}" class="rounded mb-4">
+            <h3 class="text-lg font-semibold">${title}</h3>
+            <div class="text-sm text-gray-300">
+              ${availability.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center'>${availability.stream}</div></div>` : ''}
+              ${availability.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center'>${availability.buy}</div></div>` : ''}
+            </div>
+          `;
+        }
+        container.appendChild(card);
+      }
+    }
+
+    async function showResults(isNewSearch) {
+      clearResults();
+      showMoreCount = 0;
+      let arr = deduplicateAndSort(results, currentQuery);
+      await renderBatch(arr.slice(0, 12));
+    }
+
+    async function runSearch(isNewSearch = false) {
+      if (isLoading) return;
+      isLoading = true;
+      let page = 1;
+      if (!isNewSearch) page = currentPage;
+      else currentPage = 1;
+      let query = currentQuery.trim();
+      results = await fetchMedia(currentType, query, page);
+      await showResults(true);
+      isLoading = false;
+    }
+
+    async function showMore() {
+      if (isLoading || showMoreCount >= maxShowMore) return;
+      isLoading = true;
+      currentPage++;
+      let query = currentQuery.trim();
+      let newResults = await fetchMedia(currentType, query, currentPage);
+      let all = deduplicateAndSort(results.concat(newResults), currentQuery);
+      results = all;
+      await renderBatch(all.slice((currentPage - 1) * 12, currentPage * 12));
+      showMoreCount++;
+      isLoading = false;
+    }
+
+    function setActiveTab(tab) {
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active-tab', 'inactive-tab'));
+      tab.classList.add('active-tab');
+    }
+    function setRegionButton(regionBtn) {
+      document.querySelectorAll('.flag-tab').forEach(btn => btn.classList.remove('selected'));
+      regionBtn.classList.add('selected');
+    }
 
     // Wild Card / Randomize Feature - Centered Display
     async function wildCard() {
@@ -429,6 +617,8 @@
         </div>
       </div>`;
     }
+
+    // ------------- END FULL JS -------------
   </script>
 </body>
 </html>
