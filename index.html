@@ -45,7 +45,6 @@
     @media (max-width: 1024px) {
       .wild-card-center { min-height: 220px; }
     }
-    /* --- Wild Cards Overlay styles --- */
     #wildcardsOverlay {
       display: none;
       position: fixed;
@@ -76,129 +75,6 @@
     .wildcards-swipe-btn.reject {
       background: linear-gradient(90deg,#fc7e1e 0,#ffde57 80%);
       color: #522; box-shadow: 0 2px 14px #ffde5744;
-    }
-    .wildcards-big-card {
-      width: 210px; height: 320px;
-      margin: 0 18px;
-      perspective: 1200px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-      cursor: pointer;
-      transition: transform .15s;
-    }
-    .wildcards-big-card.selected {
-      box-shadow: 0 0 0 6px #fc7e1e99, 0 4px 32px #111c;
-      transform: scale(1.08);
-      z-index: 2;
-    }
-    .wildcards-flip-inner {
-      position: relative;
-      width: 100%; height: 100%;
-      transition: transform 0.8s cubic-bezier(.53,1.73,.54,.98);
-      transform-style: preserve-3d;
-    }
-    .wildcards-flip.flipped .wildcards-flip-inner {
-      transform: rotateY(180deg);
-    }
-    .wildcards-flip-front, .wildcards-flip-back {
-      position: absolute;
-      width: 100%; height: 100%;
-      backface-visibility: hidden;
-      border-radius: 18px;
-      overflow: hidden;
-      box-shadow: 0 6px 30px #000a, 0 0 0 4px #fc7e1e33;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    .wildcards-flip-back {
-      background: #18112c;
-      background-image:
-        repeating-linear-gradient(120deg, #7f5af033 0 6px, transparent 6px 24px),
-        repeating-linear-gradient(60deg, #ffe17822 0 10px, transparent 10px 34px),
-        radial-gradient(circle at 70% 30%, #ffde5740 0 50%, transparent 70%);
-      border: 3.5px solid #ffe178;
-      box-shadow: 0 0 0 8px #2cb67d22, 0 8px 40px #000a;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .wildcards-card-back-svg {
-      width: 92px; height: 140px; display: block;
-    }
-    .wildcards-flip-front {
-      background: #201b34;
-      transform: rotateY(180deg);
-      border: 3.5px solid #ffe178;
-      box-shadow: 0 0 0 8px #2cb67d22, 0 8px 40px #000a;
-      overflow: hidden;
-      flex-direction: column;
-      justify-content: flex-start;
-      align-items: center;
-      padding-top: 12px;
-    }
-    .wildcards-flip-front img {
-      width: 104px;
-      height: 156px;
-      object-fit: cover;
-      border-radius: 10px;
-      margin-bottom: 9px;
-      box-shadow: 0 2px 12px #0008;
-    }
-    .wildcards-flip-front .title {
-      font-size:1.04rem;font-weight:700;color:#ffe178;margin-bottom:7px;text-align:center;line-height:1.15;
-      text-shadow: 0 2px 8px #7f5af088;
-    }
-    .wildcards-flip-front .mediatype {
-      font-size:0.99rem;font-weight:400;color:#7f5af0;
-      margin-bottom: 5px;
-    }
-    .wildcards-flip-front .providers {
-      margin-top: 2px; font-size:0.93rem;
-      color: #fc7e1e; text-align:center;
-    }
-    .wildcards-flip-front .providers img {
-      height: 1.5rem;
-      margin: 0 0.15rem;
-      border-radius: 0.3rem;
-      vertical-align: middle;
-      box-shadow: 0 2px 5px #0004;
-    }
-    .wildcards-flip-front .providers .text-sm {
-      margin-top: 0.2rem;
-    }
-    .wildcards-flip-front .notavail {
-      color: #fbbf24; font-size: 0.9rem; margin-top: 15px;
-      text-align: center;
-    }
-    .wildcards-deck-row {
-      display:flex;
-      flex-direction:row;
-      justify-content:center;
-      align-items:flex-end;
-      margin-bottom: 1.2rem;
-      flex-wrap:wrap;
-      gap: 16px;
-    }
-    .wildcards-reshuffle-btn {
-      margin-top: 1.7rem;
-      background: linear-gradient(90deg, #ffe178 0, #7f5af0 70%);
-      color: #1b103f;
-      font-weight: 800;
-      font-size: 1.09rem;
-      border-radius: 2rem;
-      padding: 0.7rem 2.2rem;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 2px 18px #ffe17833;
-      transition: background .25s, color .12s;
-    }
-    .wildcards-reshuffle-btn:hover {
-      background: linear-gradient(90deg, #7f5af0 0, #ffe178 80%);
-      color: #fff;
     }
   </style>
 </head>
@@ -245,18 +121,258 @@
   </div>
   <script>
     // ------------------ FULL JS CODE BELOW ------------------
-    // ... all your original site JS code here ...
-    // (See previous message for the full code, nothing omitted)
-    // ... unchanged up to overlay game logic ...
-    // For brevity, only the overlay game code is shown below, but your file will contain ALL code.
+    const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
+    const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
+    let currentType = 'all';
+    let currentRegion = 'GB';
+    let currentQuery = '';
+    let currentPage = 1;
+    let results = [];
+    let isLoading = false;
+    let maxShowMore = 4;
+    let showMoreCount = 0;
+    let mediaCache = {};
 
-    // --- Wild Cards Overlay Game Logic ---
+    function getEndpoint(type, query, page) {
+      let base = 'https://api.themoviedb.org/3';
+      if (query) {
+        if (type === 'movie') return `${base}/search/movie?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${page}`;
+        if (type === 'tv') return `${base}/search/tv?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${page}`;
+        return `${base}/search/multi?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${page}`;
+      } else {
+        if (type === 'movie') return `${base}/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`;
+        if (type === 'tv') return `${base}/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`;
+        return [
+          `${base}/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`,
+          `${base}/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`
+        ];
+      }
+    }
+
+    async function fetchMedia(type, query, page) {
+      if (mediaCache[type + '|' + query + '|' + page + '|' + currentRegion]) return mediaCache[type + '|' + query + '|' + page + '|' + currentRegion];
+      let res, data, arr = [];
+      let endpoints = getEndpoint(type, query, page);
+      if (Array.isArray(endpoints)) {
+        for (let ep of endpoints) {
+          res = await fetch(ep);
+          data = await res.json();
+          arr = arr.concat((data.results || []).map(item => {
+            if (ep.includes('/tv/')) item.media_type = 'tv';
+            else item.media_type = 'movie';
+            return item;
+          }));
+        }
+      } else {
+        res = await fetch(endpoints);
+        data = await res.json();
+        arr = (data.results || []).map(item => {
+          if (!item.media_type) item.media_type = type === 'all' ? (item.title ? 'movie' : 'tv') : type;
+          return item;
+        });
+      }
+      mediaCache[type + '|' + query + '|' + page + '|' + currentRegion] = arr;
+      return arr;
+    }
+
+    function deduplicateAndSort(arr, query) {
+      const norm = s => (s || '').toLowerCase().replace(/^the\s+/i, '');
+      const seen = new Set();
+      const queryNorm = norm(query);
+      let filtered = arr.filter(item => {
+        let idKey = (item.media_type || '') + ':' + item.id;
+        if (seen.has(idKey)) return false;
+        seen.add(idKey);
+        if (!query && (item.vote_count || 0) < 100) return false;
+        if (currentType !== 'all' && item.media_type !== currentType) return false;
+        return true;
+      });
+      return filtered.sort((a, b) => {
+        let aT = norm(a.title || a.name || ''), bT = norm(b.title || b.name || '');
+        let aExact = aT === queryNorm, bExact = bT === queryNorm;
+        if (aExact && !bExact) return -1; if (!aExact && bExact) return 1;
+        let aStarts = aT.startsWith(queryNorm), bStarts = bT.startsWith(queryNorm);
+        if (aStarts && !bStarts) return -1; if (!aStarts && bStarts) return 1;
+        if ((b.vote_count || 0) !== (a.vote_count || 0)) return (b.vote_count || 0) - (a.vote_count || 0);
+        return (b.popularity || 0) - (a.popularity || 0);
+      });
+    }
+
+    async function fetchAvailability(id, mediaType, title) {
+      const type = mediaType === 'tv' ? 'tv' : 'movie';
+      try {
+        const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
+        const tmdbData = await tmdbRes.json();
+        const countryData = tmdbData.results?.[currentRegion];
+        let stream = '', buy = '';
+        if (countryData) {
+          const render = (items) => items.map(p => `<img src='https://image.tmdb.org/t/p/w45${p.logo_path}' alt='${p.provider_name}' title='${p.provider_name}' class='inline-block h-8 mx-2'>`).join('');
+          stream = countryData.flatrate ? render(countryData.flatrate) : '';
+          buy = countryData.buy ? render(countryData.buy) : '';
+        }
+        if (!stream && !buy && title) {
+          const searchRes = await fetch(`https://watchmode.p.rapidapi.com/search/?search_value=${encodeURIComponent(title)}&search_type=1`, {
+            method: 'GET',
+            headers: {
+              'X-RapidAPI-Key': watchmodeApiKey,
+              'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
+            }
+          });
+          const searchData = await searchRes.json();
+          const match = searchData.title_results?.find(r => r.name.toLowerCase() === title.toLowerCase());
+          if (match) {
+            const sourceRes = await fetch(`https://watchmode.p.rapidapi.com/title/${match.id}/sources/`, {
+              method: 'GET',
+              headers: {
+                'X-RapidAPI-Key': watchmodeApiKey,
+                'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
+              }
+            });
+            const sourceData = await sourceRes.json();
+            const watchmodeLogos = sourceData.filter(s => s.type === 'sub' || s.type === 'buy')
+              .map(s => `<div class='text-sm text-white border px-2 py-1 rounded mx-1'>${s.name}</div>`)
+              .join('');
+            stream = watchmodeLogos;
+          }
+        }
+        if (!stream && !buy) return null;
+        return { stream, buy };
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function clearResults() {
+      document.getElementById('searchResults').innerHTML = '';
+    }
+
+    async function renderBatch(batch, centerWildCard = false) {
+      const container = document.getElementById('searchResults');
+      if (centerWildCard && batch.length === 1) {
+        const found = batch[0];
+        const title = found.title || found.name || 'Untitled';
+        const poster = found.poster_path ? `https://image.tmdb.org/t/p/w500${found.poster_path}` : '';
+        const availability = found.availability;
+        container.innerHTML = `
+          <div class="wild-card-center">
+            <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center max-w-xs mx-auto">
+              <img src="${poster}" alt="${title}" class="rounded mb-5 mx-auto" style="max-height:290px; width:auto;">
+              <h3 class="text-2xl font-bold mb-3">${title}</h3>
+              <div class="text-md text-gray-300 mb-3">
+                ${availability.stream ? `<div class='mb-2'>Stream on:<div class='flex flex-wrap justify-center mt-2'>${availability.stream}</div></div>` : ''}
+                ${availability.buy ? `<div class='mb-2'>Buy on:<div class='flex flex-wrap justify-center mt-2'>${availability.buy}</div></div>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+      for (const item of batch) {
+        const title = item.title || item.name || 'Untitled';
+        const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
+        const availability = await fetchAvailability(item.id, item.media_type, title);
+        const card = document.createElement('div');
+        card.className = 'bg-gray-800 p-4 rounded-lg shadow';
+        if (!availability) {
+          card.innerHTML = `
+            <img src="${poster}" alt="${title}" class="rounded mb-4">
+            <h3 class="text-lg font-semibold">${title}</h3>
+            <div class="text-sm text-yellow-400 mt-4">Not yet available to stream or buy in selected region.</div>
+          `;
+        } else {
+          card.innerHTML = `
+            <img src="${poster}" alt="${title}" class="rounded mb-4">
+            <h3 class="text-lg font-semibold">${title}</h3>
+            <div class="text-sm text-gray-300">
+              ${availability.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center'>${availability.stream}</div></div>` : ''}
+              ${availability.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center'>${availability.buy}</div></div>` : ''}
+            </div>
+          `;
+        }
+        container.appendChild(card);
+      }
+    }
+
+    async function showResults(isNewSearch) {
+      clearResults();
+      showMoreCount = 0;
+      let arr = deduplicateAndSort(results, currentQuery);
+      await renderBatch(arr.slice(0, 12));
+    }
+
+    async function runSearch(isNewSearch = false) {
+      if (isLoading) return;
+      isLoading = true;
+      let page = 1;
+      if (!isNewSearch) page = currentPage;
+      else currentPage = 1;
+      let query = currentQuery.trim();
+      results = await fetchMedia(currentType, query, page);
+      await showResults(true);
+      isLoading = false;
+    }
+
+    async function showMore() {
+      if (isLoading || showMoreCount >= maxShowMore) return;
+      isLoading = true;
+      currentPage++;
+      let query = currentQuery.trim();
+      let newResults = await fetchMedia(currentType, query, currentPage);
+      let all = deduplicateAndSort(results.concat(newResults), currentQuery);
+      results = all;
+      await renderBatch(all.slice((currentPage - 1) * 12, currentPage * 12));
+      showMoreCount++;
+      isLoading = false;
+    }
+
+    function setActiveTab(tab) {
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active-tab', 'inactive-tab'));
+      tab.classList.add('active-tab');
+    }
+    function setRegionButton(regionBtn) {
+      document.querySelectorAll('.flag-tab').forEach(btn => btn.classList.remove('selected'));
+      regionBtn.classList.add('selected');
+    }
+
+    // Wild Card / Randomize Feature - Centered Display
+    async function wildCard() {
+      document.getElementById('wildOverlay').style.display = "flex";
+      let tries = 0, found = null;
+      while (tries < 10 && !found) {
+        let randPage = 1 + Math.floor(Math.random() * 4);
+        let media = await fetchMedia(currentType, '', randPage);
+        media = deduplicateAndSort(media, '').filter(i => (i.vote_count || 0) >= 100);
+        if (!media.length) { tries++; continue; }
+        for (let i = media.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [media[i], media[j]] = [media[j], media[i]];
+        }
+        for (let m of media) {
+          const avail = await fetchAvailability(m.id, m.media_type, m.title || m.name || '');
+          if (avail && avail.stream) {
+            found = { ...m, availability: avail };
+            break;
+          }
+        }
+        tries++;
+      }
+      setTimeout(async () => {
+        document.getElementById('wildOverlay').style.display = "none";
+        clearResults();
+        if (found) {
+          await renderBatch([found], true); // center!
+        } else {
+          document.getElementById('searchResults').innerHTML = `<div class="wild-card-center"><div class="text-lg font-bold text-yellow-400">Sorry, nothing found for your region and settings!</div></div>`;
+        }
+      }, 1700);
+    }
+
+    // Wild Cards Overlay Game (last working version, self-contained, classic mode)
     let wildcardsOverlayOpen = false;
     let wildcardsDeck = [];
     let wildcardsHand = [];
     let wildcardsPhase = 'deck';
     let wildcardsCurrent = 0;
-    let wildcardsFlipped = [];
 
     function openWildcardsOverlay() {
       document.getElementById('wildcardsOverlay').classList.add('active');
@@ -270,7 +386,6 @@
       wildcardsOverlayOpen = false;
       wildcardsDeck = [];
       wildcardsHand = [];
-      wildcardsFlipped = [];
       wildcardsPhase = 'deck';
       wildcardsCurrent = 0;
       document.getElementById('wildcardsGameContainer').innerHTML = '';
@@ -285,7 +400,6 @@
       </div>`;
       wildcardsDeck = [];
       wildcardsHand = [];
-      wildcardsFlipped = [];
       wildcardsPhase = 'deck';
       wildcardsCurrent = 0;
       let tries = 0;
@@ -310,90 +424,47 @@
         document.getElementById('wcTryAgainBtn').onclick = ()=>startWildcardsGame();
         return;
       }
-      wildcardsFlipped = [false, false, false, false, false];
       renderWildcardsDeck();
     }
     function renderWildcardsDeck() {
       wildcardsPhase = 'deck';
       const cont = document.getElementById('wildcardsGameContainer');
       cont.innerHTML = `<div class="text-2xl font-bold text-yellow-100 mb-8">Your Wild Cards</div>`;
-      let cardsHTML = `<div class="wildcards-deck-row">`;
+      let cardsHTML = `<div style="display:flex;gap:2vw;justify-content:center;">`;
       for (let i = 0; i < wildcardsDeck.length; i++) {
-        let flipped = wildcardsFlipped[i];
-        let selected = wildcardsCurrent === i;
+        const card = wildcardsDeck[i];
         cardsHTML += `
-        <div class="wildcards-big-card wildcards-flip${flipped ? ' flipped' : ''}${selected ? ' selected' : ''}" data-idx="${i}">
-          <div class="wildcards-flip-inner">
-            <div class="wildcards-flip-back">
-              <svg class="wildcards-card-back-svg" viewBox="0 0 92 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="2" y="2" width="88" height="136" rx="12" fill="#2c2350" stroke="#ffe178" stroke-width="4"/>
-                <rect x="14" y="14" width="64" height="112" rx="9" fill="#1b103f" stroke="#ffc700" stroke-width="2"/>
-                <g opacity="0.44">
-                  <path d="M24 29c12-7 32-7 44 0" stroke="#ffe178" stroke-width="1.5" fill="none"/>
-                  <path d="M24 111c12 7 32 7 44 0" stroke="#ffe178" stroke-width="1.5" fill="none"/>
-                  <ellipse cx="46" cy="70" rx="21" ry="33" fill="none" stroke="#ffe178" stroke-width="1.7"/>
-                  <ellipse cx="46" cy="70" rx="13.5" ry="21.5" fill="none" stroke="#ffe178" stroke-width="1"/>
-                  <ellipse cx="46" cy="70" rx="5.5" ry="9.5" fill="none" stroke="#ffe178" stroke-width="1"/>
-                </g>
-              </svg>
-            </div>
-            <div class="wildcards-flip-front">
-              <img src="${wildcardsDeck[i].poster_path ? `https://image.tmdb.org/t/p/w500${wildcardsDeck[i].poster_path}` : ''}" alt="" draggable="false">
-              <div class="title">${wildcardsDeck[i].title || wildcardsDeck[i].name || "Untitled"}</div>
-              <div class="mediatype">${wildcardsDeck[i].media_type==='tv'?'Series':'Movie'}</div>
-              <div class="providers">
-                ${wildcardsDeck[i].availability && wildcardsDeck[i].availability.stream ? `<div>Stream:<br>${wildcardsDeck[i].availability.stream}</div>` : ""}
-              </div>
-              ${!wildcardsDeck[i].availability ? `<div class="notavail">Not available to stream</div>` : ""}
-            </div>
-          </div>
-        </div>`;
+          <div style="background:#1b103f;border-radius:14px;border:2.5px solid #ffde57;width:135px;height:200px;box-shadow:0 4px 18px #000a;padding:11px 4px;display:flex;flex-direction:column;align-items:center;${i===wildcardsCurrent?'outline:3px solid #7f5af0;':''}" data-idx="${i}">
+            <img src="${card.poster_path ? `https://image.tmdb.org/t/p/w500${card.poster_path}` : ''}" alt="" style="width:90px;height:133px;object-fit:cover;border-radius:9px;margin-bottom:7px;">
+            <div style="font-size:1.01rem;font-weight:700;color:#ffe178;margin-bottom:4px;text-align:center;">${card.title || card.name || "Untitled"}</div>
+            <div style="font-size:0.93rem;font-weight:400;color:#7f5af0;">${card.media_type==='tv'?'Series':'Movie'}</div>
+          </div>`;
       }
       cardsHTML += `</div>`;
       cont.innerHTML += cardsHTML;
       cont.innerHTML += `
         <div style="display:flex;justify-content:center;gap:2rem;margin-top:2rem;">
-          <button class="wildcards-swipe-btn reject" id="wcRejectBtn" disabled>✗ Reject</button>
-          <button class="wildcards-swipe-btn" id="wcKeepBtn" disabled>✓ Keep</button>
+          <button class="wildcards-swipe-btn reject" id="wcRejectBtn">✗ Reject</button>
+          <button class="wildcards-swipe-btn" id="wcKeepBtn">✓ Keep</button>
         </div>
-        <button class="wildcards-reshuffle-btn" id="wcReshuffleBtn">New Deck / Reshuffle</button>
-        <div class="text-xs mt-2 text-gray-300 text-center">Click any card to flip and reveal. Then select (click) a revealed card and keep or reject it.</div>
+        <div class="text-xs mt-2 text-gray-300 text-center">Click a card to select, then keep or reject. (Only one at a time)</div>
       `;
       setTimeout(()=>{
-        // Card flip click
-        cont.querySelectorAll('.wildcards-big-card').forEach(cardEl=>{
+        cont.querySelectorAll('[data-idx]').forEach(cardEl=>{
           cardEl.onclick = ()=>{
             let idx = +cardEl.getAttribute('data-idx');
-            if (!wildcardsFlipped[idx]) {
-              wildcardsFlipped[idx] = true;
-              wildcardsCurrent = idx;
-              renderWildcardsDeck();
-            } else {
-              wildcardsCurrent = idx;
-              renderWildcardsDeck();
-            }
+            wildcardsCurrent = idx;
+            renderWildcardsDeck();
           }
         });
-        // Only enable keep/reject if selected card is flipped
-        let keepBtn = document.getElementById('wcKeepBtn');
-        let rejectBtn = document.getElementById('wcRejectBtn');
-        if (wildcardsFlipped[wildcardsCurrent]) {
-          keepBtn.disabled = false;
-          rejectBtn.disabled = false;
-          keepBtn.onclick = ()=>swipeWildcardsCard('keep');
-          rejectBtn.onclick = ()=>swipeWildcardsCard('reject');
-        } else {
-          keepBtn.disabled = true;
-          rejectBtn.disabled = true;
-        }
-        document.getElementById('wcReshuffleBtn').onclick = ()=>startWildcardsGame();
-      }, 30);
+        document.getElementById('wcKeepBtn').onclick = ()=>swipeWildcardsCard('keep');
+        document.getElementById('wcRejectBtn').onclick = ()=>swipeWildcardsCard('reject');
+      }, 10);
     }
     function swipeWildcardsCard(action) {
       const idx = wildcardsCurrent;
       if(action === 'keep') wildcardsHand.push(wildcardsDeck[idx]);
       wildcardsDeck.splice(idx,1);
-      wildcardsFlipped.splice(idx,1);
       if(wildcardsDeck.length === 0) { renderWildcardsHand(); }
       else {
         wildcardsCurrent = Math.max(0, Math.min(wildcardsCurrent, wildcardsDeck.length-1));
@@ -410,26 +481,19 @@
         document.getElementById('wcRestartBtn').onclick = ()=>startWildcardsGame();
         return;
       }
-      let cardsHTML = `<div class="wildcards-deck-row">`;
+      let cardsHTML = `<div style="display:flex;justify-content:center;gap:2vw;">`;
       for(let i=0;i<wildcardsHand.length;i++) {
         cardsHTML += `
-          <div class="wildcards-big-card" style="cursor:pointer;" data-idx="${i}">
-            <div class="wildcards-flip-inner" style="transform: rotateY(180deg);">
-              <div class="wildcards-flip-front" style="position:relative;">
-                <img src="${wildcardsHand[i].poster_path ? `https://image.tmdb.org/t/p/w500${wildcardsHand[i].poster_path}` : ''}" alt="" draggable="false">
-                <div class="title">${wildcardsHand[i].title || wildcardsHand[i].name || "Untitled"}</div>
-                <div class="mediatype">${wildcardsHand[i].media_type==='tv'?'Series':'Movie'}</div>
-                <div class="providers">${wildcardsHand[i].availability && wildcardsHand[i].availability.stream ? `<div>Stream:<br>${wildcardsHand[i].availability.stream}</div>` : ""}</div>
-                ${!wildcardsHand[i].availability ? `<div class="notavail">Not available to stream</div>` : ""}
-              </div>
-            </div>
+          <div style="background:#1b103f;border-radius:14px;border:2.5px solid #ffde57;width:135px;height:200px;box-shadow:0 4px 18px #000a;padding:11px 4px;display:flex;flex-direction:column;align-items:center;" data-idx="${i}">
+            <img src="${wildcardsHand[i].poster_path ? `https://image.tmdb.org/t/p/w500${wildcardsHand[i].poster_path}` : ''}" alt="" style="width:90px;height:133px;object-fit:cover;border-radius:9px;margin-bottom:7px;">
+            <div style="font-size:1.01rem;font-weight:700;color:#ffe178;margin-bottom:4px;text-align:center;">${wildcardsHand[i].title || wildcardsHand[i].name || "Untitled"}</div>
+            <div style="font-size:0.93rem;font-weight:400;color:#7f5af0;">${wildcardsHand[i].media_type==='tv'?'Series':'Movie'}</div>
           </div>`;
       }
       cardsHTML += `</div>`;
       cont.innerHTML += cardsHTML;
       cont.innerHTML += `<div style="margin-top:1.5rem;text-align:center;">
         <div class="text-sm text-gray-300">Click a card to review, keep or remove. Continue until one remains!</div>
-        <button class="wildcards-reshuffle-btn" id="wcReshuffleBtn2" style="margin-top:2rem;">New Deck / Reshuffle</button>
       </div>`;
       setTimeout(()=>{
         cont.querySelectorAll('[data-idx]').forEach(cardEl=>{
@@ -438,25 +502,21 @@
             reviewHandCard(idx);
           }
         });
-        document.getElementById('wcReshuffleBtn2').onclick = ()=>startWildcardsGame();
       },30);
     }
     function reviewHandCard(idx) {
       const cont = document.getElementById('wildcardsGameContainer');
       const card = wildcardsHand[idx];
       cont.innerHTML = `
-        <div style="background:#1b103f;border-radius:18px;border:3.5px solid #ffde57;width:310px;height:460px;box-shadow:0 4px 28px #000a;margin:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-          <img src="${card.poster_path ? `https://image.tmdb.org/t/p/w500${card.poster_path}` : ''}" alt="" style="width:180px;height:260px;object-fit:cover;border-radius:13px;margin-top:10px;margin-bottom:13px;">
-          <div style="font-size:1.22rem;font-weight:700;color:#ffe178;margin-bottom:10px;text-align:center;">${card.title || card.name || "Untitled"}</div>
-          <div style="font-size:1.09rem;font-weight:400;color:#7f5af0;">${card.media_type==='tv'?'Series':'Movie'}</div>
-          <div style="margin-top:12px;">${card.availability && card.availability.stream ? `<div>Stream:<br>${card.availability.stream}</div>` : ""}</div>
-          ${!card.availability ? `<div class="notavail">Not available to stream</div>` : ""}
+        <div style="background:#1b103f;border-radius:14px;border:2.5px solid #ffde57;width:190px;height:280px;box-shadow:0 4px 18px #000a;margin:auto;display:flex;flex-direction:column;align-items:center;">
+          <img src="${card.poster_path ? `https://image.tmdb.org/t/p/w500${card.poster_path}` : ''}" alt="" style="width:140px;height:210px;object-fit:cover;border-radius:10px;margin-top:10px;margin-bottom:13px;">
+          <div style="font-size:1.11rem;font-weight:700;color:#ffe178;margin-bottom:6px;text-align:center;">${card.title || card.name || "Untitled"}</div>
+          <div style="font-size:0.99rem;font-weight:400;color:#7f5af0;">${card.media_type==='tv'?'Series':'Movie'}</div>
         </div>
-        <div style="display:flex;justify-content:center;gap:2rem;margin-top:2.2rem;">
+        <div style="display:flex;justify-content:center;gap:2rem;margin-top:2rem;">
           <button class="wildcards-swipe-btn reject" id="wcRemoveFromHandBtn">Remove</button>
           <button class="wildcards-swipe-btn" id="wcKeepInHandBtn">Keep</button>
         </div>
-        <button class="wildcards-reshuffle-btn" id="wcReshuffleBtn3" style="margin-top:2.2rem;">New Deck / Reshuffle</button>
       `;
       document.getElementById('wcKeepInHandBtn').onclick = ()=>{
         if(wildcardsHand.length === 1) renderWildcardsFinal();
@@ -467,28 +527,36 @@
         if(wildcardsHand.length === 1) renderWildcardsFinal();
         else renderWildcardsHand();
       };
-      document.getElementById('wcReshuffleBtn3').onclick = ()=>startWildcardsGame();
     }
     function renderWildcardsFinal() {
       const cont = document.getElementById('wildcardsGameContainer');
       const card = wildcardsHand[0];
       cont.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;">
         <div style="font-size:2.1rem;color:#ffe178;font-weight:800;margin-bottom:1.3rem;text-shadow:0 1px 8px #7f5af044,0 0 18px #fff3;">Your Pick!</div>
-        <div style="background:#1b103f;border-radius:18px;border:3.5px solid #ffde57;width:310px;height:460px;box-shadow:0 4px 28px #000a;margin:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-          <img src="${card.poster_path ? `https://image.tmdb.org/t/p/w500${card.poster_path}` : ''}" alt="" style="width:180px;height:260px;object-fit:cover;border-radius:13px;margin-top:13px;margin-bottom:17px;">
-          <div style="font-size:1.27rem;font-weight:700;color:#ffe178;margin-bottom:12px;text-align:center;">${card.title || card.name || "Untitled"}</div>
-          <div style="font-size:1.12rem;font-weight:400;color:#7f5af0;">${card.media_type==='tv'?'Series':'Movie'}</div>
-          <div style="margin-top:13px;">${card.availability && card.availability.stream ? `<div>Stream:<br>${card.availability.stream}</div>` : ""}</div>
-          ${!card.availability ? `<div class="notavail">Not available to stream</div>` : ""}
+        <div style="background:#1b103f;border-radius:14px;border:2.5px solid #ffde57;width:220px;height:320px;box-shadow:0 4px 18px #000a;margin:auto;display:flex;flex-direction:column;align-items:center;">
+          <img src="${card.poster_path ? `https://image.tmdb.org/t/p/w500${card.poster_path}` : ''}" alt="" style="width:160px;height:240px;object-fit:cover;border-radius:11px;margin-top:13px;margin-bottom:17px;">
+          <div style="font-size:1.15rem;font-weight:700;color:#ffe178;margin-bottom:8px;text-align:center;">${card.title || card.name || "Untitled"}</div>
+          <div style="font-size:1.09rem;font-weight:400;color:#7f5af0;">${card.media_type==='tv'?'Series':'Movie'}</div>
         </div>
         <div style="font-size:1.4rem;color:#ffde57;margin-top:1.7rem;text-align:center;">
         Enjoy your <span style="color:#7f5af0">${card.media_type==='tv'?'Series':'Movie'}</span> night!
         </div>
-        <button class="wildcards-reshuffle-btn" id="wcReshuffleBtn4" style="margin-top:2.2rem;">New Deck / Reshuffle</button>
       </div>`;
-      document.getElementById('wcReshuffleBtn4').onclick = ()=>startWildcardsGame();
     }
-    // ------------- END FULL JS -------------
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await runSearch(true);
+      document.getElementById('allTab').onclick = async function () { if (currentType !== 'all') { setActiveTab(this); currentType = 'all'; await runSearch(true); } };
+      document.getElementById('movieTab').onclick = async function () { if (currentType !== 'movie') { setActiveTab(this); currentType = 'movie'; await runSearch(true); } };
+      document.getElementById('tvTab').onclick = async function () { if (currentType !== 'tv') { setActiveTab(this); currentType = 'tv'; await runSearch(true); } };
+      document.getElementById('regionUK').onclick = async function () { if (currentRegion !== 'GB') { setRegionButton(this); currentRegion = 'GB'; await runSearch(true); } };
+      document.getElementById('regionUS').onclick = async function () { if (currentRegion !== 'US') { setRegionButton(this); currentRegion = 'US'; await runSearch(true); } };
+      document.getElementById('regionCA').onclick = async function () { if (currentRegion !== 'CA') { setRegionButton(this); currentRegion = 'CA'; await runSearch(true); } };
+      document.getElementById('searchInput').addEventListener('input', async function (e) { currentQuery = e.target.value; await runSearch(true); });
+      document.getElementById('showMoreBtn').onclick = async function () { await showMore(); };
+      document.getElementById('wildBtn').onclick = async function () { await wildCard(); };
+      document.getElementById('wildcardsGameBtn').onclick = function () { openWildcardsOverlay(); };
+    });
   </script>
 </body>
 </html>
