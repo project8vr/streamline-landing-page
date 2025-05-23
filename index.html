@@ -11,10 +11,10 @@
     .active-tab { background: linear-gradient(to right, #7f5af0, #2cb67d); color: white; box-shadow: 0 0 10px rgba(127, 90, 240, 0.6);}
     .inactive-tab { background-color: #2e2e3a; color: #a0aec0;}
     .inactive-tab:hover { background-color: #3a3a4d; color: #ffffff;}
-    .flag-tab { border-radius: 9999px; padding: 0.5rem 0.9rem; font-size: 1.85rem; background: #222; border: 2px solid transparent; margin: 0 0.25rem; transition: 0.2s; box-shadow: 0 2px 12px 0 rgba(9,10,40,0.13);}
+    .flag-tab { border-radius: 9999px; padding: 0.5rem 0.9rem; font-size: 1.85rem; background: #222; border: 2px solid transparent; margin: 0 0.25rem; transition: 0.2s; box-shadow: 0 2px 12px 0 rgba(90,90,120,0.06); outline: none; display: flex; align-items: center; justify-content: center; line-height: 1; height: 3.2rem; width: 3.7rem; }
     .flag-tab.selected { background: linear-gradient(to right, #7f5af0, #2cb67d); color: white; border-color: #fff; filter: brightness(1.15) drop-shadow(0 2px 8px #7f5af088);}
     .flag-img { width: 2.2rem; height: 1.6rem; border-radius: 0.4rem; object-fit: cover; display: block;}
-    .wild-btn { margin-left: 0.75rem; background: linear-gradient(to right, #ffde57, #fc7e1e); color: #1b103f; font-weight: 700; border-radius: 2rem; padding: 0.7rem 1.3rem; font-size: 1.2rem; box-shadow: 0 2px 12px 0 #ffde5722; transition: all 0.2s;}
+    .wild-btn { margin-left: 0.75rem; background: linear-gradient(to right, #ffde57, #fc7e1e); color: #1b103f; font-weight: 700; border-radius: 2rem; padding: 0.7rem 1.3rem; font-size: 1.2rem; box-shadow: 0 2px 10px #0003; border: none; transition: 0.2s; }
     .wild-btn:hover { background: linear-gradient(to right, #fc7e1e, #ffde57); color: #111; }
     .overlay-spin {
       position: fixed; z-index: 100; inset: 0; background: rgba(26,18,48,0.94); display: flex; align-items: center; justify-content: center; flex-direction: column;
@@ -32,6 +32,7 @@
       animation: spin 1s linear infinite;
       margin-bottom: 1.3rem;
     }
+    @keyframes spin { 100% { transform: rotate(360deg);} }
     .wild-card-center {
       display: flex;
       justify-content: center;
@@ -42,16 +43,15 @@
     @media (max-width: 1024px) {
       .wild-card-center { min-height: 220px; }
     }
-    /* Wild Cards overlay (safe, self-contained) */
+    /* --- Wild Cards Overlay styles --- */
     #wildcardsOverlay {
       display: none;
       position: fixed;
       z-index: 9999;
       left: 0; top: 0; width: 100vw; height: 100vh;
-      background: rgba(20,12,40,0.98);
+      background: rgba(27,16,63,0.97);
       align-items: center; justify-content: center;
       flex-direction: column;
-      animation: fadeIn 0.3s;
     }
     #wildcardsOverlay.active { display: flex; }
     .wildcards-close-btn {
@@ -75,7 +75,6 @@
       background: linear-gradient(90deg,#fc7e1e 0,#ffde57 80%);
       color: #522; box-shadow: 0 2px 14px #ffde5744;
     }
-    /* ...other overlay styles as needed... */
   </style>
 </head>
 <body class="text-white">
@@ -105,7 +104,7 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/panda_1f43c.png" alt="Panda" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/otter_1f9a6.png" alt="Otter" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
@@ -113,12 +112,10 @@
     <div class="spin-wheel"></div>
     <div class="text-xl font-bold mt-2">Picking something great for you…</div>
   </div>
-  <!-- Wild Cards Overlay (self-contained, does not affect site) -->
+  <!-- Wild Cards Overlay (added, self-contained) -->
   <div id="wildcardsOverlay">
     <button class="wildcards-close-btn" id="wildcardsCloseBtn" title="Close">×</button>
-    <div id="wildcardsGameContainer" style="width:100%;height:100%;display:flex;justify-content:center;align-items:center;position:relative;flex-direction:column;">
-      <!-- Wild Cards game will render here -->
-    </div>
+    <div id="wildcardsGameContainer" style="width:100vw;min-height:100vh;display:flex;justify-content:center;align-items:center;flex-direction:column;position:relative;"></div>
   </div>
   <script>
     // ---- All your original JS logic below, untouched up to the wildBtn logic ----
@@ -134,81 +131,110 @@
     let showMoreCount = 0;
     let mediaCache = {};
 
-    function getEndpoint(type, query, page) { /* ... */ }
-    async function fetchMedia(type, query, page) { /* ... */ }
-    function deduplicateAndSort(arr, query) { /* ... */ }
-    async function fetchAvailability(id, mediaType, title) { /* ... */ }
-    function clearResults() { /* ... */ }
-    async function renderBatch(batch, centerWildCard = false) { /* ... */ }
-    async function showResults(isNewSearch) { /* ... */ }
-    async function runSearch(isNewSearch = false) { /* ... */ }
-    async function showMore() { /* ... */ }
-    function setActiveTab(tab) { /* ... */ }
-    function setRegionButton(regionBtn) { /* ... */ }
+    function getEndpoint(type, query, page) {/* ... unchanged ... */}
+    async function fetchMedia(type, query, page) {/* ... unchanged ... */}
+    function deduplicateAndSort(arr, query) {/* ... unchanged ... */}
+    async function fetchAvailability(id, mediaType, title) {/* ... unchanged ... */}
+    function clearResults() {/* ... unchanged ... */}
+    async function renderBatch(batch, centerWildCard = false) {/* ... unchanged ... */}
+    async function showResults(isNewSearch) {/* ... unchanged ... */}
+    async function runSearch(isNewSearch = false) {/* ... unchanged ... */}
+    async function showMore() {/* ... unchanged ... */}
+    function setActiveTab(tab) {/* ... unchanged ... */}
+    function setRegionButton(regionBtn) {/* ... unchanged ... */}
+
+    // Wild Card / Randomize Feature - Centered Display
+    async function wildCard() {
+      // If running overlay game, don't launch classic wild.
+      if (wildcardsOverlayOpen) return;
+      document.getElementById('wildOverlay').style.display = "flex";
+      let tries = 0, found = null;
+      while (tries < 10 && !found) {
+        let randPage = 1 + Math.floor(Math.random() * 4);
+        let media = await fetchMedia(currentType, '', randPage);
+        media = deduplicateAndSort(media, '').filter(i => (i.vote_count || 0) >= 100);
+        if (!media.length) { tries++; continue; }
+        for (let i = media.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [media[i], media[j]] = [media[j], media[i]];
+        }
+        for (let m of media) {
+          const avail = await fetchAvailability(m.id, m.media_type, m.title || m.name || '');
+          if (avail && avail.stream) {
+            found = { ...m, availability: avail };
+            break;
+          }
+        }
+        tries++;
+      }
+      setTimeout(async () => {
+        document.getElementById('wildOverlay').style.display = "none";
+        clearResults();
+        if (found) {
+          await renderBatch([found], true); // center!
+        } else {
+          document.getElementById('searchResults').innerHTML = `<div class="wild-card-center"><div class="text-lg font-bold text-yellow-400">Sorry, nothing found for your region and settings!</div></div>`;
+        }
+      }, 1700);
+    }
 
     document.addEventListener('DOMContentLoaded', async () => {
       await runSearch(true);
-      document.getElementById('allTab').onclick = async function () {
-        if (currentType !== 'all') {
-          setActiveTab(this); currentType = 'all'; await runSearch(true);
-        }
-      };
-      document.getElementById('movieTab').onclick = async function () {
-        if (currentType !== 'movie') {
-          setActiveTab(this); currentType = 'movie'; await runSearch(true);
-        }
-      };
-      document.getElementById('tvTab').onclick = async function () {
-        if (currentType !== 'tv') {
-          setActiveTab(this); currentType = 'tv'; await runSearch(true);
-        }
-      };
-      document.getElementById('regionUK').onclick = async function () {
-        if (currentRegion !== 'GB') {
-          setRegionButton(this); currentRegion = 'GB'; await runSearch(true);
-        }
-      };
-      document.getElementById('regionUS').onclick = async function () {
-        if (currentRegion !== 'US') {
-          setRegionButton(this); currentRegion = 'US'; await runSearch(true);
-        }
-      };
-      document.getElementById('regionCA').onclick = async function () {
-        if (currentRegion !== 'CA') {
-          setRegionButton(this); currentRegion = 'CA'; await runSearch(true);
-        }
-      };
-      document.getElementById('searchInput').addEventListener('input', async function (e) {
-        currentQuery = e.target.value; await runSearch(true);
-      });
+      document.getElementById('allTab').onclick = async function () { if (currentType !== 'all') { setActiveTab(this); currentType = 'all'; await runSearch(true); } };
+      document.getElementById('movieTab').onclick = async function () { if (currentType !== 'movie') { setActiveTab(this); currentType = 'movie'; await runSearch(true); } };
+      document.getElementById('tvTab').onclick = async function () { if (currentType !== 'tv') { setActiveTab(this); currentType = 'tv'; await runSearch(true); } };
+      document.getElementById('regionUK').onclick = async function () { if (currentRegion !== 'GB') { setRegionButton(this); currentRegion = 'GB'; await runSearch(true); } };
+      document.getElementById('regionUS').onclick = async function () { if (currentRegion !== 'US') { setRegionButton(this); currentRegion = 'US'; await runSearch(true); } };
+      document.getElementById('regionCA').onclick = async function () { if (currentRegion !== 'CA') { setRegionButton(this); currentRegion = 'CA'; await runSearch(true); } };
+      document.getElementById('searchInput').addEventListener('input', async function (e) { currentQuery = e.target.value; await runSearch(true); });
       document.getElementById('showMoreBtn').onclick = async function () { await showMore(); };
-      // Attach overlay logic to Wild Card button
-      document.getElementById('wildBtn').onclick = function () {
-        if(wildcardsOverlayOpen) return;
-        startWildcardsGame();
+
+      // Wild Card
+      document.getElementById('wildBtn').onclick = async function (e) {
+        // If holding shift, open new game overlay; else classic wild card
+        if (e && e.shiftKey) {
+          openWildcardsOverlay();
+        } else {
+          await wildCard();
+        }
       };
     });
 
-    // --- Wild Cards Overlay Game (self-contained) ---
+    // --- Wild Cards Overlay Game (self-contained, non-intrusive) ---
     let wildcardsOverlayOpen = false;
     let wildcardsDeck = [];
     let wildcardsHand = [];
     let wildcardsPhase = 'deck';
     let wildcardsCurrent = 0;
 
-    async function startWildcardsGame() {
+    function openWildcardsOverlay() {
       document.getElementById('wildcardsOverlay').classList.add('active');
       document.body.style.overflow = 'hidden';
       wildcardsOverlayOpen = true;
+      startWildcardsGame();
+    }
+    function closeWildcardsOverlay(){
+      document.getElementById('wildcardsOverlay').classList.remove('active');
+      document.body.style.overflow = '';
+      wildcardsOverlayOpen = false;
       wildcardsDeck = [];
       wildcardsHand = [];
       wildcardsPhase = 'deck';
       wildcardsCurrent = 0;
+      document.getElementById('wildcardsGameContainer').innerHTML = '';
+    }
+    document.getElementById('wildcardsCloseBtn').onclick = closeWildcardsOverlay;
+
+    async function startWildcardsGame() {
       const cont = document.getElementById('wildcardsGameContainer');
       cont.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;">
         <div class="spin-wheel"></div>
-        <div class="text-xl font-bold mt-2">Shuffling your deck…</div>
+        <div class="text-xl font-bold mt-2">Dealing your wild cards…</div>
       </div>`;
+      wildcardsDeck = [];
+      wildcardsHand = [];
+      wildcardsPhase = 'deck';
+      wildcardsCurrent = 0;
       let tries = 0;
       while(wildcardsDeck.length < 5 && tries < 15) {
         let randPage = 1 + Math.floor(Math.random() * 4);
@@ -350,17 +376,7 @@
         </div>
       </div>`;
     }
-    function closeWildcardsOverlay(){
-      document.getElementById('wildcardsOverlay').classList.remove('active');
-      document.body.style.overflow = '';
-      wildcardsOverlayOpen = false;
-      wildcardsDeck = [];
-      wildcardsHand = [];
-      wildcardsPhase = 'deck';
-      wildcardsCurrent = 0;
-    }
-    document.getElementById('wildcardsCloseBtn').onclick = closeWildcardsOverlay;
-    // ---- End overlay logic ----
+    // --- End overlay game ---
   </script>
 </body>
 </html>
