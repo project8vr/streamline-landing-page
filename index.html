@@ -11,10 +11,10 @@
     .active-tab { background: linear-gradient(to right, #7f5af0, #2cb67d); color: white; box-shadow: 0 0 10px rgba(127, 90, 240, 0.6);}
     .inactive-tab { background-color: #2e2e3a; color: #a0aec0;}
     .inactive-tab:hover { background-color: #3a3a4d; color: #ffffff;}
-    .flag-tab { border-radius: 9999px; padding: 0.5rem 0.9rem; font-size: 1.85rem; background: #222; border: 2px solid transparent; margin: 0 0.25rem; transition: 0.2s; box-shadow: 0 2px 12px 0 rgba(90,90,120,0.06); outline: none; display: flex; align-items: center; justify-content: center; line-height: 1; height: 3.2rem; width: 3.7rem; }
+    .flag-tab { border-radius: 9999px; padding: 0.5rem 0.9rem; font-size: 1.85rem; background: #222; border: 2px solid transparent; margin: 0 0.25rem; transition: 0.2s; box-shadow: 0 2px 12px 0 rgba(9,10,40,0.13);}
     .flag-tab.selected { background: linear-gradient(to right, #7f5af0, #2cb67d); color: white; border-color: #fff; filter: brightness(1.15) drop-shadow(0 2px 8px #7f5af088);}
     .flag-img { width: 2.2rem; height: 1.6rem; border-radius: 0.4rem; object-fit: cover; display: block;}
-    .wild-btn { margin-left: 0.75rem; background: linear-gradient(to right, #ffde57, #fc7e1e); color: #1b103f; font-weight: 700; border-radius: 2rem; padding: 0.7rem 1.3rem; font-size: 1.2rem; box-shadow: 0 2px 10px #0003; border: none; transition: 0.2s; }
+    .wild-btn { margin-left: 0.75rem; background: linear-gradient(to right, #ffde57, #fc7e1e); color: #1b103f; font-weight: 700; border-radius: 2rem; padding: 0.7rem 1.3rem; font-size: 1.2rem; box-shadow: 0 2px 12px 0 #ffde5722; transition: all 0.2s;}
     .wild-btn:hover { background: linear-gradient(to right, #fc7e1e, #ffde57); color: #111; }
     .overlay-spin {
       position: fixed; z-index: 100; inset: 0; background: rgba(26,18,48,0.94); display: flex; align-items: center; justify-content: center; flex-direction: column;
@@ -43,6 +43,154 @@
     @media (max-width: 1024px) {
       .wild-card-center { min-height: 220px; }
     }
+
+    /* Wild Cards Overlay Styles */
+    .wildcards-overlay {
+      position: fixed; z-index: 200; inset: 0;
+      background: rgba(20,12,40,0.98);
+      display: flex; align-items: center; justify-content: center;
+      animation: fadeIn 0.3s;
+    }
+    .wildcards-deck {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      height: 380px;
+      width: 610px;
+      max-width: 98vw;
+      pointer-events: none;
+    }
+    .wildcards-card-back,
+    .wildcards-card-front {
+      width: 124px;
+      height: 180px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #1b103f 90%, #e4d49c 100%);
+      box-shadow: 0 8px 36px 0 #0008, 0 1px 2px 2px #e4d49c44 inset;
+      border: 3px solid #ffde57;
+      outline: 2px solid #f4e5b1;
+      outline-offset: -5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI',sans-serif;
+      color: #fff6dc;
+      font-size: 1.5rem;
+      font-weight: 700;
+      position: absolute;
+      left: 50%; top: 0;
+      transform: translateX(-50%) scale(1) rotate(0deg);
+      transition: all 0.45s cubic-bezier(.7,1.8,.2,1), box-shadow 0.22s;
+      cursor: pointer;
+      backface-visibility: hidden;
+      pointer-events: auto;
+      user-select: none;
+    }
+    .wildcards-card-back .wildcards-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 90%;
+      height: 80%;
+    }
+    .wildcards-logo-circle {
+      width: 54px; height: 54px;
+      border-radius: 9999px;
+      background: radial-gradient(circle at 58% 44%, #ffe178 80%, #917a1e 100%);
+      border: 3px solid #fff7;
+      margin-bottom: 8px;
+      box-shadow: 0 2px 8px #ffde573d;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      color: #1b103f;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    .wildcards-logo-text {
+      font-size: 1.16rem;
+      font-weight: 700;
+      color: #ffe178;
+      letter-spacing: 2px;
+      text-shadow: 0 1px 2px #000a, 0 2px 8px #917a1e66;
+    }
+    .wildcards-card-front {
+      background: #18122c;
+      color: #fff;
+      border: 3px solid #ffde57;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 1.2rem 0.7rem;
+    }
+    .wildcards-card-front img {
+      width: 98px; height: 138px; border-radius: 10px; box-shadow: 0 2px 8px #0007;
+      object-fit: cover; background: #241a36;
+      margin-bottom: 0.7rem;
+    }
+    .wildcards-card-front .wc-title {
+      font-size: 1.03rem;
+      font-weight: 600;
+      color: #ffe178;
+      margin-bottom: 0.5rem;
+      text-align: center;
+      line-height: 1.18;
+    }
+    .wildcards-card-front .wc-type {
+      font-size: 0.98rem;
+      font-weight: 400;
+      color: #7f5af0;
+      margin-bottom: 0.4rem;
+      text-align: center;
+    }
+    .wildcards-card-front .wc-provider-logos {
+      display: flex; flex-wrap: wrap; gap: 3px;
+      justify-content: center;
+      margin-top: 0.17rem;
+    }
+    .wildcards-swipe-btn {
+      background: linear-gradient(90deg,#7f5af0 0,#2cb67d 80%);
+      color: #fff; border-radius: 9999px; padding: 0.59rem 1.5rem;
+      font-weight: 700; font-size: 1.25rem; box-shadow: 0 2px 14px #7f5af044;
+      margin: 0 1.2rem; border: none; cursor: pointer; outline: none;
+      transition: background 0.14s, color 0.14s;
+    }
+    .wildcards-swipe-btn.reject {
+      background: linear-gradient(90deg,#fc7e1e 0,#ffde57 80%);
+      color: #522; box-shadow: 0 2px 14px #ffde5744;
+    }
+    .wildcards-close-btn {
+      position: absolute; top: 28px; right: 38px; z-index: 3;
+      background: #1b103f; color: #ffe178; border: 2.5px solid #ffde57;
+      border-radius: 9999px; width: 55px; height: 55px;
+      font-size: 2.1rem; font-weight: 700;
+      box-shadow: 0 2px 14px #ffe17844;
+      cursor: pointer; outline: none; transition: background 0.13s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .wildcards-close-btn:hover { background: #2cb67d; color: #fff; }
+    .wildcards-hand-cards {
+      display: flex; justify-content: center; align-items: flex-end;
+      gap: 2.5vw; margin-top: 1.2rem; min-height: 220px;
+      width: 98vw; max-width: 900px;
+      flex-wrap: wrap;
+    }
+    .wildcards-celebration {
+      position: absolute; inset: 0; pointer-events: none; z-index: 20;
+      overflow: hidden;
+    }
+    /* Confetti */
+    .confetti-piece {
+      position: absolute;
+      width: 18px; height: 10px;
+      border-radius: 4px;
+      opacity: 0.85;
+      animation: confetti-fall 1.8s cubic-bezier(.1,.8,.3,1) forwards;
+    }
+    @keyframes confetti-fall {
+      0% { transform: translateY(-45vh) rotateZ(0deg) scale(1.2);}
+      80% { opacity: 1;}
+      100% { transform: translateY(95vh) rotateZ(360deg) scale(1);}
+    }
   </style>
 </head>
 <body class="text-white">
@@ -67,12 +215,14 @@
     </div>
     <div class="flex justify-center items-center mb-8">
       <input id="searchInput" type="text" autocomplete="off" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded" />
-      <button id="wildBtn" class="wild-btn" title="Spin the wheel for a random pick!">🎲 Wild Card</button>
+      <button id="wildBtn" class="wild-btn" title="Try the Wild Cards game!">🃏 Wild Cards</button>
     </div>
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/otter_1f9a6.png" alt="Otter" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <!-- Changed image for animal in top right to panda to show change -->
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/panda_1f43c.png" alt="Panda" class="fixed top-4 right-4 h-16 w-16 z-50">
+
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
@@ -80,7 +230,16 @@
     <div class="spin-wheel"></div>
     <div class="text-xl font-bold mt-2">Picking something great for you…</div>
   </div>
+  <!-- Wild Cards Overlay -->
+  <div id="wildcardsOverlay" style="display:none;" class="wildcards-overlay">
+    <button class="wildcards-close-btn" id="wildcardsCloseBtn" title="Close">×</button>
+    <div id="wildcardsGameContainer" style="width:100%;height:100%;display:flex;justify-content:center;align-items:center;position:relative;flex-direction:column;">
+      <!-- Deck and cards will appear here -->
+    </div>
+    <div id="wildcardsCelebration" class="wildcards-celebration"></div>
+  </div>
   <script>
+    // --- Existing code (unchanged except Wild Card logic below) ---
     const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
     const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
     let currentType = 'all';
@@ -294,41 +453,287 @@
       regionBtn.classList.add('selected');
     }
 
-    // Wild Card / Randomize Feature - Centered Display
-    async function wildCard() {
-      document.getElementById('wildOverlay').style.display = "flex";
-      let tries = 0, found = null;
-      while (tries < 10 && !found) {
+    // --- NEW: Wild Cards Game Overlay logic ---
+    // Utilities for confetti animation
+    function runCelebration() {
+      const colors = ['#ffe178', '#fc7e1e', '#7f5af0', '#2cb67d', '#fff', '#ffde57'];
+      const area = document.getElementById('wildcardsCelebration');
+      area.innerHTML = '';
+      for (let i = 0; i < 45; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = (Math.random() * 100) + 'vw';
+        piece.style.top = (Math.random() * 10) + 'vh';
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.transform = `rotateZ(${Math.random()*360}deg)`;
+        piece.style.animationDelay = (Math.random() * 0.5) + 's';
+        area.appendChild(piece);
+      }
+      setTimeout(() => { area.innerHTML = ''; }, 2100);
+    }
+
+    // Wild Cards game state
+    let wildcardsDeck = [];
+    let wildcardsHand = [];
+    let wildcardsPhase = 'deck'; // deck | hand | final
+    let wildcardsCurrent = 0;
+    let wildcardsOverlayOpen = false;
+
+    // Helper: build placeholder card back
+    function wildcardsCardBackElem(idx, z, angle, yOffset, visible=true) {
+      return `<div class="wildcards-card-back" style="
+        z-index:${z};
+        transform: translateX(-50%) rotate(${angle}deg) translateY(${yOffset}px) scale(${visible?'1':'0.9'});
+        opacity:${visible?1:0.17};
+        pointer-events:${visible?'auto':'none'};
+        left:50%; top:0;">
+        <div class="wildcards-logo">
+          <div class="wildcards-logo-circle">S2N</div>
+          <div class="wildcards-logo-text">Stream2Night</div>
+        </div>
+      </div>`;
+    }
+
+    // Helper: build card front
+    function wildcardsCardFrontElem(card, idx, z, angle, yOffset) {
+      const title = card.title || card.name || 'Untitled';
+      const type = card.media_type === 'tv' ? 'Series' : 'Movie';
+      const poster = card.poster_path ? `https://image.tmdb.org/t/p/w500${card.poster_path}` : '';
+      let providers = '';
+      if (card.availability) {
+        const {stream, buy} = card.availability;
+        providers += stream ? stream : '';
+        providers += buy ? buy : '';
+      }
+      return `<div class="wildcards-card-front" style="
+        z-index:${z};
+        transform: translateX(-50%) rotate(${angle}deg) translateY(${yOffset}px) scale(1.07);
+        left:50%; top:0;">
+        <img src="${poster}" alt="${title}">
+        <div class="wc-title">${title}</div>
+        <div class="wc-type">${type}</div>
+        <div class="wc-provider-logos">${providers || '<span style="font-size:0.94em;color:#aaa">No streaming info</span>'}</div>
+      </div>`;
+    }
+
+    // Helper: render deck splayed upside down
+    function renderWildcardsDeck() {
+      wildcardsPhase = 'deck';
+      const cont = document.getElementById('wildcardsGameContainer');
+      cont.innerHTML = '';
+      const N = wildcardsDeck.length;
+      const topIdx = wildcardsCurrent;
+      const splay = Math.min(25, 60/N); // max 25deg spread
+      for (let i = 0; i < N; i++) {
+        const rel = i - topIdx;
+        let angle = rel * splay;
+        let yOffset = 18 + Math.abs(rel)*7;
+        let z = 100 + i;
+        // Topmost card is clickable
+        cont.innerHTML += wildcardsCardBackElem(i, z, angle, yOffset, i >= topIdx);
+      }
+      // Add swipe controls and instructions
+      if (topIdx < N) {
+        cont.innerHTML += `
+          <div style="position:absolute;left:50%;top:60%;transform:translate(-50%,-50%);z-index:500;width:340px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <button class="wildcards-swipe-btn reject" id="wcRejectBtn">✗ Reject</button>
+              <div class="text-lg text-yellow-200 font-semibold">Flip & Swipe!</div>
+              <button class="wildcards-swipe-btn" id="wcKeepBtn">✓ Keep</button>
+            </div>
+            <div class="text-xs mt-2 text-gray-300 text-center">Click top card to flip, then swipe left/right or use buttons</div>
+          </div>
+        `;
+        // Add flip event to top card
+        setTimeout(()=>{
+          const cards = cont.querySelectorAll('.wildcards-card-back');
+          if(cards.length) {
+            cards[N-topIdx-1].addEventListener('click', ()=>flipWildcardsCard());
+          }
+          document.getElementById('wcKeepBtn').onclick = ()=>swipeWildcardsCard('keep');
+          document.getElementById('wcRejectBtn').onclick = ()=>swipeWildcardsCard('reject');
+        }, 10);
+      }
+    }
+
+    // Helper: flip card and show face-up in center
+    function flipWildcardsCard() {
+      const cont = document.getElementById('wildcardsGameContainer');
+      cont.innerHTML = '';
+      const idx = wildcardsCurrent;
+      const card = wildcardsDeck[idx];
+      cont.innerHTML = wildcardsCardFrontElem(card, idx, 300, 0, 0);
+      cont.innerHTML += `
+        <div style="position:absolute;left:50%;top:80%;transform:translate(-50%,-50%);z-index:100;">
+          <button class="wildcards-swipe-btn reject" id="wcRejectBtn2">✗ Reject</button>
+          <button class="wildcards-swipe-btn" id="wcKeepBtn2">✓ Keep</button>
+        </div>
+      `;
+      document.getElementById('wcKeepBtn2').onclick = ()=>swipeWildcardsCard('keep');
+      document.getElementById('wcRejectBtn2').onclick = ()=>swipeWildcardsCard('reject');
+      // Add swipe for mobile
+      const cardFront = cont.querySelector('.wildcards-card-front');
+      let startX = null;
+      cardFront.ontouchstart = (e)=>{startX = e.touches[0].clientX;};
+      cardFront.ontouchend = (e)=>{
+        if(startX === null) return;
+        let dx = e.changedTouches[0].clientX - startX;
+        if(dx > 55) swipeWildcardsCard('keep');
+        else if(dx < -55) swipeWildcardsCard('reject');
+        startX = null;
+      };
+    }
+
+    // Helper: after keep/reject, move deck forward or to hand phase
+    function swipeWildcardsCard(action) {
+      const idx = wildcardsCurrent;
+      if(action === 'keep') wildcardsHand.push(wildcardsDeck[idx]);
+      wildcardsCurrent++;
+      if(wildcardsCurrent >= wildcardsDeck.length) {
+        renderWildcardsHand();
+      } else {
+        renderWildcardsDeck();
+      }
+    }
+
+    // Helper: render user's hand of kept cards
+    function renderWildcardsHand() {
+      wildcardsPhase = 'hand';
+      const cont = document.getElementById('wildcardsGameContainer');
+      cont.innerHTML = `<div class="text-xl text-yellow-100 mb-2 font-bold">Your Hand</div>`;
+      if(wildcardsHand.length === 0) {
+        cont.innerHTML += `<div class="text-lg text-pink-200 mb-5">You rejected all cards! <br>Try again?</div>
+        <button class="wildcards-swipe-btn" id="wcRestartBtn" style="margin-top:2rem;">Play Again</button>`;
+        document.getElementById('wcRestartBtn').onclick = ()=>startWildcardsGame();
+        return;
+      }
+      let cardsHTML = `<div class="wildcards-hand-cards">`;
+      const N = wildcardsHand.length;
+      const splay = Math.min(22, 60/N);
+      for(let i=0;i<N;i++) {
+        let angle = (i-(N-1)/2)*splay;
+        let yOffset = Math.abs(i-(N-1)/2)*8;
+        cardsHTML += `<div class="wildcards-card-front" style="
+          z-index:${200+i};
+          transform: rotate(${angle}deg) translateY(${yOffset}px) scale(1.01);
+          left:0;top:0;margin:0 4px;cursor:pointer;" data-idx="${i}">
+          <img src="${wildcardsHand[i].poster_path ? `https://image.tmdb.org/t/p/w500${wildcardsHand[i].poster_path}` : ''}" alt="">
+          <div class="wc-title">${wildcardsHand[i].title || wildcardsHand[i].name || "Untitled"}</div>
+          <div class="wc-type">${wildcardsHand[i].media_type==='tv'?'Series':'Movie'}</div>
+        </div>`;
+      }
+      cardsHTML += `</div>`;
+      cont.innerHTML += cardsHTML;
+      cont.innerHTML += `<div style="margin-top:1.5rem;text-align:center;">
+        <div class="text-sm text-gray-300">Click a card to review, keep or remove. <br>Continue until one remains!</div>
+      </div>`;
+      // Card click to review
+      setTimeout(()=>{
+        cont.querySelectorAll('.wildcards-card-front').forEach(cardEl=>{
+          cardEl.onclick = ()=>{
+            let idx = +cardEl.getAttribute('data-idx');
+            reviewHandCard(idx);
+          }
+        });
+      },30);
+    }
+
+    // Review a card in hand, keep/remove
+    function reviewHandCard(idx) {
+      const cont = document.getElementById('wildcardsGameContainer');
+      const card = wildcardsHand[idx];
+      cont.innerHTML = wildcardsCardFrontElem(card, idx, 300, 0, 0);
+      cont.innerHTML += `
+        <div style="position:absolute;left:50%;top:80%;transform:translate(-50%,-50%);z-index:100;">
+          <button class="wildcards-swipe-btn reject" id="wcRemoveFromHandBtn">Remove</button>
+          <button class="wildcards-swipe-btn" id="wcKeepInHandBtn">Keep</button>
+        </div>
+      `;
+      document.getElementById('wcKeepInHandBtn').onclick = ()=>{
+        if(wildcardsHand.length === 1) renderWildcardsFinal();
+        else renderWildcardsHand();
+      };
+      document.getElementById('wcRemoveFromHandBtn').onclick = ()=>{
+        wildcardsHand.splice(idx,1);
+        if(wildcardsHand.length === 1) renderWildcardsFinal();
+        else renderWildcardsHand();
+      };
+    }
+
+    // Final - one card left
+    function renderWildcardsFinal() {
+      wildcardsPhase = 'final';
+      const cont = document.getElementById('wildcardsGameContainer');
+      const card = wildcardsHand[0];
+      cont.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;">
+        <div style="font-size:2.1rem;color:#ffe178;font-weight:800;margin-bottom:1.3rem;text-shadow:0 1px 8px #7f5af044,0 0 18px #fff3;">Your Pick!</div>
+        ${wildcardsCardFrontElem(card, 0, 900, 0, 0)}
+        <div style="font-size:1.4rem;color:#ffde57;margin-top:1.7rem;text-align:center;">
+        Enjoy your <span style="color:#7f5af0">${card.media_type==='tv'?'Series':'Movie'}</span> night!
+        </div>
+      </div>`;
+      runCelebration();
+    }
+
+    // Start wild cards game: get random 5 cards with streaming
+    async function startWildcardsGame() {
+      document.getElementById('wildcardsOverlay').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      wildcardsOverlayOpen = true;
+      wildcardsDeck = [];
+      wildcardsHand = [];
+      wildcardsPhase = 'deck';
+      wildcardsCurrent = 0;
+      // Show loading spinner
+      const cont = document.getElementById('wildcardsGameContainer');
+      cont.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;">
+        <div class="spin-wheel"></div>
+        <div class="text-xl font-bold mt-2">Shuffling your deck…</div>
+      </div>`;
+      // Fetch 5 randoms with streaming
+      let tries = 0;
+      while(wildcardsDeck.length < 5 && tries < 12) {
         let randPage = 1 + Math.floor(Math.random() * 4);
         let media = await fetchMedia(currentType, '', randPage);
         media = deduplicateAndSort(media, '').filter(i => (i.vote_count || 0) >= 100);
-        if (!media.length) { tries++; continue; }
         for (let i = media.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [media[i], media[j]] = [media[j], media[i]];
         }
         for (let m of media) {
+          if(wildcardsDeck.length >= 5) break;
           const avail = await fetchAvailability(m.id, m.media_type, m.title || m.name || '');
           if (avail && avail.stream) {
-            found = { ...m, availability: avail };
-            break;
+            wildcardsDeck.push({...m, availability: avail});
           }
         }
         tries++;
       }
-      setTimeout(async () => {
-        document.getElementById('wildOverlay').style.display = "none";
-        clearResults();
-        if (found) {
-          await renderBatch([found], true); // center!
-        } else {
-          document.getElementById('searchResults').innerHTML = `<div class="wild-card-center"><div class="text-lg font-bold text-yellow-400">Sorry, nothing found for your region and settings!</div></div>`;
-        }
-      }, 1700);
+      if(wildcardsDeck.length === 0) {
+        cont.innerHTML = `<div class="text-lg font-bold text-yellow-400">Sorry, nothing found for your region and settings!</div>
+        <button class="wildcards-swipe-btn" id="wcTryAgainBtn" style="margin-top:2.5rem;">Try Again</button>`;
+        document.getElementById('wcTryAgainBtn').onclick = ()=>startWildcardsGame();
+        return;
+      }
+      renderWildcardsDeck();
     }
 
+    // Overlay open/close control
+    function closeWildcardsOverlay(){
+      document.getElementById('wildcardsOverlay').style.display = 'none';
+      document.body.style.overflow = '';
+      wildcardsOverlayOpen = false;
+      wildcardsDeck = [];
+      wildcardsHand = [];
+      wildcardsPhase = 'deck';
+      wildcardsCurrent = 0;
+      document.getElementById('wildcardsCelebration').innerHTML = '';
+    }
+    document.getElementById('wildcardsCloseBtn').onclick = closeWildcardsOverlay;
+
+    // --- End Wild Cards Game Overlay logic ---
+
     document.addEventListener('DOMContentLoaded', async () => {
-      // Initial
       await runSearch(true);
 
       // Tabs
@@ -388,15 +793,15 @@
         await showMore();
       };
 
-      // Wild Card
+      // Wild Cards (replace wildCard logic)
       document.getElementById('wildBtn').onclick = async function () {
-        await wildCard();
+        if(wildcardsOverlayOpen) return;
+        await startWildcardsGame();
       };
     });
   </script>
 </body>
 </html>
-
 
 
 
