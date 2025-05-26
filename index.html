@@ -32,7 +32,6 @@
       animation: spin 1s linear infinite;
       margin-bottom: 1.3rem;
     }
-    @keyframes spin { 100% { transform: rotate(360deg);} }
     .wild-card-center {
       display: flex;
       justify-content: center;
@@ -62,6 +61,28 @@
       border: 2.5px solid #ffde57;
       text-shadow: 0 1px 6px #fff6, 0 0 10px #fc7e1e44;
     }
+    .toggle-free.active {
+      background: linear-gradient(to right, #ffe178, #fc7e1e);
+      color: #1b103f;
+      font-weight: 700;
+      box-shadow: 0 2px 10px #ffde574c;
+      border: 2.5px solid #ffde57;
+    }
+    .toggle-free {
+      padding: 0.7rem 2.0rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      background: #222;
+      color: #ffe178;
+      border: 2px solid #ffe178;
+      margin-left: 0.5rem;
+      font-size: 1.15rem;
+      transition: 0.2s;
+    }
+    .toggle-free:hover {
+      background: linear-gradient(to right, #fc7e1e, #ffe178);
+      color: #1b103f;
+    }
   </style>
 </head>
 <body class="text-white">
@@ -83,7 +104,7 @@
       <button id="allTab" class="tab-button active-tab">All</button>
       <button id="movieTab" class="tab-button inactive-tab">Movies</button>
       <button id="tvTab" class="tab-button inactive-tab">Series</button>
-      <button id="freeTab" class="tab-button inactive-tab">Free</button>
+      <button id="freeToggle" class="toggle-free">Free</button>
     </div>
     <div class="flex justify-center items-center mb-8">
       <input id="searchInput" type="text" autocomplete="off" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded" />
@@ -101,7 +122,6 @@
     <div class="text-xl font-bold mt-2">Picking something great for you…</div>
   </div>
   <script>
-    // API KEYS (replace with env vars or proxy for production)
     const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
     const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
     let currentType = 'all';
@@ -113,6 +133,7 @@
     let maxShowMore = 4;
     let showMoreCount = 0;
     let mediaCache = {};
+    let isFreeFilter = false;
 
     function getEndpoint(type, query, page) {
       let base = 'https://api.themoviedb.org/3';
@@ -165,7 +186,7 @@
         if (seen.has(idKey)) return false;
         seen.add(idKey);
         if (!query && (item.vote_count || 0) < 100) return false;
-        if (currentType !== 'all' && currentType !== 'free' && item.media_type !== currentType) return false;
+        if (currentType !== 'all' && item.media_type !== currentType) return false;
         return true;
       });
       return filtered.sort((a, b) => {
@@ -179,16 +200,16 @@
       });
     }
 
-    // Caches for availability
     let availabilityCache = {};
 
     async function fetchAvailability(id, mediaType, title) {
       const cacheKey = `${id}|${mediaType}|${currentRegion}`;
       if (availabilityCache[cacheKey]) return availabilityCache[cacheKey];
       const type = mediaType === 'tv' ? 'tv' : 'movie';
-      let freeOnYouTube = false, freeOnPlex = false;
+      let freeOnPlex = false;
+      let plexUrl = '';
       try {
-        // TMDb main providers
+        // TMDb
         const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
         const tmdbData = await tmdbRes.json();
         const countryData = tmdbData.results?.[currentRegion];
@@ -196,20 +217,16 @@
         if (countryData) {
           const render = (items) => items.map(p => {
             const lower = p.provider_name?.toLowerCase() || '';
-            if (lower.includes('youtube')) freeOnYouTube = true;
-            if (lower.includes('plex')) freeOnPlex = true;
             let logoClass = '';
-            if (lower.includes('youtube') || lower.includes('plex')) logoClass = 'border-yellow-400';
+            if (lower.includes('plex')) logoClass = 'border-yellow-400';
             return `<img src='https://image.tmdb.org/t/p/w45${p.logo_path}' alt='${p.provider_name}' title='${p.provider_name}' class='inline-block h-8 mx-2 ${logoClass}'>`;
           }).join('');
           if (countryData.flatrate) stream += render(countryData.flatrate);
           if (countryData.buy) buy += render(countryData.buy);
           if (countryData.free) {
             free += render(countryData.free);
-            // To avoid duplicates, also mark YouTube/Plex as free if present here
             (countryData.free || []).forEach(p => {
               const lower = p.provider_name?.toLowerCase() || '';
-              if (lower.includes('youtube')) freeOnYouTube = true;
               if (lower.includes('plex')) freeOnPlex = true;
             });
           }
@@ -217,14 +234,13 @@
             free += render(countryData.ads);
             (countryData.ads || []).forEach(p => {
               const lower = p.provider_name?.toLowerCase() || '';
-              if (lower.includes('youtube')) freeOnYouTube = true;
               if (lower.includes('plex')) freeOnPlex = true;
             });
           }
         }
 
-        // Watchmode fallback for free sources
-        if ((!freeOnYouTube || !freeOnPlex) && title) {
+        // Watchmode fallback for free sources (Plex only)
+        if (title) {
           const searchRes = await fetch(`https://watchmode.p.rapidapi.com/search/?search_value=${encodeURIComponent(title)}&search_type=1`, {
             method: 'GET',
             headers: {
@@ -243,26 +259,21 @@
               }
             });
             const sourceData = await sourceRes.json();
-            // Only include free or ads sources
             const freeSources = sourceData.filter(s =>
               (s.type === 'free' || s.type === 'ads') &&
-              (s.name.toLowerCase().includes('youtube') || s.name.toLowerCase().includes('plex'))
+              (s.name && s.name.toLowerCase().includes('plex'))
             );
-            freeSources.forEach(s => {
-              if (s.name.toLowerCase().includes('youtube')) freeOnYouTube = true;
-              if (s.name.toLowerCase().includes('plex')) freeOnPlex = true;
-            });
-            // Show free sources as text badges as well
-            free += freeSources.map(s =>
-              `<div class='free-badge'>Free on ${s.name}</div>`
-            ).join('');
+            if (freeSources.length > 0) {
+              freeOnPlex = true;
+              plexUrl = freeSources[0].web_url || '';
+              free += freeSources.map(s =>
+                `<a href="${s.web_url}" target="_blank" rel="noopener" class="free-badge">Free on Plex!</a>`
+              ).join('');
+            }
           }
         }
 
-        const result = {
-          stream, buy, free,
-          freeOnYouTube, freeOnPlex
-        };
+        const result = { stream, buy, free, freeOnPlex, plexUrl };
         availabilityCache[cacheKey] = result;
         return result;
       } catch (err) {
@@ -281,14 +292,14 @@
         const title = found.title || found.name || 'Untitled';
         const poster = found.poster_path ? `https://image.tmdb.org/t/p/w500${found.poster_path}` : '';
         const availability = found.availability;
-        const isFree = availability && (availability.freeOnYouTube || availability.freeOnPlex);
+        const isFree = availability && availability.freeOnPlex;
         container.innerHTML = `
           <div class="wild-card-center">
             <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center max-w-xs mx-auto ${isFree ? 'border-4 border-yellow-400' : ''}">
               <img src="${poster}" alt="${title}" class="rounded mb-5 mx-auto" style="max-height:290px; width:auto;">
               <h3 class="text-2xl font-bold mb-3">${title}</h3>
               <div class="text-md text-gray-300 mb-3">
-                ${isFree ? `<div class="free-badge">Free on ${availability.freeOnYouTube ? 'YouTube' : ''}${availability.freeOnPlex && availability.freeOnYouTube ? ' & ' : ''}${availability.freeOnPlex ? 'Plex' : ''}!</div>` : ''}
+                ${isFree ? `<a href="${availability.plexUrl}" target="_blank" rel="noopener" class="free-badge">Free on Plex!</a>` : ''}
                 ${availability.free}
                 ${availability.stream ? `<div class='mb-2'>Stream on:<div class='flex flex-wrap justify-center mt-2'>${availability.stream}</div></div>` : ''}
                 ${availability.buy ? `<div class='mb-2'>Buy on:<div class='flex flex-wrap justify-center mt-2'>${availability.buy}</div></div>` : ''}
@@ -306,14 +317,14 @@
           availability = await fetchAvailability(item.id, item.media_type, title);
           item.availability = availability;
         }
-        const isFree = availability && (availability.freeOnYouTube || availability.freeOnPlex);
+        const isFree = availability && availability.freeOnPlex;
         const card = document.createElement('div');
         card.className = 'bg-gray-800 p-4 rounded-lg shadow' + (isFree ? ' border-4 border-yellow-400' : '');
         card.innerHTML = `
           <img src="${poster}" alt="${title}" class="rounded mb-4">
           <h3 class="text-lg font-semibold">${title}</h3>
           <div class="text-sm text-gray-300">
-            ${isFree ? `<div class="free-badge">Free on ${availability.freeOnYouTube ? 'YouTube' : ''}${availability.freeOnPlex && availability.freeOnYouTube ? ' & ' : ''}${availability.freeOnPlex ? 'Plex' : ''}!</div>` : ''}
+            ${isFree ? `<a href="${availability.plexUrl}" target="_blank" rel="noopener" class="free-badge">Free on Plex!</a>` : ''}
             ${availability && availability.free ? availability.free : ''}
             ${availability && availability.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center'>${availability.stream}</div></div>` : ''}
             ${availability && availability.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center'>${availability.buy}</div></div>` : ''}
@@ -328,14 +339,13 @@
       clearResults();
       showMoreCount = 0;
       let arr = deduplicateAndSort(results, currentQuery);
-      // For "free" tab, only show titles that are free on YouTube or Plex
-      if (currentType === 'free') {
-        // Need to ensure we have availability for all items!
-        arr = await Promise.all(arr.map(async item => {
-          if (!item.availability) item.availability = await fetchAvailability(item.id, item.media_type, item.title || item.name || '');
-          return item;
-        }));
-        arr = arr.filter(item => item.availability && (item.availability.freeOnYouTube || item.availability.freeOnPlex));
+      arr = await Promise.all(arr.map(async item => {
+        if (!item.availability) item.availability = await fetchAvailability(item.id, item.media_type, item.title || item.name || '');
+        return item;
+      }));
+      // If free filter, only show free on Plex
+      if (isFreeFilter) {
+        arr = arr.filter(item => item.availability && item.availability.freeOnPlex);
       }
       await renderBatch(arr.slice(0, 12));
     }
@@ -347,7 +357,7 @@
       if (!isNewSearch) page = currentPage;
       else currentPage = 1;
       let query = currentQuery.trim();
-      results = await fetchMedia(currentType === 'free' ? 'all' : currentType, query, page);
+      results = await fetchMedia(currentType, query, page);
       await showResults(true);
       isLoading = false;
     }
@@ -357,14 +367,14 @@
       isLoading = true;
       currentPage++;
       let query = currentQuery.trim();
-      let newResults = await fetchMedia(currentType === 'free' ? 'all' : currentType, query, currentPage);
+      let newResults = await fetchMedia(currentType, query, currentPage);
       let all = deduplicateAndSort(results.concat(newResults), currentQuery);
-      if (currentType === 'free') {
-        all = await Promise.all(all.map(async item => {
-          if (!item.availability) item.availability = await fetchAvailability(item.id, item.media_type, item.title || item.name || '');
-          return item;
-        }));
-        all = all.filter(item => item.availability && (item.availability.freeOnYouTube || item.availability.freeOnPlex));
+      all = await Promise.all(all.map(async item => {
+        if (!item.availability) item.availability = await fetchAvailability(item.id, item.media_type, item.title || item.name || '');
+        return item;
+      }));
+      if (isFreeFilter) {
+        all = all.filter(item => item.availability && item.availability.freeOnPlex);
       }
       results = all;
       await renderBatch(all.slice((currentPage - 1) * 12, currentPage * 12));
@@ -387,15 +397,14 @@
       let tries = 0, found = null;
       while (tries < 10 && !found) {
         let randPage = 1 + Math.floor(Math.random() * 4);
-        let media = await fetchMedia(currentType === 'free' ? 'all' : currentType, '', randPage);
+        let media = await fetchMedia(currentType, '', randPage);
         media = deduplicateAndSort(media, '').filter(i => (i.vote_count || 0) >= 100);
-        // If on "free" tab, filter for free only
-        if (currentType === 'free') {
-          media = await Promise.all(media.map(async item => {
-            if (!item.availability) item.availability = await fetchAvailability(item.id, item.media_type, item.title || item.name || '');
-            return item;
-          }));
-          media = media.filter(m => m.availability && (m.availability.freeOnYouTube || m.availability.freeOnPlex));
+        media = await Promise.all(media.map(async item => {
+          if (!item.availability) item.availability = await fetchAvailability(item.id, item.media_type, item.title || item.name || '');
+          return item;
+        }));
+        if (isFreeFilter) {
+          media = media.filter(m => m.availability && m.availability.freeOnPlex);
         }
         if (!media.length) { tries++; continue; }
         for (let i = media.length - 1; i > 0; i--) {
@@ -403,9 +412,8 @@
           [media[i], media[j]] = [media[j], media[i]];
         }
         for (let m of media) {
-          const avail = m.availability || await fetchAvailability(m.id, m.media_type, m.title || m.name || '');
-          if (avail && ((currentType === 'free' && (avail.freeOnYouTube || avail.freeOnPlex)) || (avail.stream))) {
-            found = { ...m, availability: avail };
+          if (m.availability && (!isFreeFilter || m.availability.freeOnPlex)) {
+            found = { ...m, availability: m.availability };
             break;
           }
         }
@@ -448,12 +456,13 @@
           await runSearch(true);
         }
       };
-      document.getElementById('freeTab').onclick = async function () {
-        if (currentType !== 'free') {
-          setActiveTab(this);
-          currentType = 'free';
-          await runSearch(true);
-        }
+
+      // Free filter toggle
+      const freeToggleBtn = document.getElementById('freeToggle');
+      freeToggleBtn.onclick = async function () {
+        isFreeFilter = !isFreeFilter;
+        freeToggleBtn.classList.toggle('active', isFreeFilter);
+        await showResults(true);
       };
 
       // Region
