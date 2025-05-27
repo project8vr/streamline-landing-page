@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>PointerLockControls FIXED (moveForward/moveRight)</title>
+  <title>PointerLockControls FIXED (EventDispatcher)</title>
   <style>
     body { margin:0; overflow:hidden; }
     #ui { position:fixed; top:15px; left:0; width:100%; text-align:center; font-family:sans-serif; }
@@ -14,9 +14,8 @@
   <span id="hint">Click to enter — WASD+Mouse to move</span>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
-<!-- Inline PointerLockControls code with movement methods added -->
 <script>
-// PointerLockControls from classic three.js "examples/js/controls/PointerLockControls.js" with moveForward/moveRight
+// PointerLockControls with proper EventDispatcher for modern three.js
 THREE.PointerLockControls = function ( camera, domElement ) {
   if ( domElement === undefined ) {
     console.warn( 'THREE.PointerLockControls: The second parameter "domElement" is now mandatory.' );
@@ -25,7 +24,6 @@ THREE.PointerLockControls = function ( camera, domElement ) {
   this.domElement = domElement;
   this.isLocked = false;
 
-  // Internal "object" for movement and rotation
   var scope = this;
   var changeEvent = { type: 'change' };
   var lockEvent = { type: 'lock' };
@@ -97,10 +95,8 @@ THREE.PointerLockControls = function ( camera, domElement ) {
     document.exitPointerLock();
   };
 
-  // ADD MOVEMENT METHODS:
+  // MOVEMENT METHODS:
   this.moveForward = function ( distance ) {
-    // move forward parallel to the xz-plane
-    // assumes camera.up is y-up
     var vec = new THREE.Vector3();
     vec.setFromMatrixColumn( obj.matrix, 0 );
     vec.crossVectors( obj.up, vec );
@@ -113,7 +109,8 @@ THREE.PointerLockControls = function ( camera, domElement ) {
     obj.position.addScaledVector( vec, distance );
   };
 
-  THREE.EventDispatcher.prototype.apply( this );
+  // Modern EventDispatcher mixin:
+  Object.assign(this, THREE.EventDispatcher.prototype);
   this.connect();
 };
 </script>
