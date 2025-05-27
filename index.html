@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <title>Stream 2 Night</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX'); // <-- REPLACE THIS WITH YOUR MEASUREMENT ID
+  </script>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
     body { background: linear-gradient(to bottom, #1b103f, #090d28); }
@@ -72,7 +80,8 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/red-panda_1f43c.png" alt="Red Panda" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <!-- Changed animal: Capybara -->
+  <img src="https://emojicdn.elk.sh/🦫" alt="Capybara" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
@@ -93,6 +102,71 @@
     let maxShowMore = 4;
     let showMoreCount = 0;
     let mediaCache = {};
+
+    // Canonical provider normalizer
+    function normalizeProviderName(name) {
+      // Amazon/Prime variants
+      if (
+        name === 'Amazon' ||
+        name === 'Amazon Prime' ||
+        name === 'Amazon Prime Video' ||
+        name === 'Prime Video'
+      ) return 'Prime Video';
+      // Netflix w/ads
+      if (name === 'Netflix with Ads' || name === 'Netflix') return 'Netflix';
+      return name;
+    }
+
+    // Provider homepage map
+    function getProviderHomepage(name) {
+      const map = {
+        'Netflix': 'https://www.netflix.com',
+        'Prime Video': 'https://www.primevideo.com',
+        'Disney Plus': 'https://www.disneyplus.com',
+        'Disney+': 'https://www.disneyplus.com',
+        'Hulu': 'https://www.hulu.com',
+        'Apple TV+': 'https://tv.apple.com/gb',
+        'Apple TV Plus': 'https://tv.apple.com/gb',
+        'Apple TV': 'https://tv.apple.com/gb',
+        'Paramount Plus': 'https://www.paramountplus.com',
+        'Paramount+': 'https://www.paramountplus.com',
+        'Peacock': 'https://www.peacocktv.com',
+        'HBO Max': 'https://www.max.com',
+        'Max': 'https://www.max.com',
+        'Sky Go': 'https://www.sky.com/watch/sky-go',
+        'Sky Store': 'https://www.skystore.com/',
+        'Sky': 'https://www.sky.com',
+        'NOW': 'https://www.nowtv.com',
+        'Rakuten TV': 'https://www.rakuten.tv/uk',
+        'Rakuten': 'https://www.rakuten.tv/uk'
+      };
+      // Normalize keys before lookup
+      return map[normalizeProviderName(name)] || '';
+    }
+
+    // Provider logos
+    const providerLogoMap = {
+      'Netflix': 'https://image.tmdb.org/t/p/w45/wwemzKWzjKYJFfCeiB57q3r4Bcm.png',
+      'Disney+': 'https://image.tmdb.org/t/p/w45/7rwgEs15tFwyR9NPQ5vpzxTj19Q.png',
+      'Prime Video': 'https://image.tmdb.org/t/p/w45/emthp39XA2YScoYL1p0sdbAH2WA.png',
+      'Hulu': 'https://image.tmdb.org/t/p/w45/giwM8XX4V2AQb9vsoN7yti82tKK.png',
+      'Apple TV+': 'https://image.tmdb.org/t/p/w45/6uhKBfmtzFqOcLoushwZUzYdQSc.png',
+      'Apple TV Plus': 'https://image.tmdb.org/t/p/w45/6uhKBfmtzFqOcLoushwZUzYdQSc.png',
+      'Apple TV': 'https://image.tmdb.org/t/p/w45/6uhKBfmtzFqOcLoushwZUzYdQSc.png',
+      'Paramount+': 'https://image.tmdb.org/t/p/w45/xbhHHa1GkJJFJ6U7eJ4H6s0F5bD.png',
+      'Peacock': 'https://image.tmdb.org/t/p/w45/5UQsZrfbfG2dYJbx8DxfoTr2UOg.png',
+      'HBO Max': 'https://image.tmdb.org/t/p/w45/7HrwYFjdO8bLk5iNMR4rF3v6Z5H.png',
+      'Max': 'https://image.tmdb.org/t/p/w45/7HrwYFjdO8bLk5iNMR4rF3v6Z5H.png',
+      'Sky Go': 'https://upload.wikimedia.org/wikipedia/commons/5/5a/Sky_Go_logo.png',
+      'Sky Store': 'https://www.skystore.com/media/images/favicon.ico',
+      'Sky': 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Sky_UK_logo_2020.svg',
+      'NOW': 'https://upload.wikimedia.org/wikipedia/commons/0/07/NOW_TV_logo.svg',
+      'Rakuten TV': 'https://statics.rakuten.tv/public/images/favicon-96x96.png',
+      'Rakuten': 'https://statics.rakuten.tv/public/images/favicon-96x96.png'
+    };
+    function getProviderLogo(name) {
+      return providerLogoMap[normalizeProviderName(name)] || '';
+    }
 
     function getEndpoint(type, query, page) {
       let base = 'https://api.themoviedb.org/3';
@@ -159,68 +233,26 @@
       });
     }
 
-    // Provider homepage map (add more as needed)
-    function getProviderHomepage(name) {
-      const map = {
-        'Netflix': 'https://www.netflix.com',
-        'Netflix with Ads': 'https://www.netflix.com',
-        'Prime Video': 'https://www.primevideo.com',
-        'Amazon Prime': 'https://www.primevideo.com',
-        'Amazon Prime Video': 'https://www.primevideo.com',
-        'Disney Plus': 'https://www.disneyplus.com',
-        'Disney+': 'https://www.disneyplus.com',
-        'Hulu': 'https://www.hulu.com',
-        'Apple TV+': 'https://tv.apple.com/gb',
-        'Apple TV Plus': 'https://tv.apple.com/gb',
-        'Apple TV': 'https://tv.apple.com/gb',
-        'Paramount Plus': 'https://www.paramountplus.com',
-        'Paramount+': 'https://www.paramountplus.com',
-        'Peacock': 'https://www.peacocktv.com',
-        'HBO Max': 'https://www.max.com',
-        'Max': 'https://www.max.com',
-        'Sky Go': 'https://www.sky.com/watch/sky-go',
-        'Sky Store': 'https://www.skystore.com/',
-        'Sky': 'https://www.sky.com',
-        'NOW': 'https://www.nowtv.com',
-        'Rakuten TV': 'https://www.rakuten.tv/uk',
-        'Rakuten': 'https://www.rakuten.tv/uk'
-      };
-      return map[name] || '';
-    }
-
-    // Provider logos (expand as needed)
-    const providerLogoMap = {
-      'Netflix': 'https://image.tmdb.org/t/p/w45/wwemzKWzjKYJFfCeiB57q3r4Bcm.png',
-      'Netflix with Ads': 'https://image.tmdb.org/t/p/w45/wwemzKWzjKYJFfCeiB57q3r4Bcm.png',
-      'Disney+': 'https://image.tmdb.org/t/p/w45/7rwgEs15tFwyR9NPQ5vpzxTj19Q.png',
-      'Prime Video': 'https://image.tmdb.org/t/p/w45/emthp39XA2YScoYL1p0sdbAH2WA.png',
-      'Amazon Prime': 'https://image.tmdb.org/t/p/w45/emthp39XA2YScoYL1p0sdbAH2WA.png',
-      'Amazon Prime Video': 'https://image.tmdb.org/t/p/w45/emthp39XA2YScoYL1p0sdbAH2WA.png',
-      'Hulu': 'https://image.tmdb.org/t/p/w45/giwM8XX4V2AQb9vsoN7yti82tKK.png',
-      'Apple TV+': 'https://image.tmdb.org/t/p/w45/6uhKBfmtzFqOcLoushwZUzYdQSc.png',
-      'Apple TV Plus': 'https://image.tmdb.org/t/p/w45/6uhKBfmtzFqOcLoushwZUzYdQSc.png',
-      'Apple TV': 'https://image.tmdb.org/t/p/w45/6uhKBfmtzFqOcLoushwZUzYdQSc.png',
-      'Paramount+': 'https://image.tmdb.org/t/p/w45/xbhHHa1GkJJFJ6U7eJ4H6s0F5bD.png',
-      'Peacock': 'https://image.tmdb.org/t/p/w45/5UQsZrfbfG2dYJbx8DxfoTr2UOg.png',
-      'HBO Max': 'https://image.tmdb.org/t/p/w45/7HrwYFjdO8bLk5iNMR4rF3v6Z5H.png',
-      'Max': 'https://image.tmdb.org/t/p/w45/7HrwYFjdO8bLk5iNMR4rF3v6Z5H.png',
-      'Sky Go': 'https://upload.wikimedia.org/wikipedia/commons/5/5a/Sky_Go_logo.png',
-      'Sky Store': 'https://www.skystore.com/media/images/favicon.ico',
-      'Sky': 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Sky_UK_logo_2020.svg',
-      'NOW': 'https://upload.wikimedia.org/wikipedia/commons/0/07/NOW_TV_logo.svg',
-      'Rakuten TV': 'https://statics.rakuten.tv/public/images/favicon-96x96.png',
-      'Rakuten': 'https://statics.rakuten.tv/public/images/favicon-96x96.png'
-    };
-    function getProviderLogo(name) {
-      // Collapse Netflix with Ads to Netflix
-      if (name === 'Netflix with Ads') return providerLogoMap['Netflix'];
-      return providerLogoMap[name] || '';
-    }
-
-    function normalizeProviderName(name) {
-      // Treat Netflix with Ads as Netflix for display
-      if (name === 'Netflix with Ads') return 'Netflix';
-      return name;
+    // Deduplicate and normalize for streaming/buy sources
+    function renderProviders(sources) {
+      const shown = new Set();
+      return sources.map(s => {
+        const providerName = normalizeProviderName(s.name);
+        if (shown.has(providerName)) return '';
+        shown.add(providerName);
+        let url = s.web_url || getProviderHomepage(providerName);
+        let logo = getProviderLogo(providerName);
+        if (url && url !== '#') {
+          if (logo) {
+            return `<a href="${url}" target="_blank" rel="noopener"><img src="${logo}" alt="${providerName}" title="${providerName}" class="inline-block h-8 mx-2"></a>`;
+          }
+          return `<a href="${url}" target="_blank" rel="noopener"><span class='inline-block border border-blue-400 rounded px-2 py-1 mx-1 text-sm bg-blue-900'>${providerName}</span></a>`;
+        }
+        if (logo) {
+          return `<img src="${logo}" alt="${providerName}" title="${providerName}" class="inline-block h-8 mx-2 opacity-60 cursor-not-allowed">`;
+        }
+        return `<span class='inline-block border border-blue-400 rounded px-2 py-1 mx-1 text-sm bg-blue-900 opacity-60 cursor-not-allowed'>${providerName}</span>`;
+      }).join('');
     }
 
     async function fetchAvailability(id, mediaType, title) {
@@ -232,18 +264,13 @@
         const tmdbData = await tmdbRes.json();
         const countryData = tmdbData.results?.[currentRegion];
         if (countryData) {
-          const render = (items) => items.map(p => {
-            let providerName = normalizeProviderName(p.provider_name);
-            let homepage = getProviderHomepage(providerName);
-            let logo = p.logo_path ? `https://image.tmdb.org/t/p/w45${p.logo_path}` : getProviderLogo(providerName);
-            if (homepage && logo) {
-              return `<a href="${homepage}" target="_blank" rel="noopener"><img src="${logo}" alt="${providerName}" title="${providerName}" class="inline-block h-8 mx-2"></a>`;
-            }
-            if (logo) {
-              return `<img src="${logo}" alt="${providerName}" title="${providerName}" class="inline-block h-8 mx-2 opacity-60 cursor-not-allowed">`;
-            }
-            return `<span class='inline-block border border-blue-400 rounded px-2 py-1 mx-1 text-sm bg-blue-900 opacity-60 cursor-not-allowed'>${providerName}</span>`;
-          }).join('');
+          const render = (items) => {
+            // Fake an array of "source" objects for deduplication
+            return renderProviders(items.map(p => ({
+              name: p.provider_name,
+              web_url: '', // TMDb does not provide direct web_url
+            })));
+          }
           stream = countryData.flatrate ? render(countryData.flatrate) : '';
           buy = countryData.buy ? render(countryData.buy) : '';
         }
@@ -273,41 +300,10 @@
               let streamingSources = sourceData.filter(
                 s => s.type === 'sub' || s.type === 'free' || s.type === 'ads'
               );
-              stream += streamingSources.map(s => {
-                let providerName = normalizeProviderName(s.name);
-                let url = s.web_url || getProviderHomepage(providerName);
-                let logo = getProviderLogo(providerName);
-                if (url && url !== '#') {
-                  if (logo) {
-                    return `<a href="${url}" target="_blank" rel="noopener"><img src="${logo}" alt="${providerName}" title="${providerName}" class="inline-block h-8 mx-2"></a>`;
-                  }
-                  return `<a href="${url}" target="_blank" rel="noopener"><span class='inline-block border border-blue-400 rounded px-2 py-1 mx-1 text-sm bg-blue-900'>${providerName}</span></a>`;
-                }
-                // Not clickable
-                if (logo) {
-                  return `<img src="${logo}" alt="${providerName}" title="${providerName}" class="inline-block h-8 mx-2 opacity-60 cursor-not-allowed">`;
-                }
-                return `<span class='inline-block border border-blue-400 rounded px-2 py-1 mx-1 text-sm bg-blue-900 opacity-60 cursor-not-allowed'>${providerName}</span>`;
-              }).join('');
+              stream += renderProviders(streamingSources);
               // Buy/rent
               let buySources = sourceData.filter(s => s.type === 'buy' || s.type === 'rent');
-              buy += buySources.map(s => {
-                // Amazon buy links should use the Prime Video homepage
-                let providerName = s.name === 'Amazon' ? 'Prime Video' : normalizeProviderName(s.name);
-                let url = s.web_url || getProviderHomepage(providerName);
-                let logo = getProviderLogo(providerName);
-                if (url && url !== '#') {
-                  if (logo) {
-                    return `<a href="${url}" target="_blank" rel="noopener"><img src="${logo}" alt="${providerName}" title="${providerName}" class="inline-block h-8 mx-2"></a>`;
-                  }
-                  return `<a href="${url}" target="_blank" rel="noopener"><span class='inline-block border border-yellow-400 rounded px-2 py-1 mx-1 text-sm bg-yellow-900'>${providerName}</span></a>`;
-                }
-                // Not clickable
-                if (logo) {
-                  return `<img src="${logo}" alt="${providerName}" title="${providerName}" class="inline-block h-8 mx-2 opacity-60 cursor-not-allowed">`;
-                }
-                return `<span class='inline-block border border-yellow-400 rounded px-2 py-1 mx-1 text-sm bg-yellow-900 opacity-60 cursor-not-allowed'>${providerName}</span>`;
-              }).join('');
+              buy += renderProviders(buySources);
             }
           }
         }
