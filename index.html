@@ -72,7 +72,6 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <!-- Animal changed to Red Panda for visible update confirmation -->
   <img src="https://em-content.zobj.net/source/microsoft-teams/337/red-panda_1f43c.png" alt="Red Panda" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
@@ -82,7 +81,6 @@
     <div class="text-xl font-bold mt-2">Picking something great for you…</div>
   </div>
   <script>
-    // API KEYS
     const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
     const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
 
@@ -161,11 +159,13 @@
       });
     }
 
-    // Helper: fallback homepage URLs for main providers
+    // Provider homepage map (add more as needed)
     function getProviderHomepage(name) {
       const map = {
         'Netflix': 'https://www.netflix.com',
         'Prime Video': 'https://www.primevideo.com',
+        'Amazon Prime': 'https://www.primevideo.com',
+        'Amazon Prime Video': 'https://www.primevideo.com',
         'Disney Plus': 'https://www.disneyplus.com',
         'Disney+': 'https://www.disneyplus.com',
         'Hulu': 'https://www.hulu.com',
@@ -175,24 +175,32 @@
         'Paramount+': 'https://www.paramountplus.com',
         'Peacock': 'https://www.peacocktv.com',
         'HBO Max': 'https://www.max.com',
-        'Max': 'https://www.max.com'
+        'Max': 'https://www.max.com',
+        'Sky Go': 'https://www.sky.com/watch/sky-go',
+        'Sky': 'https://www.sky.com',
+        'NOW': 'https://www.nowtv.com'
       };
-      return map[name] || '#';
+      return map[name] || '';
     }
 
-    // Helper: provider logos from TMDb or Watchmode
+    // Provider logos (expand as needed)
     const providerLogoMap = {
       'Netflix': 'https://image.tmdb.org/t/p/w45/wwemzKWzjKYJFfCeiB57q3r4Bcm.png',
       'Disney+': 'https://image.tmdb.org/t/p/w45/7rwgEs15tFwyR9NPQ5vpzxTj19Q.png',
       'Prime Video': 'https://image.tmdb.org/t/p/w45/emthp39XA2YScoYL1p0sdbAH2WA.png',
+      'Amazon Prime': 'https://image.tmdb.org/t/p/w45/emthp39XA2YScoYL1p0sdbAH2WA.png',
+      'Amazon Prime Video': 'https://image.tmdb.org/t/p/w45/emthp39XA2YScoYL1p0sdbAH2WA.png',
       'Hulu': 'https://image.tmdb.org/t/p/w45/giwM8XX4V2AQb9vsoN7yti82tKK.png',
       'Apple TV+': 'https://image.tmdb.org/t/p/w45/6uhKBfmtzFqOcLoushwZUzYdQSc.png',
+      'Apple TV Plus': 'https://image.tmdb.org/t/p/w45/6uhKBfmtzFqOcLoushwZUzYdQSc.png',
       'Paramount+': 'https://image.tmdb.org/t/p/w45/xbhHHa1GkJJFJ6U7eJ4H6s0F5bD.png',
       'Peacock': 'https://image.tmdb.org/t/p/w45/5UQsZrfbfG2dYJbx8DxfoTr2UOg.png',
       'HBO Max': 'https://image.tmdb.org/t/p/w45/7HrwYFjdO8bLk5iNMR4rF3v6Z5H.png',
-      'Max': 'https://image.tmdb.org/t/p/w45/7HrwYFjdO8bLk5iNMR4rF3v6Z5H.png'
+      'Max': 'https://image.tmdb.org/t/p/w45/7HrwYFjdO8bLk5iNMR4rF3v6Z5H.png',
+      'Sky Go': 'https://upload.wikimedia.org/wikipedia/commons/5/5a/Sky_Go_logo.png',
+      'Sky': 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Sky_UK_logo_2020.svg',
+      'NOW': 'https://upload.wikimedia.org/wikipedia/commons/0/07/NOW_TV_logo.svg'
     };
-
     function getProviderLogo(name) {
       return providerLogoMap[name] || '';
     }
@@ -201,7 +209,7 @@
       const type = mediaType === 'tv' ? 'tv' : 'movie';
       let stream = '', buy = '';
       try {
-        // TMDb providers
+        // TMDb providers (homepage only, not title-specific)
         const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
         const tmdbData = await tmdbRes.json();
         const countryData = tmdbData.results?.[currentRegion];
@@ -209,14 +217,18 @@
           const render = (items) => items.map(p => {
             let homepage = getProviderHomepage(p.provider_name);
             let logo = p.logo_path ? `https://image.tmdb.org/t/p/w45${p.logo_path}` : '';
-            return homepage && logo
-              ? `<a href="${homepage}" target="_blank" rel="noopener"><img src="${logo}" alt="${p.provider_name}" title="${p.provider_name}" class="inline-block h-8 mx-2"></a>`
-              : '';
+            if (homepage && logo) {
+              return `<a href="${homepage}" target="_blank" rel="noopener"><img src="${logo}" alt="${p.provider_name}" title="${p.provider_name}" class="inline-block h-8 mx-2"></a>`;
+            }
+            if (logo) {
+              return `<img src="${logo}" alt="${p.provider_name}" title="${p.provider_name}" class="inline-block h-8 mx-2 opacity-60 cursor-not-allowed">`;
+            }
+            return `<span class='inline-block border border-blue-400 rounded px-2 py-1 mx-1 text-sm bg-blue-900 opacity-60 cursor-not-allowed'>${p.provider_name}</span>`;
           }).join('');
           stream = countryData.flatrate ? render(countryData.flatrate) : '';
           buy = countryData.buy ? render(countryData.buy) : '';
         }
-        // Watchmode fallback/supplement
+        // Watchmode fallback/supplement (prefer direct-to-title links)
         if (title) {
           const searchRes = await fetch(`https://watchmode.p.rapidapi.com/search/?search_value=${encodeURIComponent(title)}&search_type=1`, {
             method: 'GET',
@@ -245,20 +257,34 @@
               stream += streamingSources.map(s => {
                 let url = s.web_url || getProviderHomepage(s.name);
                 let logo = getProviderLogo(s.name);
-                if (logo) {
-                  return `<a href="${url}" target="_blank" rel="noopener"><img src="${logo}" alt="${s.name}" title="${s.name}" class="inline-block h-8 mx-2"></a>`;
+                if (url && url !== '#') {
+                  if (logo) {
+                    return `<a href="${url}" target="_blank" rel="noopener"><img src="${logo}" alt="${s.name}" title="${s.name}" class="inline-block h-8 mx-2"></a>`;
+                  }
+                  return `<a href="${url}" target="_blank" rel="noopener"><span class='inline-block border border-blue-400 rounded px-2 py-1 mx-1 text-sm bg-blue-900'>${s.name}</span></a>`;
                 }
-                return `<a href="${url}" target="_blank" rel="noopener"><span class='inline-block border border-blue-400 rounded px-2 py-1 mx-1 text-sm bg-blue-900'>${s.name}</span></a>`;
+                // Not clickable
+                if (logo) {
+                  return `<img src="${logo}" alt="${s.name}" title="${s.name}" class="inline-block h-8 mx-2 opacity-60 cursor-not-allowed">`;
+                }
+                return `<span class='inline-block border border-blue-400 rounded px-2 py-1 mx-1 text-sm bg-blue-900 opacity-60 cursor-not-allowed'>${s.name}</span>`;
               }).join('');
               // Buy/rent
               let buySources = sourceData.filter(s => s.type === 'buy' || s.type === 'rent');
               buy += buySources.map(s => {
                 let url = s.web_url || getProviderHomepage(s.name);
                 let logo = getProviderLogo(s.name);
-                if (logo) {
-                  return `<a href="${url}" target="_blank" rel="noopener"><img src="${logo}" alt="${s.name}" title="${s.name}" class="inline-block h-8 mx-2"></a>`;
+                if (url && url !== '#') {
+                  if (logo) {
+                    return `<a href="${url}" target="_blank" rel="noopener"><img src="${logo}" alt="${s.name}" title="${s.name}" class="inline-block h-8 mx-2"></a>`;
+                  }
+                  return `<a href="${url}" target="_blank" rel="noopener"><span class='inline-block border border-yellow-400 rounded px-2 py-1 mx-1 text-sm bg-yellow-900'>${s.name}</span></a>`;
                 }
-                return `<a href="${url}" target="_blank" rel="noopener"><span class='inline-block border border-yellow-400 rounded px-2 py-1 mx-1 text-sm bg-yellow-900'>${s.name}</span></a>`;
+                // Not clickable
+                if (logo) {
+                  return `<img src="${logo}" alt="${s.name}" title="${s.name}" class="inline-block h-8 mx-2 opacity-60 cursor-not-allowed">`;
+                }
+                return `<span class='inline-block border border-yellow-400 rounded px-2 py-1 mx-1 text-sm bg-yellow-900 opacity-60 cursor-not-allowed'>${s.name}</span>`;
               }).join('');
             }
           }
@@ -363,7 +389,6 @@
       regionBtn.classList.add('selected');
     }
 
-    // Wild Card Feature
     async function wildCard() {
       document.getElementById('wildOverlay').style.display = "flex";
       let tries = 0, found = null;
@@ -397,10 +422,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // Initial
       await runSearch(true);
 
-      // Tabs
       document.getElementById('allTab').onclick = async function () {
         if (currentType !== 'all') {
           setActiveTab(this);
@@ -423,7 +446,6 @@
         }
       };
 
-      // Region
       document.getElementById('regionUK').onclick = async function () {
         if (currentRegion !== 'GB') {
           setRegionButton(this);
@@ -446,23 +468,19 @@
         }
       };
 
-      // Search
       document.getElementById('searchInput').addEventListener('input', async function (e) {
         currentQuery = e.target.value;
         await runSearch(true);
       });
 
-      // Show More
       document.getElementById('showMoreBtn').onclick = async function () {
         await showMore();
       };
 
-      // Wild Card
       document.getElementById('wildBtn').onclick = async function () {
         await wildCard();
       };
     });
-
   </script>
 </body>
 </html>
