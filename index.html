@@ -5,12 +5,12 @@
   <title>Stream 2 Night</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Google Analytics 4 -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z4PWK187GP"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-XXXXXXXXXX'); // <-- REPLACE THIS WITH YOUR MEASUREMENT ID
+    gtag('config', 'G-Z4PWK187GP');
   </script>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
@@ -80,8 +80,8 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <!-- Changed animal: Capybara -->
-  <img src="https://emojicdn.elk.sh/🦫" alt="Capybara" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <!-- Changed animal: Llama -->
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/llama_1f999.png" alt="Llama" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
@@ -140,11 +140,10 @@
         'Rakuten TV': 'https://www.rakuten.tv/uk',
         'Rakuten': 'https://www.rakuten.tv/uk'
       };
-      // Normalize keys before lookup
       return map[normalizeProviderName(name)] || '';
     }
 
-    // Provider logos
+    // Provider logos (use TMDb's logo_path if present, else fallback to this map)
     const providerLogoMap = {
       'Netflix': 'https://image.tmdb.org/t/p/w45/wwemzKWzjKYJFfCeiB57q3r4Bcm.png',
       'Disney+': 'https://image.tmdb.org/t/p/w45/7rwgEs15tFwyR9NPQ5vpzxTj19Q.png',
@@ -164,7 +163,8 @@
       'Rakuten TV': 'https://statics.rakuten.tv/public/images/favicon-96x96.png',
       'Rakuten': 'https://statics.rakuten.tv/public/images/favicon-96x96.png'
     };
-    function getProviderLogo(name) {
+    function getProviderLogo(name, tmdbLogoPath) {
+      if (tmdbLogoPath) return `https://image.tmdb.org/t/p/w45${tmdbLogoPath}`;
       return providerLogoMap[normalizeProviderName(name)] || '';
     }
 
@@ -233,46 +233,59 @@
       });
     }
 
-    // Deduplicate and normalize for streaming/buy sources
-    function renderProviders(sources) {
+    // Deduplicate and normalize for streaming/buy sources (preserving logo logic)
+    function renderProviders(sources, tmdbProvidersArr) {
       const shown = new Set();
-      return sources.map(s => {
-        const providerName = normalizeProviderName(s.name);
-        if (shown.has(providerName)) return '';
-        shown.add(providerName);
-        let url = s.web_url || getProviderHomepage(providerName);
-        let logo = getProviderLogo(providerName);
-        if (url && url !== '#') {
-          if (logo) {
-            return `<a href="${url}" target="_blank" rel="noopener"><img src="${logo}" alt="${providerName}" title="${providerName}" class="inline-block h-8 mx-2"></a>`;
+      let rendered = '';
+      // 1. Render all TMDb providers first, using their logo_path if present.
+      if (tmdbProvidersArr && Array.isArray(tmdbProvidersArr)) {
+        for (const p of tmdbProvidersArr) {
+          const providerName = normalizeProviderName(p.provider_name);
+          if (shown.has(providerName)) continue;
+          shown.add(providerName);
+          const homepage = getProviderHomepage(providerName);
+          const logo = getProviderLogo(p.provider_name, p.logo_path);
+          if (homepage && logo) {
+            rendered += `<a href="${homepage}" target="_blank" rel="noopener"><img src="${logo}" alt="${providerName}" title="${providerName}" class="inline-block h-8 mx-2"></a>`;
+          } else if (logo) {
+            rendered += `<img src="${logo}" alt="${providerName}" title="${providerName}" class="inline-block h-8 mx-2 opacity-60 cursor-not-allowed">`;
+          } else {
+            rendered += `<span class='inline-block border border-blue-400 rounded px-2 py-1 mx-1 text-sm bg-blue-900 opacity-60 cursor-not-allowed'>${providerName}</span>`;
           }
-          return `<a href="${url}" target="_blank" rel="noopener"><span class='inline-block border border-blue-400 rounded px-2 py-1 mx-1 text-sm bg-blue-900'>${providerName}</span></a>`;
         }
-        if (logo) {
-          return `<img src="${logo}" alt="${providerName}" title="${providerName}" class="inline-block h-8 mx-2 opacity-60 cursor-not-allowed">`;
+      }
+      // 2. Render Watchmode sources, skipping any already shown.
+      if (sources && Array.isArray(sources)) {
+        for (const s of sources) {
+          const providerName = normalizeProviderName(s.name);
+          if (shown.has(providerName)) continue;
+          shown.add(providerName);
+          let url = s.web_url || getProviderHomepage(providerName);
+          let logo = getProviderLogo(s.name);
+          if (url && logo) {
+            rendered += `<a href="${url}" target="_blank" rel="noopener"><img src="${logo}" alt="${providerName}" title="${providerName}" class="inline-block h-8 mx-2"></a>`;
+          } else if (logo) {
+            rendered += `<img src="${logo}" alt="${providerName}" title="${providerName}" class="inline-block h-8 mx-2 opacity-60 cursor-not-allowed">`;
+          } else {
+            rendered += `<span class='inline-block border border-blue-400 rounded px-2 py-1 mx-1 text-sm bg-blue-900 opacity-60 cursor-not-allowed'>${providerName}</span>`;
+          }
         }
-        return `<span class='inline-block border border-blue-400 rounded px-2 py-1 mx-1 text-sm bg-blue-900 opacity-60 cursor-not-allowed'>${providerName}</span>`;
-      }).join('');
+      }
+      return rendered;
     }
 
     async function fetchAvailability(id, mediaType, title) {
       const type = mediaType === 'tv' ? 'tv' : 'movie';
       let stream = '', buy = '';
+      let tmdbFlat = [], tmdbBuy = [], wmStream = [], wmBuy = [];
       try {
         // TMDb providers (homepage only, not title-specific)
         const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
         const tmdbData = await tmdbRes.json();
         const countryData = tmdbData.results?.[currentRegion];
         if (countryData) {
-          const render = (items) => {
-            // Fake an array of "source" objects for deduplication
-            return renderProviders(items.map(p => ({
-              name: p.provider_name,
-              web_url: '', // TMDb does not provide direct web_url
-            })));
-          }
-          stream = countryData.flatrate ? render(countryData.flatrate) : '';
-          buy = countryData.buy ? render(countryData.buy) : '';
+          tmdbFlat = countryData.flatrate || [];
+          tmdbBuy = countryData.buy || [];
         }
         // Watchmode fallback/supplement (prefer direct-to-title links)
         if (title) {
@@ -296,17 +309,15 @@
             });
             const sourceData = await sourceRes.json();
             if (Array.isArray(sourceData)) {
-              // Streaming
-              let streamingSources = sourceData.filter(
+              wmStream = sourceData.filter(
                 s => s.type === 'sub' || s.type === 'free' || s.type === 'ads'
               );
-              stream += renderProviders(streamingSources);
-              // Buy/rent
-              let buySources = sourceData.filter(s => s.type === 'buy' || s.type === 'rent');
-              buy += renderProviders(buySources);
+              wmBuy = sourceData.filter(s => s.type === 'buy' || s.type === 'rent');
             }
           }
         }
+        stream = renderProviders(wmStream, tmdbFlat);
+        buy = renderProviders(wmBuy, tmdbBuy);
         if (!stream && !buy) return null;
         return { stream, buy };
       } catch (err) {
