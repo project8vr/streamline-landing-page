@@ -161,11 +161,41 @@
       });
     }
 
-    // Map of provider logo paths from TMDb for common providers
-    const providerLogos = {
+    // Helper: fallback homepage URLs for main providers
+    function getProviderHomepage(name) {
+      const map = {
+        'Netflix': 'https://www.netflix.com',
+        'Prime Video': 'https://www.primevideo.com',
+        'Disney Plus': 'https://www.disneyplus.com',
+        'Disney+': 'https://www.disneyplus.com',
+        'Hulu': 'https://www.hulu.com',
+        'Apple TV+': 'https://tv.apple.com',
+        'Apple TV Plus': 'https://tv.apple.com',
+        'Paramount Plus': 'https://www.paramountplus.com',
+        'Paramount+': 'https://www.paramountplus.com',
+        'Peacock': 'https://www.peacocktv.com',
+        'HBO Max': 'https://www.max.com',
+        'Max': 'https://www.max.com'
+      };
+      return map[name] || '#';
+    }
+
+    // Helper: provider logos from TMDb or Watchmode
+    const providerLogoMap = {
       'Netflix': 'https://image.tmdb.org/t/p/w45/wwemzKWzjKYJFfCeiB57q3r4Bcm.png',
-      // Add other providers here as needed
+      'Disney+': 'https://image.tmdb.org/t/p/w45/7rwgEs15tFwyR9NPQ5vpzxTj19Q.png',
+      'Prime Video': 'https://image.tmdb.org/t/p/w45/emthp39XA2YScoYL1p0sdbAH2WA.png',
+      'Hulu': 'https://image.tmdb.org/t/p/w45/giwM8XX4V2AQb9vsoN7yti82tKK.png',
+      'Apple TV+': 'https://image.tmdb.org/t/p/w45/6uhKBfmtzFqOcLoushwZUzYdQSc.png',
+      'Paramount+': 'https://image.tmdb.org/t/p/w45/xbhHHa1GkJJFJ6U7eJ4H6s0F5bD.png',
+      'Peacock': 'https://image.tmdb.org/t/p/w45/5UQsZrfbfG2dYJbx8DxfoTr2UOg.png',
+      'HBO Max': 'https://image.tmdb.org/t/p/w45/7HrwYFjdO8bLk5iNMR4rF3v6Z5H.png',
+      'Max': 'https://image.tmdb.org/t/p/w45/7HrwYFjdO8bLk5iNMR4rF3v6Z5H.png'
     };
+
+    function getProviderLogo(name) {
+      return providerLogoMap[name] || '';
+    }
 
     async function fetchAvailability(id, mediaType, title) {
       const type = mediaType === 'tv' ? 'tv' : 'movie';
@@ -177,7 +207,6 @@
         const countryData = tmdbData.results?.[currentRegion];
         if (countryData) {
           const render = (items) => items.map(p => {
-            // Link to provider homepage for TMDb providers
             let homepage = getProviderHomepage(p.provider_name);
             let logo = p.logo_path ? `https://image.tmdb.org/t/p/w45${p.logo_path}` : '';
             return homepage && logo
@@ -209,25 +238,28 @@
             });
             const sourceData = await sourceRes.json();
             if (Array.isArray(sourceData)) {
-              // Streaming (Netflix etc.)
+              // Streaming
               let streamingSources = sourceData.filter(
                 s => s.type === 'sub' || s.type === 'free' || s.type === 'ads'
               );
               stream += streamingSources.map(s => {
-                if (s.name === 'Netflix' && s.web_url) {
-                  // Netflix logo as clickable link to web_url
-                  return `<a href="${s.web_url}" target="_blank" rel="noopener">
-                    <img src="${providerLogos['Netflix']}" alt="Netflix" title="Netflix" class="inline-block h-8 mx-2" />
-                  </a>`;
+                let url = s.web_url || getProviderHomepage(s.name);
+                let logo = getProviderLogo(s.name);
+                if (logo) {
+                  return `<a href="${url}" target="_blank" rel="noopener"><img src="${logo}" alt="${s.name}" title="${s.name}" class="inline-block h-8 mx-2"></a>`;
                 }
-                // fallback: just provider name
-                return `<span class='inline-block border border-blue-400 rounded px-2 py-1 mx-1 text-sm bg-blue-900'>${s.name}</span>`;
+                return `<a href="${url}" target="_blank" rel="noopener"><span class='inline-block border border-blue-400 rounded px-2 py-1 mx-1 text-sm bg-blue-900'>${s.name}</span></a>`;
               }).join('');
-              // Buy/Rent
+              // Buy/rent
               let buySources = sourceData.filter(s => s.type === 'buy' || s.type === 'rent');
-              buy += buySources.map(s =>
-                `<span class='inline-block border border-yellow-400 rounded px-2 py-1 mx-1 text-sm bg-yellow-900'>${s.name}</span>`
-              ).join('');
+              buy += buySources.map(s => {
+                let url = s.web_url || getProviderHomepage(s.name);
+                let logo = getProviderLogo(s.name);
+                if (logo) {
+                  return `<a href="${url}" target="_blank" rel="noopener"><img src="${logo}" alt="${s.name}" title="${s.name}" class="inline-block h-8 mx-2"></a>`;
+                }
+                return `<a href="${url}" target="_blank" rel="noopener"><span class='inline-block border border-yellow-400 rounded px-2 py-1 mx-1 text-sm bg-yellow-900'>${s.name}</span></a>`;
+              }).join('');
             }
           }
         }
@@ -236,25 +268,6 @@
       } catch (err) {
         return null;
       }
-    }
-
-    // Helper: fallback homepage URLs for main providers
-    function getProviderHomepage(name) {
-      const map = {
-        'Netflix': 'https://www.netflix.com',
-        'Prime Video': 'https://www.primevideo.com',
-        'Disney Plus': 'https://www.disneyplus.com',
-        'Disney+': 'https://www.disneyplus.com',
-        'Hulu': 'https://www.hulu.com',
-        'Apple TV+': 'https://tv.apple.com',
-        'Apple TV Plus': 'https://tv.apple.com',
-        'Paramount Plus': 'https://www.paramountplus.com',
-        'Paramount+': 'https://www.paramountplus.com',
-        'Peacock': 'https://www.peacocktv.com',
-        'HBO Max': 'https://www.max.com',
-        'Max': 'https://www.max.com'
-      };
-      return map[name] || '#';
     }
 
     function clearResults() {
@@ -350,7 +363,7 @@
       regionBtn.classList.add('selected');
     }
 
-    // Wild Card / Randomize Feature - Centered Display
+    // Wild Card Feature
     async function wildCard() {
       document.getElementById('wildOverlay').style.display = "flex";
       let tries = 0, found = null;
@@ -376,7 +389,7 @@
         document.getElementById('wildOverlay').style.display = "none";
         clearResults();
         if (found) {
-          await renderBatch([found], true); // center!
+          await renderBatch([found], true);
         } else {
           document.getElementById('searchResults').innerHTML = `<div class="wild-card-center"><div class="text-lg font-bold text-yellow-400">Sorry, nothing found for your region and settings!</div></div>`;
         }
