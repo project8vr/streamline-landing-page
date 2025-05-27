@@ -112,6 +112,7 @@ console.log("PointerLockControls:", typeof THREE.PointerLockControls);
 
 let camera, scene, renderer, controls;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+let canJump = false;
 let velocity = new THREE.Vector3();
 let direction = new THREE.Vector3();
 let prevTime = performance.now();
@@ -121,7 +122,6 @@ animate();
 
 function init() {
   camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 1.5, 5);
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x18122b);
@@ -149,6 +149,9 @@ function init() {
   document.body.appendChild(renderer.domElement);
 
   controls = new THREE.PointerLockControls(camera, renderer.domElement);
+  controls.getObject().position.set(0, 1.5, 5); // set initial camera height
+
+  scene.add(controls.getObject());
 
   document.getElementById('ui').onclick = () => controls.lock();
   controls.addEventListener('lock', function() { document.getElementById('hint').style.display = 'none'; });
@@ -197,6 +200,7 @@ function animate() {
     if (moveForward || moveBackward) velocity.z -= direction.z * speed * delta;
     if (moveLeft || moveRight) velocity.x -= direction.x * speed * delta;
 
+    // Apply movement to the controls' object (not camera directly!)
     controls.moveRight(-velocity.x * delta);
     controls.moveForward(-velocity.z * delta);
 
