@@ -2,25 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>3D Test - Stream 2 Night</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PointerLockControls Test</title>
   <style>
     body { margin:0; overflow:hidden; }
-    #ui { position:fixed; top:15px; left:0; width:100%; z-index:10; text-align:center; font-family:sans-serif; }
+    #ui { position:fixed; top:15px; left:0; width:100%; text-align:center; font-family:sans-serif; }
     #hint { color:#fff; font-size:1.2rem; background:#2b2266cc; padding:0.7em 1.2em; border-radius:1em; display:inline-block; }
   </style>
 </head>
 <body>
 <div id="ui">
-  <span id="hint">Click to enter the 3D store — WASD + Mouse to move, Esc to unlock</span>
+  <span id="hint">Click to enter — WASD+Mouse to move</span>
 </div>
+<!-- Important: Three.js first, then PointerLockControls -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/examples/js/controls/PointerLockControls.min.js"></script>
 <script>
+console.log("THREE version:", THREE.REVISION);
+console.log("PointerLockControls:", typeof THREE.PointerLockControls);
+
 let camera, scene, renderer, controls;
-let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-let velocity = new THREE.Vector3(), direction = new THREE.Vector3();
-let prevTime = performance.now();
 
 init();
 animate();
@@ -32,87 +32,20 @@ function init() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x18122b);
 
-  // LIGHT
-  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444488, 1.1);
-  scene.add(hemiLight);
-
-  // FLOOR
-  let floor = new THREE.Mesh(new THREE.BoxGeometry(30, 1, 30), new THREE.MeshStandardMaterial({color:0x3c2e53}));
-  floor.position.set(0, -0.5, 0);
-  scene.add(floor);
-
-  // CUBE TEST
-  let cube = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshStandardMaterial({color:0x7f5af0}));
-  cube.position.set(0,1,0);
-  scene.add(cube);
-
-  // RENDERER
   renderer = new THREE.WebGLRenderer({antialias:true});
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setClearColor(0x18122b);
   document.body.appendChild(renderer.domElement);
 
-  // CONTROLS (the critical line!)
+  // This line will fail if PointerLockControls is not attached!
   controls = new THREE.PointerLockControls(camera, renderer.domElement);
 
-  document.getElementById('ui').onclick = () => {
-    controls.lock();
-  };
-  controls.addEventListener('lock', function() {
-    document.getElementById('hint').style.display = 'none';
-  });
-  controls.addEventListener('unlock', function() {
-    document.getElementById('hint').style.display = 'inline-block';
-  });
-
-  window.addEventListener('resize', function() {
-    camera.aspect = window.innerWidth/window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-
-  // MOVEMENT
-  document.addEventListener('keydown', function(e){
-    switch(e.code){
-      case 'ArrowUp': case 'KeyW': moveForward = true; break;
-      case 'ArrowLeft': case 'KeyA': moveLeft = true; break;
-      case 'ArrowDown': case 'KeyS': moveBackward = true; break;
-      case 'ArrowRight': case 'KeyD': moveRight = true; break;
-    }
-  });
-  document.addEventListener('keyup', function(e){
-    switch(e.code){
-      case 'ArrowUp': case 'KeyW': moveForward = false; break;
-      case 'ArrowLeft': case 'KeyA': moveLeft = false; break;
-      case 'ArrowDown': case 'KeyS': moveBackward = false; break;
-      case 'ArrowRight': case 'KeyD': moveRight = false; break;
-    }
-  });
+  document.getElementById('ui').onclick = () => controls.lock();
+  controls.addEventListener('lock', function() { document.getElementById('hint').style.display = 'none'; });
+  controls.addEventListener('unlock', function() { document.getElementById('hint').style.display = 'inline-block'; });
 }
 
 function animate() {
   requestAnimationFrame(animate);
-
-  if(controls && controls.isLocked){
-    let time = performance.now();
-    let delta = (time - prevTime)/1000;
-    velocity.x -= velocity.x * 10.0 * delta;
-    velocity.z -= velocity.z * 10.0 * delta;
-
-    direction.z = Number(moveForward) - Number(moveBackward);
-    direction.x = Number(moveRight) - Number(moveLeft);
-    direction.normalize();
-
-    let speed = 6.0;
-    if (moveForward || moveBackward) velocity.z -= direction.z * speed * delta;
-    if (moveLeft || moveRight) velocity.x -= direction.x * speed * delta;
-
-    controls.moveRight(-velocity.x * delta);
-    controls.moveForward(-velocity.z * delta);
-
-    prevTime = time;
-  }
-
   renderer.render(scene, camera);
 }
 </script>
