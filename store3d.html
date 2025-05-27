@@ -16,14 +16,13 @@
   <span id="hint">Click to enter the 3D store &mdash; WASD + Mouse to move, Esc to unlock</span>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/PointerLockControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/PointerLockControls.min.js"></script>
 <script>
 let camera, scene, renderer, controls;
 let objects = [];
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
 let velocity = new THREE.Vector3(), direction = new THREE.Vector3();
 let prevTime = performance.now();
-const clock = new THREE.Clock();
 
 init();
 animate();
