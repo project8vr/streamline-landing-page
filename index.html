@@ -68,7 +68,6 @@
     <div class="flex justify-center items-center mb-8">
       <input id="searchInput" type="text" autocomplete="off" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded" />
       <button id="wildBtn" class="wild-btn" title="Spin the wheel for a random pick!">🎲 Wild Card</button>
-      <!-- Wild Cards Game button removed -->
     </div>
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
@@ -82,14 +81,11 @@
     <div class="spin-wheel"></div>
     <div class="text-xl font-bold mt-2">Picking something great for you…</div>
   </div>
-  <!-- Wild Cards Overlay and logic removed -->
   <script>
-    // ... (All your original JS code, EXCEPT everything related to the Wild Cards Game has been removed)
-    // All event listeners, variables, and functions related to #wildcardsGameBtn, #wildcardsOverlay, and their logic are now gone.
-    // The rest of your app (including the regular Wild Card feature) is untouched.
-    
+    // API KEYS
     const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
     const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
+
     let currentType = 'all';
     let currentRegion = 'GB';
     let currentQuery = '';
@@ -165,19 +161,34 @@
       });
     }
 
+    // Map of provider logo paths from TMDb for common providers
+    const providerLogos = {
+      'Netflix': 'https://image.tmdb.org/t/p/w45/wwemzKWzjKYJFfCeiB57q3r4Bcm.png',
+      // Add other providers here as needed
+    };
+
     async function fetchAvailability(id, mediaType, title) {
       const type = mediaType === 'tv' ? 'tv' : 'movie';
+      let stream = '', buy = '';
       try {
+        // TMDb providers
         const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
         const tmdbData = await tmdbRes.json();
         const countryData = tmdbData.results?.[currentRegion];
-        let stream = '', buy = '';
         if (countryData) {
-          const render = (items) => items.map(p => `<img src='https://image.tmdb.org/t/p/w45${p.logo_path}' alt='${p.provider_name}' title='${p.provider_name}' class='inline-block h-8 mx-2'>`).join('');
+          const render = (items) => items.map(p => {
+            // Link to provider homepage for TMDb providers
+            let homepage = getProviderHomepage(p.provider_name);
+            let logo = p.logo_path ? `https://image.tmdb.org/t/p/w45${p.logo_path}` : '';
+            return homepage && logo
+              ? `<a href="${homepage}" target="_blank" rel="noopener"><img src="${logo}" alt="${p.provider_name}" title="${p.provider_name}" class="inline-block h-8 mx-2"></a>`
+              : '';
+          }).join('');
           stream = countryData.flatrate ? render(countryData.flatrate) : '';
           buy = countryData.buy ? render(countryData.buy) : '';
         }
-        if (!stream && !buy && title) {
+        // Watchmode fallback/supplement
+        if (title) {
           const searchRes = await fetch(`https://watchmode.p.rapidapi.com/search/?search_value=${encodeURIComponent(title)}&search_type=1`, {
             method: 'GET',
             headers: {
@@ -186,7 +197,8 @@
             }
           });
           const searchData = await searchRes.json();
-          const match = searchData.title_results?.find(r => r.name.toLowerCase() === title.toLowerCase());
+          let match = searchData.title_results?.find(r => r.name.toLowerCase() === title.toLowerCase());
+          if (!match && searchData.title_results?.length) match = searchData.title_results[0];
           if (match) {
             const sourceRes = await fetch(`https://watchmode.p.rapidapi.com/title/${match.id}/sources/`, {
               method: 'GET',
@@ -196,10 +208,27 @@
               }
             });
             const sourceData = await sourceRes.json();
-            const watchmodeLogos = sourceData.filter(s => s.type === 'sub' || s.type === 'buy')
-              .map(s => `<div class='text-sm text-white border px-2 py-1 rounded mx-1'>${s.name}</div>`)
-              .join('');
-            stream = watchmodeLogos;
+            if (Array.isArray(sourceData)) {
+              // Streaming (Netflix etc.)
+              let streamingSources = sourceData.filter(
+                s => s.type === 'sub' || s.type === 'free' || s.type === 'ads'
+              );
+              stream += streamingSources.map(s => {
+                if (s.name === 'Netflix' && s.web_url) {
+                  // Netflix logo as clickable link to web_url
+                  return `<a href="${s.web_url}" target="_blank" rel="noopener">
+                    <img src="${providerLogos['Netflix']}" alt="Netflix" title="Netflix" class="inline-block h-8 mx-2" />
+                  </a>`;
+                }
+                // fallback: just provider name
+                return `<span class='inline-block border border-blue-400 rounded px-2 py-1 mx-1 text-sm bg-blue-900'>${s.name}</span>`;
+              }).join('');
+              // Buy/Rent
+              let buySources = sourceData.filter(s => s.type === 'buy' || s.type === 'rent');
+              buy += buySources.map(s =>
+                `<span class='inline-block border border-yellow-400 rounded px-2 py-1 mx-1 text-sm bg-yellow-900'>${s.name}</span>`
+              ).join('');
+            }
           }
         }
         if (!stream && !buy) return null;
@@ -207,6 +236,25 @@
       } catch (err) {
         return null;
       }
+    }
+
+    // Helper: fallback homepage URLs for main providers
+    function getProviderHomepage(name) {
+      const map = {
+        'Netflix': 'https://www.netflix.com',
+        'Prime Video': 'https://www.primevideo.com',
+        'Disney Plus': 'https://www.disneyplus.com',
+        'Disney+': 'https://www.disneyplus.com',
+        'Hulu': 'https://www.hulu.com',
+        'Apple TV+': 'https://tv.apple.com',
+        'Apple TV Plus': 'https://tv.apple.com',
+        'Paramount Plus': 'https://www.paramountplus.com',
+        'Paramount+': 'https://www.paramountplus.com',
+        'Peacock': 'https://www.peacocktv.com',
+        'HBO Max': 'https://www.max.com',
+        'Max': 'https://www.max.com'
+      };
+      return map[name] || '#';
     }
 
     function clearResults() {
@@ -219,15 +267,16 @@
         const found = batch[0];
         const title = found.title || found.name || 'Untitled';
         const poster = found.poster_path ? `https://image.tmdb.org/t/p/w500${found.poster_path}` : '';
-        const availability = found.availability;
+        const availability = found.availability || await fetchAvailability(found.id, found.media_type, title);
         container.innerHTML = `
           <div class="wild-card-center">
             <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center max-w-xs mx-auto">
               <img src="${poster}" alt="${title}" class="rounded mb-5 mx-auto" style="max-height:290px; width:auto;">
               <h3 class="text-2xl font-bold mb-3">${title}</h3>
               <div class="text-md text-gray-300 mb-3">
-                ${availability.stream ? `<div class='mb-2'>Stream on:<div class='flex flex-wrap justify-center mt-2'>${availability.stream}</div></div>` : ''}
-                ${availability.buy ? `<div class='mb-2'>Buy on:<div class='flex flex-wrap justify-center mt-2'>${availability.buy}</div></div>` : ''}
+                ${availability?.stream ? `<div class='mb-2'>Stream on:<div class='flex flex-wrap justify-center mt-2'>${availability.stream}</div></div>` : ''}
+                ${availability?.buy ? `<div class='mb-2'>Buy on:<div class='flex flex-wrap justify-center mt-2'>${availability.buy}</div></div>` : ''}
+                ${!availability ? `<div class="text-sm text-yellow-400 mt-4">Not yet available to stream or buy in selected region.</div>` : ''}
               </div>
             </div>
           </div>
@@ -400,6 +449,7 @@
         await wildCard();
       };
     });
+
   </script>
 </body>
 </html>
