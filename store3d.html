@@ -18,7 +18,6 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/PointerLockControls.min.js"></script>
 <script>
 let camera, scene, renderer, controls;
-let objects = [];
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
 let velocity = new THREE.Vector3(), direction = new THREE.Vector3();
 let prevTime = performance.now();
@@ -27,89 +26,32 @@ init();
 animate();
 
 function init() {
-  // SCENE SETUP
   camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 1.5, 8);
+  camera.position.set(0, 1.5, 5);
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x18122b);
 
-  // LIGHTING
+  // LIGHT
   const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444488, 1.1);
   scene.add(hemiLight);
 
-  const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
-  dirLight.position.set(5, 10, 5);
-  scene.add(dirLight);
-
   // FLOOR
-  let floorGeo = new THREE.BoxGeometry(30, 1, 30);
-  let floorMat = new THREE.MeshStandardMaterial({color:0x3c2e53});
-  let floor = new THREE.Mesh(floorGeo, floorMat);
+  let floor = new THREE.Mesh(new THREE.BoxGeometry(30, 1, 30), new THREE.MeshStandardMaterial({color:0x3c2e53}));
   floor.position.set(0, -0.5, 0);
-  floor.receiveShadow = true;
   scene.add(floor);
 
   // WALLS
   let wallMat = new THREE.MeshStandardMaterial({color:0x272849});
-  let wallGeo = new THREE.BoxGeometry(30, 8, 1);
-  let wall1 = new THREE.Mesh(wallGeo, wallMat);
-  wall1.position.set(0, 3.5, -15);
-  scene.add(wall1);
-  let wall2 = wall1.clone();
-  wall2.position.set(0, 3.5, 15);
-  scene.add(wall2);
+  let wall1 = new THREE.Mesh(new THREE.BoxGeometry(30, 8, 1), wallMat); wall1.position.set(0, 3.5, -15); scene.add(wall1);
+  let wall2 = wall1.clone(); wall2.position.set(0,3.5,15); scene.add(wall2);
+  let wall3 = new THREE.Mesh(new THREE.BoxGeometry(1,8,30), wallMat); wall3.position.set(-15,3.5,0); scene.add(wall3);
+  let wall4 = wall3.clone(); wall4.position.set(15,3.5,0); scene.add(wall4);
 
-  let sideWallGeo = new THREE.BoxGeometry(1, 8, 30);
-  let wall3 = new THREE.Mesh(sideWallGeo, wallMat);
-  wall3.position.set(-15, 3.5, 0);
-  scene.add(wall3);
-  let wall4 = wall3.clone();
-  wall4.position.set(15, 3.5, 0);
-  scene.add(wall4);
-
-  // SHELVES
-  for(let row=0; row<2; ++row) {
-    for(let i=0; i<3; ++i) {
-      let shelfGeo = new THREE.BoxGeometry(9,0.3,2);
-      let shelfMat = new THREE.MeshStandardMaterial({color:0x6845ad});
-      let shelf = new THREE.Mesh(shelfGeo, shelfMat);
-      shelf.position.set(-7+i*7, 1.0+row*2.5, -7+row*8);
-      scene.add(shelf);
-    }
-  }
-
-  // "DVDs" as upright blocks with posters (front face)
-  let movieData = [
-    { title:"The Matrix", poster:"https://image.tmdb.org/t/p/w185/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg" },
-    { title:"Inception", poster:"https://image.tmdb.org/t/p/w185/edv5CZvWj09upOsy2Y6IwDhK8bt.jpg" },
-    { title:"Interstellar", poster:"https://image.tmdb.org/t/p/w185/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg" },
-    { title:"Barbie", poster:"https://image.tmdb.org/t/p/w185/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg" },
-    { title:"Pulp Fiction", poster:"https://image.tmdb.org/t/p/w185/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg" },
-    { title:"Shrek", poster:"https://image.tmdb.org/t/p/w185/iB64vpL3dIObOtMZgX3RqdVdQDc.jpg" }
-  ];
-  let dvdMat = new THREE.MeshStandardMaterial({color:0xffffff});
-
-  let dvdCount = movieData.length;
-  for(let shelfRow=0; shelfRow<2; ++shelfRow) {
-    for(let i=0; i<dvdCount; ++i) {
-      let posterTex = new THREE.TextureLoader().load(movieData[i].poster);
-      let mats = [
-        new THREE.MeshStandardMaterial({map: posterTex}), // front
-        dvdMat, dvdMat, dvdMat, dvdMat, dvdMat // others plain
-      ];
-      let box = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.8, 0.13), mats);
-      box.position.set(-7+2*i, 1.4+shelfRow*2.5, -7+shelfRow*8+0.8);
-      box.userData = { title: movieData[i].title };
-      scene.add(box);
-      objects.push(box);
-    }
-  }
-
-  // ADD A "BLOCKY" CASHIER DESK
-  let desk = new THREE.Mesh(new THREE.BoxGeometry(3,1,1.5), new THREE.MeshStandardMaterial({color:0x995533}));
-  desk.position.set(0, 0.5, 11);
-  scene.add(desk);
+  // CUBE TEST (you should see this in the middle!)
+  let cube = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshStandardMaterial({color:0x7f5af0}));
+  cube.position.set(0,1,0);
+  scene.add(cube);
 
   // RENDERER
   renderer = new THREE.WebGLRenderer({antialias:true});
@@ -130,7 +72,6 @@ function init() {
     document.getElementById('hint').style.display = 'inline-block';
   });
 
-  // RESIZE HANDLER
   window.addEventListener('resize', function() {
     camera.aspect = window.innerWidth/window.innerHeight;
     camera.updateProjectionMatrix();
@@ -154,29 +95,6 @@ function init() {
       case 'ArrowRight': case 'KeyD': moveRight = false; break;
     }
   });
-
-  // CLICK ON DVD TO SHOW INFO
-  renderer.domElement.addEventListener('click', function(e){
-    if (!controls.isLocked) return;
-    let mouse = new THREE.Vector2(0,0); // center of screen
-    let raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera);
-    let intersects = raycaster.intersectObjects(objects);
-    if(intersects.length > 0){
-      let t = intersects[0].object.userData.title;
-      showMoviePopup(t);
-    }
-  });
-}
-
-// SIMPLE POPUP
-function showMoviePopup(title) {
-  let popup = document.createElement('div');
-  popup.innerHTML = `<div style="background:rgba(30,20,60,0.95);padding:1.6em 2.2em;border-radius:1.6em;box-shadow:0 2px 30px #000b;color:#fff;font-size:1.4em;position:fixed;left:50%;top:30%;transform:translate(-50%,-50%);z-index:999;">
-    <b>${title}</b><br><button id="closePop" style="margin-top:1em;font-size:1em;padding:0.5em 1.2em;border-radius:1em;background:#7f5af0;color:#fff;border:none;">Close</button>
-  </div>`;
-  document.body.appendChild(popup);
-  document.getElementById('closePop').onclick = () => popup.remove();
 }
 
 function animate() {
