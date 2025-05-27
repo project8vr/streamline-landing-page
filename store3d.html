@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>3D Blockbuster Store – Stream 2 Night</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { margin:0; overflow:hidden; }
+    #ui { position:fixed; top:15px; left:0; width:100%; z-index:10; text-align:center; font-family:sans-serif; }
+    #ui button { font-size:1.1rem; padding:0.5rem 1.2rem; border-radius:1.4rem; border:none; color:#fff; background: #7f5af0; margin:0 0.3rem; }
+    #hint { color:#fff; font-size:1.2rem; background:#2b2266cc; padding:0.7em 1.2em; border-radius:1em; display:inline-block; }
+  </style>
+</head>
+<body>
+<div id="ui">
+  <span id="hint">Click to enter the 3D store &mdash; WASD + Mouse to move, Esc to unlock</span>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/PointerLockControls.js"></script>
+<script>
+let camera, scene, renderer, controls;
+let objects = [];
+let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+let velocity = new THREE.Vector3(), direction = new THREE.Vector3();
+let prevTime = performance.now();
+const clock = new THREE.Clock();
+
+init();
+animate();
+
+function init() {
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x18122b);
+
+  // Lighting
+  let light = new THREE.HemisphereLight(0xffffff, 0x333366, 1.2);
+  scene.add(light);
+
+  // Floor
+  let floorGeo = new THREE.BoxGeometry(30, 1, 30);
+  let floorMat = new THREE.MeshStandardMaterial({color:0x3c2e53});
+  let floor = new THREE.Mesh(floorGeo, floorMat);
+  floor.position.set(0, -0.5, 0);
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  // Walls (simple)
+  let wallMat = new THREE.MeshStandardMaterial({color:0x222240});
+  let wallGeo = new THREE.BoxGeometry(30, 8, 1);
+  let wall1 = new THREE.Mesh(wallGeo, wallMat);
+  wall1.position.set(0, 3.5, -15);
+  scene.add(wall1);
+  let wall2 = wall1.clone();
+  wall2.position.set(0, 3.5, 15);
+  scene.add(wall2);
+  let wall3 = new THREE.Mesh(new THREE.BoxGeometry(1,8,28), wallMat);
+  wall3.position.set(-15,3.5,0);
+  scene.add(wall3);
+  let wall4 = wall3.clone();
+  wall4.position.set(15,3.5,0);
+  scene.add(wall4);
+
+  // Shelves (just blocks)
+  for(let row=0; row<2; ++row) {
+    for(let i=0; i<3; ++i) {
+      let shelfGeo = new THREE.BoxGeometry(9,1,2);
+      let shelfMat = new THREE.MeshStandardMaterial({color:0x6845ad});
+      let shelf = new THREE.Mesh(shelfGeo, shelfMat);
+      shelf.position.set(-7+i*7, row*2+0.6, -7+row*8);
+      scene.add(shelf);
+    }
+  }
+
+  // "DVDs" as upright blocks with posters
+  let movieData = [
+    { title:"The Matrix", poster:"https://image.tmdb.org/t/p/w185/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg" },
+    { title:"Inception", poster:"https://image.tmdb.org/t/p/w185/edv5CZvWj09upOsy2Y6IwDhK8bt.jpg" },
+    { title:"Interstellar", poster:"https://image.tmdb.org/t/p/w185/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg" },
+    { title:"Barbie", poster:"https://image.tmdb.org/t/p/w185/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg" }
+  ];
+  let dvdMat = new THREE.MeshStandardMaterial({color:0xffffff});
+  for(let s=0; s<2; ++s) {
+    for(let i=0; i<movieData.length; ++i) {
+      let boxGeo = new THREE.BoxGeometry(0.5, 0.8, 0.1);
+      let mat = dvdMat.clone();
+      if(movieData[i].poster) {
+        let tex = new THREE.TextureLoader().load(movieData[i].poster);
+        mat = [
+          new THREE.MeshStandardMaterial({color:0x333, map:tex}), // front
+          dvdMat, dvdMat, dvdMat, dvdMat, dvdMat
+        ];
+      }
+      let box = new THREE.Mesh(boxGeo, mat);
+      box.position.set(-7+2*i, 1.3+s*2, -7+s*8+0.8);
+      box.userData = { title: movieData[i].title };
+      scene.add(box);
+      objects.push(box);
+    }
+  }
+
+  // Camera & controls
+  renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  controls = new THREE.PointerLockControls(camera, renderer.domElement);
+  camera.position.set(0, 1.5, 10);
+
+  document.getElementById('ui').onclick = () => {
+    controls.lock();
+  };
+  controls.addEventListener('lock', function() {
+    document.getElementById('hint').style.display = 'none';
+  });
+  controls.addEventListener('unlock', function() {
+    document.getElementById('hint').style.display = 'inline-block';
+  });
+
+  window.addEventListener('resize', function() {
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // Movement controls
+  document.addEventListener('keydown', function(e){
+    switch(e.code){
+      case 'ArrowUp': case 'KeyW': moveForward = true; break;
+      case 'ArrowLeft': case 'KeyA': moveLeft = true; break;
+      case 'ArrowDown': case 'KeyS': moveBackward = true; break;
+      case 'ArrowRight': case 'KeyD': moveRight = true; break;
+    }
+  });
+  document.addEventListener('keyup', function(e){
+    switch(e.code){
+      case 'ArrowUp': case 'KeyW': moveForward = false; break;
+      case 'ArrowLeft': case 'KeyA': moveLeft = false; break;
+      case 'ArrowDown': case 'KeyS': moveBackward = false; break;
+      case 'ArrowRight': case 'KeyD': moveRight = false; break;
+    }
+  });
+
+  // Click on DVD to show info
+  renderer.domElement.addEventListener('click', function(e){
+    if (!controls.isLocked) return;
+    let mouse = new THREE.Vector2(), raycaster = new THREE.Raycaster();
+    mouse.x = 0; mouse.y = 0; // center of screen
+    raycaster.setFromCamera(mouse, camera);
+    let intersects = raycaster.intersectObjects(objects);
+    if(intersects.length > 0){
+      let t = intersects[0].object.userData.title;
+      alert("You selected: " + t);
+    }
+  });
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  if(controls && controls.isLocked){
+    let time = performance.now();
+    let delta = (time - prevTime)/1000;
+    velocity.x -= velocity.x * 10.0 * delta;
+    velocity.z -= velocity.z * 10.0 * delta;
+
+    direction.z = Number(moveForward) - Number(moveBackward);
+    direction.x = Number(moveRight) - Number(moveLeft);
+    direction.normalize();
+
+    let speed = 6.0;
+    if (moveForward || moveBackward) velocity.z -= direction.z * speed * delta;
+    if (moveLeft || moveRight) velocity.x -= direction.x * speed * delta;
+
+    controls.moveRight(-velocity.x * delta);
+    controls.moveForward(-velocity.z * delta);
+
+    prevTime = time;
+  }
+
+  renderer.render(scene, camera);
+}
+</script>
+</body>
+</html>
