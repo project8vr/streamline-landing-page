@@ -105,19 +105,16 @@
 
     // Canonical provider normalizer
     function normalizeProviderName(name) {
-      // Amazon/Prime variants
       if (
         name === 'Amazon' ||
         name === 'Amazon Prime' ||
         name === 'Amazon Prime Video' ||
         name === 'Prime Video'
       ) return 'Prime Video';
-      // Netflix w/ads
       if (name === 'Netflix with Ads' || name === 'Netflix') return 'Netflix';
       return name;
     }
 
-    // Provider homepage map
     function getProviderHomepage(name) {
       const map = {
         'Netflix': 'https://www.netflix.com',
@@ -143,7 +140,6 @@
       return map[normalizeProviderName(name)] || '';
     }
 
-    // Provider logos (use TMDb's logo_path if present, else fallback to this map)
     const providerLogoMap = {
       'Netflix': 'https://image.tmdb.org/t/p/w45/wwemzKWzjKYJFfCeiB57q3r4Bcm.png',
       'Disney+': 'https://image.tmdb.org/t/p/w45/7rwgEs15tFwyR9NPQ5vpzxTj19Q.png',
@@ -279,7 +275,6 @@
       let stream = '', buy = '';
       let tmdbFlat = [], tmdbBuy = [], wmStream = [], wmBuy = [];
       try {
-        // TMDb providers (homepage only, not title-specific)
         const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
         const tmdbData = await tmdbRes.json();
         const countryData = tmdbData.results?.[currentRegion];
@@ -287,7 +282,6 @@
           tmdbFlat = countryData.flatrate || [];
           tmdbBuy = countryData.buy || [];
         }
-        // Watchmode fallback/supplement (prefer direct-to-title links)
         if (title) {
           const searchRes = await fetch(`https://watchmode.p.rapidapi.com/search/?search_value=${encodeURIComponent(title)}&search_type=1`, {
             method: 'GET',
@@ -396,14 +390,24 @@
       isLoading = false;
     }
 
+    // Modified showMore to avoid duplicates
     async function showMore() {
       if (isLoading || showMoreCount >= maxShowMore) return;
       isLoading = true;
       currentPage++;
       let query = currentQuery.trim();
       let newResults = await fetchMedia(currentType, query, currentPage);
-      let all = deduplicateAndSort(results.concat(newResults), currentQuery);
-      results = all;
+
+      // Remove duplicates by id and media_type
+      const existingIds = new Set(results.map(item => (item.media_type || '') + ':' + item.id));
+      const filteredNewResults = newResults.filter(item => {
+        const key = (item.media_type || '') + ':' + item.id;
+        return !existingIds.has(key);
+      });
+
+      results = results.concat(filteredNewResults);
+
+      let all = deduplicateAndSort(results, currentQuery);
       await renderBatch(all.slice((currentPage - 1) * 12, currentPage * 12));
       showMoreCount++;
       isLoading = false;
