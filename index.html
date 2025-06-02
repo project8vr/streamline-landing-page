@@ -80,8 +80,8 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <!-- Changed animal: Llama -->
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/llama_1f999.png" alt="Llama" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <!-- Changed animal: Koala -->
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/koala_1f428.png" alt="Koala" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
@@ -233,7 +233,6 @@
     function renderProviders(sources, tmdbProvidersArr) {
       const shown = new Set();
       let rendered = '';
-      // 1. Render all TMDb providers first, using their logo_path if present.
       if (tmdbProvidersArr && Array.isArray(tmdbProvidersArr)) {
         for (const p of tmdbProvidersArr) {
           const providerName = normalizeProviderName(p.provider_name);
@@ -250,7 +249,6 @@
           }
         }
       }
-      // 2. Render Watchmode sources, skipping any already shown.
       if (sources && Array.isArray(sources)) {
         for (const s of sources) {
           const providerName = normalizeProviderName(s.name);
@@ -390,7 +388,7 @@
       isLoading = false;
     }
 
-    // Modified showMore to avoid duplicates
+    // --- FINAL FIX: NO DUPLICATES ON SHOW MORE ---
     async function showMore() {
       if (isLoading || showMoreCount >= maxShowMore) return;
       isLoading = true;
@@ -398,17 +396,21 @@
       let query = currentQuery.trim();
       let newResults = await fetchMedia(currentType, query, currentPage);
 
-      // Remove duplicates by id and media_type
+      // Add only truly new items to results
       const existingIds = new Set(results.map(item => (item.media_type || '') + ':' + item.id));
-      const filteredNewResults = newResults.filter(item => {
+      for (const item of newResults) {
         const key = (item.media_type || '') + ':' + item.id;
-        return !existingIds.has(key);
-      });
+        if (!existingIds.has(key)) {
+          results.push(item);
+          existingIds.add(key);
+        }
+      }
 
-      results = results.concat(filteredNewResults);
-
-      let all = deduplicateAndSort(results, currentQuery);
-      await renderBatch(all.slice((currentPage - 1) * 12, currentPage * 12));
+      // Always deduplicate and sort before displaying
+      const all = deduplicateAndSort(results, currentQuery);
+      // Only display items that have not already been displayed (i.e., next 12 unique)
+      const alreadyDisplayed = (currentPage - 1) * 12;
+      await renderBatch(all.slice(alreadyDisplayed, alreadyDisplayed + 12));
       showMoreCount++;
       isLoading = false;
     }
