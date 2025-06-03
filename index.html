@@ -51,6 +51,41 @@
     @media (max-width: 1024px) {
       .wild-card-center { min-height: 220px; }
     }
+    /* Feedback Widget Styles */
+    .feedback-widget-float { position:fixed; top:2rem; left:2rem; z-index:9999; }
+    .feedback-form-panel { display:none; background:#18122b; border-radius:1em; box-shadow:0 2px 12px #0008; padding:1.5em 1.2em; width:350px; max-width:calc(100vw - 2em); margin-top:0.7em; }
+    .feedback-form-panel.active { display:block; }
+    .feedback-form-panel h3 { font-size:1.25em; font-weight:700; color:#7f5af0; margin-bottom:0.5em; }
+    .feedback-form-panel label { font-size:1em; font-weight:600; color:#fff; margin-top:0.5em; }
+    .feedback-form-panel textarea, .feedback-form-panel input[type="email"] {
+      width:100%; margin-bottom:0.7em; border-radius:0.5em; padding:0.5em; border:none; background:#22263a; color:#fff;
+    }
+    .feedback-form-panel button[type="submit"] {
+      background:linear-gradient(to right,#7f5af0,#2cb67d); color:#fff; padding:0.7em 1.2em; border-radius:1em; font-weight:700; border:none; cursor:pointer; width:100%;
+    }
+    .feedback-form-panel .feedback-form-close-btn { background:none; border:none; color:#aaa; font-size:1.3em; cursor:pointer; float:right; }
+    .feedback-message { margin-top:0.7em; font-size:0.95em; min-height:1.3em; }
+    /* Trailer Modal Styles */
+    #trailer-modal-bg {
+      display: none; position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.85); z-index: 10001; align-items: center; justify-content: center;
+    }
+    #trailer-modal-bg.active { display: flex; }
+    #trailer-modal {
+      background: #18122b; padding: 1.5em; border-radius: 1em; box-shadow: 0 2px 18px #000b; position: relative;
+      max-width: 96vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;
+    }
+    #trailer-modal iframe {
+      width: 80vw; max-width: 720px; height: 45vw; max-height: 405px; border-radius: 0.7em; background: #000;
+    }
+    #trailer-modal .close-btn {
+      position: absolute; top: 0.9em; right: 1.2em; font-size: 2em; color: #fff; background: none; border: none; cursor: pointer;
+      transition: color 0.2s;
+    }
+    #trailer-modal .close-btn:hover { color: #7f5af0; }
+    #trailer-modal .no-trailer {
+      color: #ff7171; font-weight: bold; margin-top: 1em; text-align: center;
+    }
   </style>
 </head>
 <body class="text-white">
@@ -80,7 +115,6 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <!-- Changed animal: Penguin -->
   <img src="https://em-content.zobj.net/source/microsoft-teams/337/penguin_1f427.png" alt="Penguin" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
@@ -90,73 +124,98 @@
     <div class="text-xl font-bold mt-2">Picking something great for you…</div>
   </div>
   
-<!-- Feedback Widget: Floating, sticky top left (Formspree version) -->
-<div id="feedback-widget" style="position:fixed;top:2rem;left:2rem;z-index:9999;">
-  <button id="feedback-open-btn" style="background:#2cb67d;color:#fff;padding:0.7em 1.2em;border-radius:1em;font-weight:700;box-shadow:0 2px 12px #0003;border:none;cursor:pointer;">
-    💬 Feedback
-  </button>
-  <div id="feedback-panel" style="display:none;background:#18122b;border-radius:1em;box-shadow:0 2px 12px #0008;padding:1.5em 1.2em;width:350px;max-width:calc(100vw - 2em);margin-top:0.7em;">
-    <div style="text-align:right;">
-      <button id="feedback-close-btn" style="background:none;border:none;color:#aaa;font-size:1.3em;cursor:pointer;">&times;</button>
+  <!-- Feedback Widget: Floating, sticky top left (Formspree version) -->
+  <div id="feedback-widget" class="feedback-widget-float">
+    <button id="feedback-open-btn" style="background:#2cb67d;color:#fff;padding:0.7em 1.2em;border-radius:1em;font-weight:700;box-shadow:0 2px 12px #0003;border:none;cursor:pointer;">
+      💬 Feedback
+    </button>
+    <div id="feedback-panel" class="feedback-form-panel">
+      <button type="button" id="feedback-close-btn" class="feedback-form-close-btn">&times;</button>
+      <h3>We'd love your feedback!</h3>
+      <form id="feedback-form" action="https://formspree.io/f/xzzgbygy" method="POST">
+        <label for="feedback-like">What did you like?</label>
+        <textarea id="feedback-like" name="like" rows="2" required placeholder="What worked well for you?"></textarea>
+        <label for="feedback-wish">What do you wish was different?</label>
+        <textarea id="feedback-wish" name="wish" rows="2" placeholder="How can we improve?"></textarea>
+        <button type="submit">Send Feedback</button>
+        <div id="feedback-message" class="feedback-message"></div>
+      </form>
     </div>
-    <h3 style="font-size:1.25em;font-weight:700;color:#7f5af0;margin-bottom:0.5em;">We'd love your feedback!</h3>
-    <form id="feedback-form" action="https://formspree.io/f/xzzgbygy" method="POST">
-      <label for="feedback-like" style="font-size:1em;font-weight:600;color:#fff;">What did you like?</label>
-      <textarea id="feedback-like" name="like" rows="2" required style="width:100%;margin-bottom:0.7em;border-radius:0.5em;padding:0.5em;border:none;background:#22263a;color:#fff;" placeholder="What worked well for you?"></textarea>
-      <label for="feedback-wish" style="font-size:1em;font-weight:600;color:#fff;">What do you wish was different?</label>
-      <textarea id="feedback-wish" name="wish" rows="2" style="width:100%;margin-bottom:1em;border-radius:0.5em;padding:0.5em;border:none;background:#22263a;color:#fff;" placeholder="How can we improve?"></textarea>
-      <!-- Optional: Uncomment to collect user's email
-      <label for="feedback-email" style="font-size:1em;font-weight:600;color:#fff;">Your Email (optional):</label>
-      <input id="feedback-email" type="email" name="email" style="width:100%;margin-bottom:1em;border-radius:0.5em;padding:0.5em;border:none;background:#22263a;color:#fff;" placeholder="you@email.com">
-      -->
-      <button type="submit" style="background:linear-gradient(to right,#7f5af0,#2cb67d);color:#fff;padding:0.7em 1.2em;border-radius:1em;font-weight:700;border:none;cursor:pointer;width:100%;">Send Feedback</button>
-      <div id="feedback-message" style="margin-top:0.7em;font-size:0.95em;"></div>
-    </form>
   </div>
-</div>
-<!-- End Feedback Widget -->
+  <!-- End Feedback Widget -->
 
-<script>
-(function(){
-  // Widget open/close
-  const openBtn = document.getElementById('feedback-open-btn');
-  const panel = document.getElementById('feedback-panel');
-  const closeBtn = document.getElementById('feedback-close-btn');
-  openBtn.onclick = () => panel.style.display = 'block';
-  closeBtn.onclick = () => panel.style.display = 'none';
-
-  // Handle form submit
-  const form = document.getElementById('feedback-form');
-  const msgDiv = document.getElementById('feedback-message');
-  form.onsubmit = async function(e) {
-    e.preventDefault();
-    msgDiv.style.color = "#fff";
-    msgDiv.textContent = "Sending...";
-    const formData = new FormData(form);
-    try {
-      const res = await fetch(form.action, {
-        method: "POST",
-        body: formData,
-        headers: { 'Accept': 'application/json' }
-      });
-      if (res.ok) {
-        msgDiv.style.color = "#2cb67d";
-        msgDiv.textContent = "Thank you for your feedback!";
-        form.reset();
-        setTimeout(() => { panel.style.display = 'none'; msgDiv.textContent=''; }, 1400);
-      } else {
-        msgDiv.style.color = "#f00";
-        msgDiv.textContent = "Sorry, there was a problem. Please try again later.";
-      }
-    } catch(e){
-      msgDiv.style.color = "#f00";
-      msgDiv.textContent = "Network error. Please try again.";
-    }
-  };
-})();
-</script>
+  <!-- Trailer Modal -->
+  <div id="trailer-modal-bg">
+    <div id="trailer-modal">
+      <button class="close-btn" onclick="hideTrailerModal()" aria-label="Close trailer modal">&times;</button>
+      <div id="trailer-modal-content"></div>
+    </div>
+  </div>
+  <!-- End Trailer Modal -->
 
   <script>
+    // Feedback widget logic for Formspree (no Netlify Function, just HTML form POST)
+    (function(){
+      const openBtn = document.getElementById('feedback-open-btn');
+      const panel = document.getElementById('feedback-panel');
+      const closeBtn = document.getElementById('feedback-close-btn');
+      openBtn.onclick = () => panel.classList.add('active');
+      closeBtn.onclick = () => panel.classList.remove('active');
+      const form = document.getElementById('feedback-form');
+      const msgDiv = document.getElementById('feedback-message');
+      form.onsubmit = async function(e) {
+        e.preventDefault();
+        msgDiv.style.color = "#fff";
+        msgDiv.textContent = "Sending...";
+        const formData = new FormData(form);
+        try {
+          const res = await fetch(form.action, {
+            method: "POST",
+            body: formData,
+            headers: { 'Accept': 'application/json' }
+          });
+          if (res.ok) {
+            msgDiv.style.color = "#2cb67d";
+            msgDiv.textContent = "Thank you for your feedback!";
+            form.reset();
+            setTimeout(() => { panel.classList.remove('active'); msgDiv.textContent=''; }, 1400);
+          } else {
+            msgDiv.style.color = "#f00";
+            msgDiv.textContent = "Sorry, there was a problem. Please try again later.";
+          }
+        } catch(e){
+          msgDiv.style.color = "#f00";
+          msgDiv.textContent = "Network error. Please try again.";
+        }
+      };
+    })();
+
+    // Trailer Modal Functions
+    function showTrailerModal(youtubeKey) {
+      const modalBg = document.getElementById('trailer-modal-bg');
+      const modalContent = document.getElementById('trailer-modal-content');
+      modalContent.innerHTML = `
+        <iframe src="https://www.youtube.com/embed/${youtubeKey}?autoplay=1"
+          frameborder="0" allow="autoplay; encrypted-media" allowfullscreen
+        ></iframe>
+      `;
+      modalBg.classList.add('active');
+    }
+    function hideTrailerModal() {
+      document.getElementById('trailer-modal-bg').classList.remove('active');
+      document.getElementById('trailer-modal-content').innerHTML = '';
+    }
+    document.getElementById('trailer-modal-bg').addEventListener('click', function(e) {
+      if (e.target === this) hideTrailerModal();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === "Escape") hideTrailerModal();
+    });
+  </script>
+
+  <script>
+    // TMDb & Watchmode movie/series logic, with trailer support
+
     const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
     const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
 
@@ -388,7 +447,6 @@
       document.getElementById('searchResults').innerHTML = '';
     }
 
-    // Ensures only unique items are displayed
     async function renderBatchUnique(batch, centerWildCard = false) {
       const container = document.getElementById('searchResults');
       if (centerWildCard && batch.length === 1) {
@@ -406,6 +464,7 @@
                 ${availability?.buy ? `<div class='mb-2'>Buy on:<div class='flex flex-wrap justify-center mt-2'>${availability.buy}</div></div>` : ''}
                 ${!availability ? `<div class="text-sm text-yellow-400 mt-4">Not yet available to stream or buy in selected region.</div>` : ''}
               </div>
+              <button class="show-trailer-btn wildcard-btn" data-tmdbid="${found.id}" data-mediatype="${found.media_type}" style="margin-top:1em;background:linear-gradient(to right,#7f5af0,#2cb67d);color:#fff;padding:0.65em 1.4em;border:none;border-radius:0.8em;font-weight:600;cursor:pointer;">Show Trailer</button>
             </div>
           </div>
         `;
@@ -416,23 +475,17 @@
         const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
         const availability = await fetchAvailability(item.id, item.media_type, title);
         const card = document.createElement('div');
-        card.className = 'bg-gray-800 p-4 rounded-lg shadow';
-        if (!availability) {
-          card.innerHTML = `
-            <img src="${poster}" alt="${title}" class="rounded mb-4">
-            <h3 class="text-lg font-semibold">${title}</h3>
-            <div class="text-sm text-yellow-400 mt-4">Not yet available to stream or buy in selected region.</div>
-          `;
-        } else {
-          card.innerHTML = `
-            <img src="${poster}" alt="${title}" class="rounded mb-4">
-            <h3 class="text-lg font-semibold">${title}</h3>
-            <div class="text-sm text-gray-300">
-              ${availability.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center'>${availability.stream}</div></div>` : ''}
-              ${availability.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center'>${availability.buy}</div></div>` : ''}
-            </div>
-          `;
-        }
+        card.className = 'bg-gray-800 p-4 rounded-lg shadow flex flex-col h-full';
+        card.innerHTML = `
+          <img src="${poster}" alt="${title}" class="rounded mb-4">
+          <h3 class="text-lg font-semibold">${title}</h3>
+          <div class="text-sm text-gray-300 flex-grow">
+            ${availability?.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center'>${availability.stream}</div></div>` : ''}
+            ${availability?.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center'>${availability.buy}</div></div>` : ''}
+            ${!availability ? `<div class="text-sm text-yellow-400 mt-4">Not yet available to stream or buy in selected region.</div>` : ''}
+          </div>
+          <button class="show-trailer-btn" data-tmdbid="${item.id}" data-mediatype="${item.media_type}" style="margin-top:1.1em;background:linear-gradient(to right,#7f5af0,#2cb67d);color:#fff;padding:0.55em 1.2em;border:none;border-radius:0.8em;font-weight:600;cursor:pointer;">Show Trailer</button>
+        `;
         container.appendChild(card);
       }
     }
@@ -440,10 +493,8 @@
     async function showResults(isNewSearch) {
       clearResults();
       showMoreCount = 0;
-      // Reset unique results and seenIdSet on new search
       uniqueResults = [];
       seenIdSet = new Set();
-      // Add unique items up to 12
       for (const item of results) {
         const key = (item.media_type || '') + ':' + item.id;
         if (!seenIdSet.has(key)) {
@@ -473,8 +524,6 @@
       currentPage++;
       let query = currentQuery.trim();
       let newResults = await fetchMedia(currentType, query, currentPage);
-
-      // Only add truly new items to uniqueResults
       for (const item of newResults) {
         const key = (item.media_type || '') + ':' + item.id;
         if (!seenIdSet.has(key)) {
@@ -482,8 +531,6 @@
           seenIdSet.add(key);
         }
       }
-
-      // Show the next 12 unique items, if available
       let start = showMoreCount * 12 + 12;
       let end = start + 12;
       await renderBatchUnique(uniqueResults.slice(start, end));
@@ -591,6 +638,45 @@
       document.getElementById('wildBtn').onclick = async function () {
         await wildCard();
       };
+    });
+
+    // Trailer button logic
+    document.addEventListener('click', async function(e) {
+      if (e.target && e.target.classList.contains('show-trailer-btn')) {
+        const btn = e.target;
+        const tmdbId = btn.getAttribute('data-tmdbid');
+        const mediaType = btn.getAttribute('data-mediatype'); // "movie" or "tv"
+        btn.disabled = true;
+        btn.textContent = "Loading...";
+        let apiUrl = '';
+        if (mediaType === 'tv' || mediaType === 'movie') {
+          apiUrl = `https://api.themoviedb.org/3/${mediaType}/${tmdbId}/videos?api_key=${tmdbApiKey}`;
+        } else {
+          apiUrl = `https://api.themoviedb.org/3/movie/${tmdbId}/videos?api_key=${tmdbApiKey}`;
+        }
+        try {
+          const res = await fetch(apiUrl);
+          const data = await res.json();
+          let trailer = null;
+          if (Array.isArray(data.results)) {
+            trailer = data.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+            if (!trailer) {
+              trailer = data.results.find(v => (v.type === 'Teaser' || v.type === 'Clip') && v.site === 'YouTube');
+            }
+          }
+          if (trailer) {
+            showTrailerModal(trailer.key);
+          } else {
+            document.getElementById('trailer-modal-content').innerHTML = "<div class='no-trailer'>No trailer found for this title.</div>";
+            document.getElementById('trailer-modal-bg').classList.add('active');
+          }
+        } catch (err) {
+          document.getElementById('trailer-modal-content').innerHTML = "<div class='no-trailer'>Error loading trailer.</div>";
+          document.getElementById('trailer-modal-bg').classList.add('active');
+        }
+        btn.disabled = false;
+        btn.textContent = "Show Trailer";
+      }
     });
   </script>
 </body>
