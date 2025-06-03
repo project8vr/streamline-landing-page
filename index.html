@@ -80,8 +80,8 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <!-- Changed animal: Llama -->
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/llama_1f999.png" alt="Llama" class="fixed top-4 right-4 h-16 w-16 z-50">
+  <!-- Changed animal: Penguin -->
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/penguin_1f427.png" alt="Penguin" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
@@ -89,6 +89,73 @@
     <div class="spin-wheel"></div>
     <div class="text-xl font-bold mt-2">Picking something great for you…</div>
   </div>
+  
+<!-- Feedback Widget: Floating, sticky top left (Formspree version) -->
+<div id="feedback-widget" style="position:fixed;top:2rem;left:2rem;z-index:9999;">
+  <button id="feedback-open-btn" style="background:#2cb67d;color:#fff;padding:0.7em 1.2em;border-radius:1em;font-weight:700;box-shadow:0 2px 12px #0003;border:none;cursor:pointer;">
+    💬 Feedback
+  </button>
+  <div id="feedback-panel" style="display:none;background:#18122b;border-radius:1em;box-shadow:0 2px 12px #0008;padding:1.5em 1.2em;width:350px;max-width:calc(100vw - 2em);margin-top:0.7em;">
+    <div style="text-align:right;">
+      <button id="feedback-close-btn" style="background:none;border:none;color:#aaa;font-size:1.3em;cursor:pointer;">&times;</button>
+    </div>
+    <h3 style="font-size:1.25em;font-weight:700;color:#7f5af0;margin-bottom:0.5em;">We'd love your feedback!</h3>
+    <form id="feedback-form" action="https://formspree.io/f/xzzgbygy" method="POST">
+      <label for="feedback-like" style="font-size:1em;font-weight:600;color:#fff;">What did you like?</label>
+      <textarea id="feedback-like" name="like" rows="2" required style="width:100%;margin-bottom:0.7em;border-radius:0.5em;padding:0.5em;border:none;background:#22263a;color:#fff;" placeholder="What worked well for you?"></textarea>
+      <label for="feedback-wish" style="font-size:1em;font-weight:600;color:#fff;">What do you wish was different?</label>
+      <textarea id="feedback-wish" name="wish" rows="2" style="width:100%;margin-bottom:1em;border-radius:0.5em;padding:0.5em;border:none;background:#22263a;color:#fff;" placeholder="How can we improve?"></textarea>
+      <!-- Optional: Uncomment to collect user's email
+      <label for="feedback-email" style="font-size:1em;font-weight:600;color:#fff;">Your Email (optional):</label>
+      <input id="feedback-email" type="email" name="email" style="width:100%;margin-bottom:1em;border-radius:0.5em;padding:0.5em;border:none;background:#22263a;color:#fff;" placeholder="you@email.com">
+      -->
+      <button type="submit" style="background:linear-gradient(to right,#7f5af0,#2cb67d);color:#fff;padding:0.7em 1.2em;border-radius:1em;font-weight:700;border:none;cursor:pointer;width:100%;">Send Feedback</button>
+      <div id="feedback-message" style="margin-top:0.7em;font-size:0.95em;"></div>
+    </form>
+  </div>
+</div>
+<!-- End Feedback Widget -->
+
+<script>
+(function(){
+  // Widget open/close
+  const openBtn = document.getElementById('feedback-open-btn');
+  const panel = document.getElementById('feedback-panel');
+  const closeBtn = document.getElementById('feedback-close-btn');
+  openBtn.onclick = () => panel.style.display = 'block';
+  closeBtn.onclick = () => panel.style.display = 'none';
+
+  // Handle form submit
+  const form = document.getElementById('feedback-form');
+  const msgDiv = document.getElementById('feedback-message');
+  form.onsubmit = async function(e) {
+    e.preventDefault();
+    msgDiv.style.color = "#fff";
+    msgDiv.textContent = "Sending...";
+    const formData = new FormData(form);
+    try {
+      const res = await fetch(form.action, {
+        method: "POST",
+        body: formData,
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        msgDiv.style.color = "#2cb67d";
+        msgDiv.textContent = "Thank you for your feedback!";
+        form.reset();
+        setTimeout(() => { panel.style.display = 'none'; msgDiv.textContent=''; }, 1400);
+      } else {
+        msgDiv.style.color = "#f00";
+        msgDiv.textContent = "Sorry, there was a problem. Please try again later.";
+      }
+    } catch(e){
+      msgDiv.style.color = "#f00";
+      msgDiv.textContent = "Network error. Please try again.";
+    }
+  };
+})();
+</script>
+
   <script>
     const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
     const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
@@ -98,26 +165,24 @@
     let currentQuery = '';
     let currentPage = 1;
     let results = [];
+    let uniqueResults = [];
     let isLoading = false;
     let maxShowMore = 4;
     let showMoreCount = 0;
     let mediaCache = {};
+    let seenIdSet = new Set();
 
-    // Canonical provider normalizer
     function normalizeProviderName(name) {
-      // Amazon/Prime variants
       if (
         name === 'Amazon' ||
         name === 'Amazon Prime' ||
         name === 'Amazon Prime Video' ||
         name === 'Prime Video'
       ) return 'Prime Video';
-      // Netflix w/ads
       if (name === 'Netflix with Ads' || name === 'Netflix') return 'Netflix';
       return name;
     }
 
-    // Provider homepage map
     function getProviderHomepage(name) {
       const map = {
         'Netflix': 'https://www.netflix.com',
@@ -143,7 +208,6 @@
       return map[normalizeProviderName(name)] || '';
     }
 
-    // Provider logos (use TMDb's logo_path if present, else fallback to this map)
     const providerLogoMap = {
       'Netflix': 'https://image.tmdb.org/t/p/w45/wwemzKWzjKYJFfCeiB57q3r4Bcm.png',
       'Disney+': 'https://image.tmdb.org/t/p/w45/7rwgEs15tFwyR9NPQ5vpzxTj19Q.png',
@@ -233,11 +297,9 @@
       });
     }
 
-    // Deduplicate and normalize for streaming/buy sources (preserving logo logic)
     function renderProviders(sources, tmdbProvidersArr) {
       const shown = new Set();
       let rendered = '';
-      // 1. Render all TMDb providers first, using their logo_path if present.
       if (tmdbProvidersArr && Array.isArray(tmdbProvidersArr)) {
         for (const p of tmdbProvidersArr) {
           const providerName = normalizeProviderName(p.provider_name);
@@ -254,7 +316,6 @@
           }
         }
       }
-      // 2. Render Watchmode sources, skipping any already shown.
       if (sources && Array.isArray(sources)) {
         for (const s of sources) {
           const providerName = normalizeProviderName(s.name);
@@ -279,7 +340,6 @@
       let stream = '', buy = '';
       let tmdbFlat = [], tmdbBuy = [], wmStream = [], wmBuy = [];
       try {
-        // TMDb providers (homepage only, not title-specific)
         const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
         const tmdbData = await tmdbRes.json();
         const countryData = tmdbData.results?.[currentRegion];
@@ -287,7 +347,6 @@
           tmdbFlat = countryData.flatrate || [];
           tmdbBuy = countryData.buy || [];
         }
-        // Watchmode fallback/supplement (prefer direct-to-title links)
         if (title) {
           const searchRes = await fetch(`https://watchmode.p.rapidapi.com/search/?search_value=${encodeURIComponent(title)}&search_type=1`, {
             method: 'GET',
@@ -329,7 +388,8 @@
       document.getElementById('searchResults').innerHTML = '';
     }
 
-    async function renderBatch(batch, centerWildCard = false) {
+    // Ensures only unique items are displayed
+    async function renderBatchUnique(batch, centerWildCard = false) {
       const container = document.getElementById('searchResults');
       if (centerWildCard && batch.length === 1) {
         const found = batch[0];
@@ -380,8 +440,19 @@
     async function showResults(isNewSearch) {
       clearResults();
       showMoreCount = 0;
-      let arr = deduplicateAndSort(results, currentQuery);
-      await renderBatch(arr.slice(0, 12));
+      // Reset unique results and seenIdSet on new search
+      uniqueResults = [];
+      seenIdSet = new Set();
+      // Add unique items up to 12
+      for (const item of results) {
+        const key = (item.media_type || '') + ':' + item.id;
+        if (!seenIdSet.has(key)) {
+          uniqueResults.push(item);
+          seenIdSet.add(key);
+        }
+        if (uniqueResults.length >= 12) break;
+      }
+      await renderBatchUnique(uniqueResults.slice(0, 12));
     }
 
     async function runSearch(isNewSearch = false) {
@@ -402,9 +473,20 @@
       currentPage++;
       let query = currentQuery.trim();
       let newResults = await fetchMedia(currentType, query, currentPage);
-      let all = deduplicateAndSort(results.concat(newResults), currentQuery);
-      results = all;
-      await renderBatch(all.slice((currentPage - 1) * 12, currentPage * 12));
+
+      // Only add truly new items to uniqueResults
+      for (const item of newResults) {
+        const key = (item.media_type || '') + ':' + item.id;
+        if (!seenIdSet.has(key)) {
+          uniqueResults.push(item);
+          seenIdSet.add(key);
+        }
+      }
+
+      // Show the next 12 unique items, if available
+      let start = showMoreCount * 12 + 12;
+      let end = start + 12;
+      await renderBatchUnique(uniqueResults.slice(start, end));
       showMoreCount++;
       isLoading = false;
     }
@@ -443,7 +525,7 @@
         document.getElementById('wildOverlay').style.display = "none";
         clearResults();
         if (found) {
-          await renderBatch([found], true);
+          await renderBatchUnique([found], true);
         } else {
           document.getElementById('searchResults').innerHTML = `<div class="wild-card-center"><div class="text-lg font-bold text-yellow-400">Sorry, nothing found for your region and settings!</div></div>`;
         }
