@@ -51,65 +51,6 @@
     @media (max-width: 1024px) {
       .wild-card-center { min-height: 220px; }
     }
-    /* Feedback overlay styles */
-    #feedback-widget {
-      position: fixed;
-      top: 2rem;
-      right: 2rem;
-      z-index: 9999;
-    }
-    #feedback-open-btn {
-      background: #2cb67d;
-      color: #fff;
-      padding: 0.7em 1.2em;
-      border-radius: 1em;
-      font-weight: 700;
-      box-shadow: 0 2px 12px #0003;
-      border: none;
-      cursor: pointer;
-    }
-    #feedback-panel {
-      display: none;
-      background: #18122b;
-      border-radius: 1em;
-      box-shadow: 0 2px 12px #0008;
-      padding: 1.5em 1.2em;
-      width: 350px;
-      max-width: calc(100vw - 2em);
-      margin-top: 0.7em;
-    }
-    #feedback-panel h3 { font-size: 1.25em; font-weight: 700; color: #7f5af0; margin-bottom: 0.5em;}
-    #feedback-panel label { font-size: 1em; font-weight: 600; color: #fff; }
-    #feedback-panel textarea {
-      width: 100%;
-      margin-bottom: 0.7em;
-      border-radius: 0.5em;
-      padding: 0.5em;
-      border: none;
-      background: #22263a;
-      color: #fff;
-    }
-    #feedback-submit-btn {
-      background: linear-gradient(to right,#7f5af0,#2cb67d);
-      color: #fff;
-      padding: 0.7em 1.2em;
-      border-radius: 1em;
-      font-weight: 700;
-      border: none;
-      cursor: pointer;
-      width: 100%;
-    }
-    #feedback-message { margin-top: 0.7em; font-size: 0.95em; }
-    /* Fox image always top right, slightly below feedback overlay */
-    #fox-corner {
-      position: fixed;
-      top: 5.6rem;
-      right: 2.8rem;
-      z-index: 9000;
-      width: 72px; height: 72px;
-      pointer-events: none;
-      user-select: none;
-    }
   </style>
 </head>
 <body class="text-white">
@@ -139,8 +80,8 @@
     <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
     <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
   </section>
-  <!-- Fox image, top right -->
-  <img id="fox-corner" src="https://em-content.zobj.net/source/microsoft-teams/337/fox_1f98a.png" alt="Fox in top right corner">
+  <!-- Changed animal: Penguin -->
+  <img src="https://em-content.zobj.net/source/microsoft-teams/337/penguin_1f427.png" alt="Penguin" class="fixed top-4 right-4 h-16 w-16 z-50">
   <footer class="text-center p-4 text-gray-400">
     This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
   </footer>
@@ -149,20 +90,20 @@
     <div class="text-xl font-bold mt-2">Picking something great for you…</div>
   </div>
   
-  <!-- Feedback Widget: Floating, sticky top right -->
-  <div id="feedback-widget">
-    <button id="feedback-open-btn">
+  <!-- Feedback Widget: Floating, sticky top left -->
+  <div id="feedback-widget" style="position:fixed;top:2rem;left:2rem;z-index:9999;">
+    <button id="feedback-open-btn" style="background:#2cb67d;color:#fff;padding:0.7em 1.2em;border-radius:1em;font-weight:700;box-shadow:0 2px 12px #0003;border:none;cursor:pointer;">
       💬 Feedback
     </button>
-    <div id="feedback-panel">
+    <div id="feedback-panel" style="display:none;background:#18122b;border-radius:1em;box-shadow:0 2px 12px #0008;padding:1.5em 1.2em;width:350px;max-width:calc(100vw - 2em);margin-top:0.7em;">
       <div style="text-align:right;"><button id="feedback-close-btn" style="background:none;border:none;color:#aaa;font-size:1.3em;cursor:pointer;">&times;</button></div>
-      <h3>We'd love your feedback!</h3>
-      <label for="feedback-like">What do you like or not like?</label>
-      <textarea id="feedback-like" rows="2"></textarea>
-      <label for="feedback-wish">What would you like to see?</label>
-      <textarea id="feedback-wish" rows="2"></textarea>
-      <button id="feedback-submit-btn">Submit Feedback</button>
-      <div id="feedback-message"></div>
+      <h3 style="font-size:1.25em;font-weight:700;color:#7f5af0;margin-bottom:0.5em;">We'd love your feedback!</h3>
+      <label for="feedback-like" style="font-size:1em;font-weight:600;color:#fff;">What do you like or not like?</label>
+      <textarea id="feedback-like" rows="2" style="width:100%;margin-bottom:0.7em;border-radius:0.5em;padding:0.5em;border:none;background:#22263a;color:#fff;"></textarea>
+      <label for="feedback-wish" style="font-size:1em;font-weight:600;color:#fff;">What would you like to see?</label>
+      <textarea id="feedback-wish" rows="2" style="width:100%;margin-bottom:1em;border-radius:0.5em;padding:0.5em;border:none;background:#22263a;color:#fff;"></textarea>
+      <button id="feedback-submit-btn" style="background:linear-gradient(to right,#7f5af0,#2cb67d);color:#fff;padding:0.7em 1.2em;border-radius:1em;font-weight:700;border:none;cursor:pointer;width:100%;">Submit Feedback</button>
+      <div id="feedback-message" style="margin-top:0.7em;font-size:0.95em;"></div>
     </div>
   </div>
   <!-- End Feedback Widget -->
