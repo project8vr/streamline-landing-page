@@ -2,682 +2,86 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Stream 2 Night</title>
+  <title>About Stream2Night | Find Where to Stream Movies, TV Shows, and Series Online</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Google Analytics 4 -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z4PWK187GP"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-Z4PWK187GP');
-  </script>
+  <meta name="description" content="Stream2Night helps you find out where to stream movies, TV shows, and series online across Netflix, Prime Video, Disney+, Hulu, Apple TV+, and more. Instantly discover streaming options for your favorite films and television shows in the UK, US, and Canada.">
+  <meta name="keywords" content="stream, streaming, movies, tv shows, series, where to watch, stream online, streaming guide, films, television, find movies online, find series, stream movies, stream tv, Netflix, Prime Video, Disney+, Hulu, Apple TV+, Paramount+, streaming platforms, UK, US, Canada, watch online, best streaming, watch films, watch series, streaming availability, streaming services">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
-    body { background: linear-gradient(to bottom, #1b103f, #090d28); }
-    .tab-button { padding: 0.75rem 1.5rem; border-radius: 9999px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 0 0 1px rgba(255,255,255,0.1); font-size: 1.1rem; }
-    .active-tab { background: linear-gradient(to right, #7f5af0, #2cb67d); color: white; box-shadow: 0 0 10px rgba(127, 90, 240, 0.6);}
-    .inactive-tab { background-color: #2e2e3a; color: #a0aec0;}
-    .inactive-tab:hover { background-color: #3a3a4d; color: #ffffff;}
-    .flag-tab { border-radius: 9999px; padding: 0.5rem 0.9rem; font-size: 1.85rem; background: #222; border: 2px solid transparent; margin: 0 0.25rem; transition: 0.2s; box-shadow: 0 2px 12px 0 rgba(90,90,120,0.06); outline: none; display: flex; align-items: center; justify-content: center; line-height: 1; height: 3.2rem; width: 3.7rem; }
-    .flag-tab.selected { background: linear-gradient(to right, #7f5af0, #2cb67d); color: white; border-color: #fff; filter: brightness(1.15) drop-shadow(0 2px 8px #7f5af088);}
-    .flag-img { width: 2.2rem; height: 1.6rem; border-radius: 0.4rem; object-fit: cover; display: block;}
-    .wild-btn { margin-left: 0.75rem; background: linear-gradient(to right, #ffde57, #fc7e1e); color: #1b103f; font-weight: 700; border-radius: 2rem; padding: 0.7rem 1.3rem; font-size: 1.2rem; box-shadow: 0 2px 10px #0003; border: none; transition: 0.2s; }
-    .wild-btn:hover { background: linear-gradient(to right, #fc7e1e, #ffde57); color: #111; }
-    .overlay-spin {
-      position: fixed; z-index: 100; inset: 0; background: rgba(26,18,48,0.94); display: flex; align-items: center; justify-content: center; flex-direction: column;
-      animation: fadeIn 0.4s;
-    }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .spin-wheel {
-      border: 8px solid #fff;
-      border-radius: 50%;
-      width: 130px; height: 130px;
-      border-top: 8px solid #ffde57;
-      border-right: 8px solid #2cb67d;
-      border-bottom: 8px solid #7f5af0;
-      border-left: 8px solid #fc7e1e;
-      animation: spin 1s linear infinite;
-      margin-bottom: 1.3rem;
-    }
-    @keyframes spin { 100% { transform: rotate(360deg);} }
-    .wild-card-center {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 350px;
-      grid-column: 1 / -1;
-    }
-    @media (max-width: 1024px) {
-      .wild-card-center { min-height: 220px; }
-    }
-    /* Feedback Widget Styles */
-    .feedback-widget-float { position:fixed; top:2rem; left:2rem; z-index:9999; }
-    .feedback-form-panel { display:none; background:#18122b; border-radius:1em; box-shadow:0 2px 12px #0008; padding:1.5em 1.2em; width:350px; max-width:calc(100vw - 2em); margin-top:0.7em; }
-    .feedback-form-panel.active { display:block; }
-    .feedback-form-panel h3 { font-size:1.25em; font-weight:700; color:#7f5af0; margin-bottom:0.5em; }
-    .feedback-form-panel label { font-size:1em; font-weight:600; color:#fff; margin-top:0.5em; }
-    .feedback-form-panel textarea, .feedback-form-panel input[type="email"] {
-      width:100%; margin-bottom:0.7em; border-radius:0.5em; padding:0.5em; border:none; background:#22263a; color:#fff;
-    }
-    .feedback-form-panel button[type="submit"] {
-      background:linear-gradient(to right,#7f5af0,#2cb67d); color:#fff; padding:0.7em 1.2em; border-radius:1em; font-weight:700; border:none; cursor:pointer; width:100%;
-    }
-    .feedback-form-panel .feedback-form-close-btn { background:none; border:none; color:#aaa; font-size:1.3em; cursor:pointer; float:right; }
-    .feedback-message { margin-top:0.7em; font-size:0.95em; min-height:1.3em; }
-    /* Trailer Modal Styles */
-    #trailer-modal-bg {
-      display: none; position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.85); z-index: 10001; align-items: center; justify-content: center;
-    }
-    #trailer-modal-bg.active { display: flex; }
-    #trailer-modal {
-      background: #18122b; padding: 1.5em; border-radius: 1em; box-shadow: 0 2px 18px #000b; position: relative;
-      max-width: 96vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;
-    }
-    #trailer-modal iframe {
-      width: 80vw; max-width: 720px; height: 45vw; max-height: 405px; border-radius: 0.7em; background: #000;
-    }
-    #trailer-modal .close-btn {
-      position: absolute; top: 0.9em; right: 1.2em; font-size: 2em; color: #fff; background: none; border: none; cursor: pointer;
-      transition: color 0.2s;
-    }
-    #trailer-modal .close-btn:hover { color: #7f5af0; }
-    #trailer-modal .no-trailer {
-      color: #ff7171; font-weight: bold; margin-top: 1em; text-align: center;
-    }
+    body { background: linear-gradient(to bottom, #1b103f, #090d28); color: #fff; }
+    .about-container { max-width: 720px; margin: 0 auto; padding: 3rem 1rem; }
+    h1, h2 { background: linear-gradient(to right, #7f5af0, #2cb67d); background-clip: text; -webkit-background-clip: text; color: transparent; }
+    .logo-img { width: 64px; height: 64px; border-radius: 50%; margin-bottom: 1.5rem; }
+    ul { list-style: disc; margin-left: 1.5rem; }
+    a { color: #7f5af0; text-decoration: underline; }
+    footer { color: #a0aec0; margin-top: 2.5rem; text-align: center; font-size: 1rem; }
   </style>
 </head>
-<body class="text-white">
-  <section class="text-center py-20 px-6">
-    <h1 class="text-6xl font-bold mb-4 leading-tight bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent">Stream 2 Night</h1>
-    <p class="text-xl text-gray-300 mb-6">Quickly find where to stream any film or show.</p>
-    <div class="mb-6 flex justify-center gap-3">
-      <button id="regionUK" class="flag-tab selected" title="United Kingdom" aria-label="United Kingdom">
-        <img src="https://hatscripts.github.io/circle-flags/flags/gb.svg" alt="UK" class="flag-img" />
-      </button>
-      <button id="regionUS" class="flag-tab" title="United States" aria-label="United States">
-        <img src="https://hatscripts.github.io/circle-flags/flags/us.svg" alt="US" class="flag-img" />
-      </button>
-      <button id="regionCA" class="flag-tab" title="Canada" aria-label="Canada">
-        <img src="https://hatscripts.github.io/circle-flags/flags/ca.svg" alt="Canada" class="flag-img" />
-      </button>
-    </div>
-    <div class="mb-8 flex justify-center gap-4">
-      <button id="allTab" class="tab-button active-tab">All</button>
-      <button id="movieTab" class="tab-button inactive-tab">Movies</button>
-      <button id="tvTab" class="tab-button inactive-tab">Series</button>
-    </div>
-    <div class="flex justify-center items-center mb-8">
-      <input id="searchInput" type="text" autocomplete="off" placeholder="Search for a movie or series..." class="text-black w-full max-w-md px-4 py-2 rounded" />
-      <button id="wildBtn" class="wild-btn" title="Spin the wheel for a random pick!">🎲 Wild Card</button>
-    </div>
-    <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
-    <button id="showMoreBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">Show More</button>
-  </section>
-  <img src="https://em-content.zobj.net/source/microsoft-teams/337/penguin_1f427.png" alt="Penguin" class="fixed top-4 right-4 h-16 w-16 z-50">
-  <footer class="text-center p-4 text-gray-400">
-    This site uses the TMDb and Watchmode APIs but is not endorsed or certified by either.
-  </footer>
-  <div id="wildOverlay" style="display:none;" class="overlay-spin">
-    <div class="spin-wheel"></div>
-    <div class="text-xl font-bold mt-2">Picking something great for you…</div>
+<body>
+  <div class="about-container">
+    <img src="https://em-content.zobj.net/source/microsoft-teams/337/penguin_1f427.png" alt="Stream2Night Penguin Logo" class="logo-img mx-auto">
+    <h1 class="text-4xl font-bold mb-4 text-center">About Stream2Night</h1>
+    <p class="text-lg mb-6 text-center">The easiest way to find where to stream movies, TV shows, and series online in the UK, US, and Canada.</p>
+    <section class="mb-8">
+      <h2 class="text-2xl font-semibold mb-2">What is Stream2Night?</h2>
+      <p class="mb-4">
+        <strong>Stream2Night</strong> is a free streaming search tool designed to help you quickly discover where to watch any movie, TV show, or series online. Whether you want to stream the latest blockbuster film, binge television shows, or search for classic series, Stream2Night makes it simple to find streaming options across all major platforms and streaming services.
+      </p>
+      <p>
+        Effortlessly locate which streaming platform has your favorite films and TV shows available—no more endless searching or switching between apps.
+      </p>
+    </section>
+    <section class="mb-8">
+      <h2 class="text-xl font-semibold mb-2">How Does Stream2Night Work?</h2>
+      <ul class="mb-4">
+        <li>Type the name of the movie, TV show, or series you want to watch.</li>
+        <li>Select your region (UK, US, or Canada) to see streaming availability in your country.</li>
+        <li>Instantly view which streaming services (like Netflix, Prime Video, Disney+, Hulu, Apple TV+, Paramount+, and more) offer your chosen film or show.</li>
+        <li>Click a streaming provider to go straight to the official page and start watching online.</li>
+      </ul>
+      <p>
+        Stream2Night uses up-to-date data from the TMDb and Watchmode APIs to ensure you always find the best places to watch films and television online.
+      </p>
+    </section>
+    <section class="mb-8">
+      <h2 class="text-xl font-semibold mb-2">Why Use Stream2Night?</h2>
+      <ul>
+        <li>Find out where movies, TV shows, and series are streaming with a single search.</li>
+        <li>Compare availability across all major streaming services and platforms.</li>
+        <li>Save time—no more searching every platform separately.</li>
+        <li>Works for popular new releases and classic films and series.</li>
+        <li>Helps you decide what to watch tonight!</li>
+      </ul>
+    </section>
+    <section>
+      <h2 class="text-xl font-semibold mb-2">Supported Streaming Services</h2>
+      <p>
+        Stream2Night checks availability on the most popular streaming platforms, including:
+      </p>
+      <ul class="mb-4">
+        <li>Netflix</li>
+        <li>Prime Video (Amazon Prime Video)</li>
+        <li>Disney+</li>
+        <li>Hulu</li>
+        <li>Apple TV+</li>
+        <li>Paramount+</li>
+        <li>Peacock</li>
+        <li>HBO Max / Max</li>
+        <li>Sky Go, NOW, Rakuten TV, and more</li>
+      </ul>
+      <p>
+        Whether you want to stream online, watch on-demand, buy, or rent, Stream2Night helps you find the best way to enjoy movies and TV at home.
+      </p>
+    </section>
+    <section class="mt-8">
+      <h2 class="text-xl font-semibold mb-2">Try Stream2Night Today!</h2>
+      <p>
+        Ready to discover where to watch your next film or television series? Go back to the <a href="index.html">Stream2Night home page</a> and start searching for your favorite movies, TV shows, and series to stream online!
+      </p>
+    </section>
+    <footer>
+      Stream2Night is not affiliated with or endorsed by Netflix, Disney+, Prime Video, or any streaming service. Data powered by TMDb and Watchmode.
+    </footer>
   </div>
-  
-  <!-- Feedback Widget: Floating, sticky top left (Formspree version) -->
-  <div id="feedback-widget" class="feedback-widget-float">
-    <button id="feedback-open-btn" style="background:#2cb67d;color:#fff;padding:0.7em 1.2em;border-radius:1em;font-weight:700;box-shadow:0 2px 12px #0003;border:none;cursor:pointer;">
-      💬 Feedback
-    </button>
-    <div id="feedback-panel" class="feedback-form-panel">
-      <button type="button" id="feedback-close-btn" class="feedback-form-close-btn">&times;</button>
-      <h3>We'd love your feedback!</h3>
-      <form id="feedback-form" action="https://formspree.io/f/xzzgbygy" method="POST">
-        <label for="feedback-like">What did you like?</label>
-        <textarea id="feedback-like" name="like" rows="2" required placeholder="What worked well for you?"></textarea>
-        <label for="feedback-wish">What do you wish was different?</label>
-        <textarea id="feedback-wish" name="wish" rows="2" placeholder="How can we improve?"></textarea>
-        <button type="submit">Send Feedback</button>
-        <div id="feedback-message" class="feedback-message"></div>
-      </form>
-    </div>
-  </div>
-  <!-- End Feedback Widget -->
-
-  <!-- Trailer Modal -->
-  <div id="trailer-modal-bg">
-    <div id="trailer-modal">
-      <button class="close-btn" onclick="hideTrailerModal()" aria-label="Close trailer modal">&times;</button>
-      <div id="trailer-modal-content"></div>
-    </div>
-  </div>
-  <!-- End Trailer Modal -->
-
-  <script>
-    // Feedback widget logic for Formspree (no Netlify Function, just HTML form POST)
-    (function(){
-      const openBtn = document.getElementById('feedback-open-btn');
-      const panel = document.getElementById('feedback-panel');
-      const closeBtn = document.getElementById('feedback-close-btn');
-      openBtn.onclick = () => panel.classList.add('active');
-      closeBtn.onclick = () => panel.classList.remove('active');
-      const form = document.getElementById('feedback-form');
-      const msgDiv = document.getElementById('feedback-message');
-      form.onsubmit = async function(e) {
-        e.preventDefault();
-        msgDiv.style.color = "#fff";
-        msgDiv.textContent = "Sending...";
-        const formData = new FormData(form);
-        try {
-          const res = await fetch(form.action, {
-            method: "POST",
-            body: formData,
-            headers: { 'Accept': 'application/json' }
-          });
-          if (res.ok) {
-            msgDiv.style.color = "#2cb67d";
-            msgDiv.textContent = "Thank you for your feedback!";
-            form.reset();
-            setTimeout(() => { panel.classList.remove('active'); msgDiv.textContent=''; }, 1400);
-          } else {
-            msgDiv.style.color = "#f00";
-            msgDiv.textContent = "Sorry, there was a problem. Please try again later.";
-          }
-        } catch(e){
-          msgDiv.style.color = "#f00";
-          msgDiv.textContent = "Network error. Please try again.";
-        }
-      };
-    })();
-
-    // Trailer Modal Functions
-    function showTrailerModal(youtubeKey) {
-      const modalBg = document.getElementById('trailer-modal-bg');
-      const modalContent = document.getElementById('trailer-modal-content');
-      modalContent.innerHTML = `
-        <iframe src="https://www.youtube.com/embed/${youtubeKey}?autoplay=1"
-          frameborder="0" allow="autoplay; encrypted-media" allowfullscreen
-        ></iframe>
-      `;
-      modalBg.classList.add('active');
-    }
-    function hideTrailerModal() {
-      document.getElementById('trailer-modal-bg').classList.remove('active');
-      document.getElementById('trailer-modal-content').innerHTML = '';
-    }
-    document.getElementById('trailer-modal-bg').addEventListener('click', function(e) {
-      if (e.target === this) hideTrailerModal();
-    });
-    document.addEventListener('keydown', function(e) {
-      if (e.key === "Escape") hideTrailerModal();
-    });
-  </script>
-
-  <script>
-    // TMDb & Watchmode movie/series logic, with trailer support
-
-    const tmdbApiKey = '2acda6d77609c7c9b6bce9bdf4e5271f';
-    const watchmodeApiKey = 'Obbabfda4fmsh11a51996ff09aeap16c8a6jsn6ee377acda63';
-
-    let currentType = 'all';
-    let currentRegion = 'GB';
-    let currentQuery = '';
-    let currentPage = 1;
-    let results = [];
-    let uniqueResults = [];
-    let isLoading = false;
-    let maxShowMore = 4;
-    let showMoreCount = 0;
-    let mediaCache = {};
-    let seenIdSet = new Set();
-
-    function normalizeProviderName(name) {
-      if (
-        name === 'Amazon' ||
-        name === 'Amazon Prime' ||
-        name === 'Amazon Prime Video' ||
-        name === 'Prime Video'
-      ) return 'Prime Video';
-      if (name === 'Netflix with Ads' || name === 'Netflix') return 'Netflix';
-      return name;
-    }
-
-    function getProviderHomepage(name) {
-      const map = {
-        'Netflix': 'https://www.netflix.com',
-        'Prime Video': 'https://www.primevideo.com',
-        'Disney Plus': 'https://www.disneyplus.com',
-        'Disney+': 'https://www.disneyplus.com',
-        'Hulu': 'https://www.hulu.com',
-        'Apple TV+': 'https://tv.apple.com/gb',
-        'Apple TV Plus': 'https://tv.apple.com/gb',
-        'Apple TV': 'https://tv.apple.com/gb',
-        'Paramount Plus': 'https://www.paramountplus.com',
-        'Paramount+': 'https://www.paramountplus.com',
-        'Peacock': 'https://www.peacocktv.com',
-        'HBO Max': 'https://www.max.com',
-        'Max': 'https://www.max.com',
-        'Sky Go': 'https://www.sky.com/watch/sky-go',
-        'Sky Store': 'https://www.skystore.com/',
-        'Sky': 'https://www.sky.com',
-        'NOW': 'https://www.nowtv.com',
-        'Rakuten TV': 'https://www.rakuten.tv/uk',
-        'Rakuten': 'https://www.rakuten.tv/uk'
-      };
-      return map[normalizeProviderName(name)] || '';
-    }
-
-    const providerLogoMap = {
-      'Netflix': 'https://image.tmdb.org/t/p/w45/wwemzKWzjKYJFfCeiB57q3r4Bcm.png',
-      'Disney+': 'https://image.tmdb.org/t/p/w45/7rwgEs15tFwyR9NPQ5vpzxTj19Q.png',
-      'Prime Video': 'https://image.tmdb.org/t/p/w45/emthp39XA2YScoYL1p0sdbAH2WA.png',
-      'Hulu': 'https://image.tmdb.org/t/p/w45/giwM8XX4V2AQb9vsoN7yti82tKK.png',
-      'Apple TV+': 'https://image.tmdb.org/t/p/w45/6uhKBfmtzFqOcLoushwZUzYdQSc.png',
-      'Apple TV Plus': 'https://image.tmdb.org/t/p/w45/6uhKBfmtzFqOcLoushwZUzYdQSc.png',
-      'Apple TV': 'https://image.tmdb.org/t/p/w45/6uhKBfmtzFqOcLoushwZUzYdQSc.png',
-      'Paramount+': 'https://image.tmdb.org/t/p/w45/xbhHHa1GkJJFJ6U7eJ4H6s0F5bD.png',
-      'Peacock': 'https://image.tmdb.org/t/p/w45/5UQsZrfbfG2dYJbx8DxfoTr2UOg.png',
-      'HBO Max': 'https://image.tmdb.org/t/p/w45/7HrwYFjdO8bLk5iNMR4rF3v6Z5H.png',
-      'Max': 'https://image.tmdb.org/t/p/w45/7HrwYFjdO8bLk5iNMR4rF3v6Z5H.png',
-      'Sky Go': 'https://upload.wikimedia.org/wikipedia/commons/5/5a/Sky_Go_logo.png',
-      'Sky Store': 'https://www.skystore.com/media/images/favicon.ico',
-      'Sky': 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Sky_UK_logo_2020.svg',
-      'NOW': 'https://upload.wikimedia.org/wikipedia/commons/0/07/NOW_TV_logo.svg',
-      'Rakuten TV': 'https://statics.rakuten.tv/public/images/favicon-96x96.png',
-      'Rakuten': 'https://statics.rakuten.tv/public/images/favicon-96x96.png'
-    };
-    function getProviderLogo(name, tmdbLogoPath) {
-      if (tmdbLogoPath) return `https://image.tmdb.org/t/p/w45${tmdbLogoPath}`;
-      return providerLogoMap[normalizeProviderName(name)] || '';
-    }
-
-    function getEndpoint(type, query, page) {
-      let base = 'https://api.themoviedb.org/3';
-      if (query) {
-        if (type === 'movie') return `${base}/search/movie?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${page}`;
-        if (type === 'tv') return `${base}/search/tv?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${page}`;
-        return `${base}/search/multi?api_key=${tmdbApiKey}&language=en-${currentRegion}&query=${encodeURIComponent(query)}&page=${page}`;
-      } else {
-        if (type === 'movie') return `${base}/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`;
-        if (type === 'tv') return `${base}/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`;
-        return [
-          `${base}/movie/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`,
-          `${base}/tv/popular?api_key=${tmdbApiKey}&language=en-${currentRegion}&page=${page}`
-        ];
-      }
-    }
-
-    async function fetchMedia(type, query, page) {
-      if (mediaCache[type + '|' + query + '|' + page + '|' + currentRegion]) return mediaCache[type + '|' + query + '|' + page + '|' + currentRegion];
-      let res, data, arr = [];
-      let endpoints = getEndpoint(type, query, page);
-      if (Array.isArray(endpoints)) {
-        for (let ep of endpoints) {
-          res = await fetch(ep);
-          data = await res.json();
-          arr = arr.concat((data.results || []).map(item => {
-            if (ep.includes('/tv/')) item.media_type = 'tv';
-            else item.media_type = 'movie';
-            return item;
-          }));
-        }
-      } else {
-        res = await fetch(endpoints);
-        data = await res.json();
-        arr = (data.results || []).map(item => {
-          if (!item.media_type) item.media_type = type === 'all' ? (item.title ? 'movie' : 'tv') : type;
-          return item;
-        });
-      }
-      mediaCache[type + '|' + query + '|' + page + '|' + currentRegion] = arr;
-      return arr;
-    }
-
-    function deduplicateAndSort(arr, query) {
-      const norm = s => (s || '').toLowerCase().replace(/^the\s+/i, '');
-      const seen = new Set();
-      const queryNorm = norm(query);
-      let filtered = arr.filter(item => {
-        let idKey = (item.media_type || '') + ':' + item.id;
-        if (seen.has(idKey)) return false;
-        seen.add(idKey);
-        if (!query && (item.vote_count || 0) < 100) return false;
-        if (currentType !== 'all' && item.media_type !== currentType) return false;
-        return true;
-      });
-      return filtered.sort((a, b) => {
-        let aT = norm(a.title || a.name || ''), bT = norm(b.title || b.name || '');
-        let aExact = aT === queryNorm, bExact = bT === queryNorm;
-        if (aExact && !bExact) return -1; if (!aExact && bExact) return 1;
-        let aStarts = aT.startsWith(queryNorm), bStarts = bT.startsWith(queryNorm);
-        if (aStarts && !bStarts) return -1; if (!aStarts && bStarts) return 1;
-        if ((b.vote_count || 0) !== (a.vote_count || 0)) return (b.vote_count || 0) - (a.vote_count || 0);
-        return (b.popularity || 0) - (a.popularity || 0);
-      });
-    }
-
-    function renderProviders(sources, tmdbProvidersArr) {
-      const shown = new Set();
-      let rendered = '';
-      if (tmdbProvidersArr && Array.isArray(tmdbProvidersArr)) {
-        for (const p of tmdbProvidersArr) {
-          const providerName = normalizeProviderName(p.provider_name);
-          if (shown.has(providerName)) continue;
-          shown.add(providerName);
-          const homepage = getProviderHomepage(providerName);
-          const logo = getProviderLogo(p.provider_name, p.logo_path);
-          if (homepage && logo) {
-            rendered += `<a href="${homepage}" target="_blank" rel="noopener"><img src="${logo}" alt="${providerName}" title="${providerName}" class="inline-block h-8 mx-2"></a>`;
-          } else if (logo) {
-            rendered += `<img src="${logo}" alt="${providerName}" title="${providerName}" class="inline-block h-8 mx-2 opacity-60 cursor-not-allowed">`;
-          } else {
-            rendered += `<span class='inline-block border border-blue-400 rounded px-2 py-1 mx-1 text-sm bg-blue-900 opacity-60 cursor-not-allowed'>${providerName}</span>`;
-          }
-        }
-      }
-      if (sources && Array.isArray(sources)) {
-        for (const s of sources) {
-          const providerName = normalizeProviderName(s.name);
-          if (shown.has(providerName)) continue;
-          shown.add(providerName);
-          let url = s.web_url || getProviderHomepage(providerName);
-          let logo = getProviderLogo(s.name);
-          if (url && logo) {
-            rendered += `<a href="${url}" target="_blank" rel="noopener"><img src="${logo}" alt="${providerName}" title="${providerName}" class="inline-block h-8 mx-2"></a>`;
-          } else if (logo) {
-            rendered += `<img src="${logo}" alt="${providerName}" title="${providerName}" class="inline-block h-8 mx-2 opacity-60 cursor-not-allowed">`;
-          } else {
-            rendered += `<span class='inline-block border border-blue-400 rounded px-2 py-1 mx-1 text-sm bg-blue-900 opacity-60 cursor-not-allowed'>${providerName}</span>`;
-          }
-        }
-      }
-      return rendered;
-    }
-
-    async function fetchAvailability(id, mediaType, title) {
-      const type = mediaType === 'tv' ? 'tv' : 'movie';
-      let stream = '', buy = '';
-      let tmdbFlat = [], tmdbBuy = [], wmStream = [], wmBuy = [];
-      try {
-        const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbApiKey}`);
-        const tmdbData = await tmdbRes.json();
-        const countryData = tmdbData.results?.[currentRegion];
-        if (countryData) {
-          tmdbFlat = countryData.flatrate || [];
-          tmdbBuy = countryData.buy || [];
-        }
-        if (title) {
-          const searchRes = await fetch(`https://watchmode.p.rapidapi.com/search/?search_value=${encodeURIComponent(title)}&search_type=1`, {
-            method: 'GET',
-            headers: {
-              'X-RapidAPI-Key': watchmodeApiKey,
-              'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
-            }
-          });
-          const searchData = await searchRes.json();
-          let match = searchData.title_results?.find(r => r.name.toLowerCase() === title.toLowerCase());
-          if (!match && searchData.title_results?.length) match = searchData.title_results[0];
-          if (match) {
-            const sourceRes = await fetch(`https://watchmode.p.rapidapi.com/title/${match.id}/sources/`, {
-              method: 'GET',
-              headers: {
-                'X-RapidAPI-Key': watchmodeApiKey,
-                'X-RapidAPI-Host': 'watchmode.p.rapidapi.com'
-              }
-            });
-            const sourceData = await sourceRes.json();
-            if (Array.isArray(sourceData)) {
-              wmStream = sourceData.filter(
-                s => s.type === 'sub' || s.type === 'free' || s.type === 'ads'
-              );
-              wmBuy = sourceData.filter(s => s.type === 'buy' || s.type === 'rent');
-            }
-          }
-        }
-        stream = renderProviders(wmStream, tmdbFlat);
-        buy = renderProviders(wmBuy, tmdbBuy);
-        if (!stream && !buy) return null;
-        return { stream, buy };
-      } catch (err) {
-        return null;
-      }
-    }
-
-    function clearResults() {
-      document.getElementById('searchResults').innerHTML = '';
-    }
-
-    async function renderBatchUnique(batch, centerWildCard = false) {
-      const container = document.getElementById('searchResults');
-      if (centerWildCard && batch.length === 1) {
-        const found = batch[0];
-        const title = found.title || found.name || 'Untitled';
-        const poster = found.poster_path ? `https://image.tmdb.org/t/p/w500${found.poster_path}` : '';
-        const availability = found.availability || await fetchAvailability(found.id, found.media_type, title);
-        container.innerHTML = `
-          <div class="wild-card-center">
-            <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center max-w-xs mx-auto">
-              <img src="${poster}" alt="${title}" class="rounded mb-5 mx-auto" style="max-height:290px; width:auto;">
-              <h3 class="text-2xl font-bold mb-3">${title}</h3>
-              <div class="text-md text-gray-300 mb-3">
-                ${availability?.stream ? `<div class='mb-2'>Stream on:<div class='flex flex-wrap justify-center mt-2'>${availability.stream}</div></div>` : ''}
-                ${availability?.buy ? `<div class='mb-2'>Buy on:<div class='flex flex-wrap justify-center mt-2'>${availability.buy}</div></div>` : ''}
-                ${!availability ? `<div class="text-sm text-yellow-400 mt-4">Not yet available to stream or buy in selected region.</div>` : ''}
-              </div>
-              <button class="show-trailer-btn wildcard-btn" data-tmdbid="${found.id}" data-mediatype="${found.media_type}" style="margin-top:1em;background:linear-gradient(to right,#7f5af0,#2cb67d);color:#fff;padding:0.65em 1.4em;border:none;border-radius:0.8em;font-weight:600;cursor:pointer;">Show Trailer</button>
-            </div>
-          </div>
-        `;
-        return;
-      }
-      for (const item of batch) {
-        const title = item.title || item.name || 'Untitled';
-        const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
-        const availability = await fetchAvailability(item.id, item.media_type, title);
-        const card = document.createElement('div');
-        card.className = 'bg-gray-800 p-4 rounded-lg shadow flex flex-col h-full';
-        card.innerHTML = `
-          <img src="${poster}" alt="${title}" class="rounded mb-4">
-          <h3 class="text-lg font-semibold">${title}</h3>
-          <div class="text-sm text-gray-300 flex-grow">
-            ${availability?.stream ? `<div class='mt-2'>Stream on:<div class='flex flex-wrap justify-center'>${availability.stream}</div></div>` : ''}
-            ${availability?.buy ? `<div class='mt-4'>Buy on:<div class='flex flex-wrap justify-center'>${availability.buy}</div></div>` : ''}
-            ${!availability ? `<div class="text-sm text-yellow-400 mt-4">Not yet available to stream or buy in selected region.</div>` : ''}
-          </div>
-          <button class="show-trailer-btn" data-tmdbid="${item.id}" data-mediatype="${item.media_type}" style="margin-top:1.1em;background:linear-gradient(to right,#7f5af0,#2cb67d);color:#fff;padding:0.55em 1.2em;border:none;border-radius:0.8em;font-weight:600;cursor:pointer;">Show Trailer</button>
-        `;
-        container.appendChild(card);
-      }
-    }
-
-    async function showResults(isNewSearch) {
-      clearResults();
-      showMoreCount = 0;
-      uniqueResults = [];
-      seenIdSet = new Set();
-      for (const item of results) {
-        const key = (item.media_type || '') + ':' + item.id;
-        if (!seenIdSet.has(key)) {
-          uniqueResults.push(item);
-          seenIdSet.add(key);
-        }
-        if (uniqueResults.length >= 12) break;
-      }
-      await renderBatchUnique(uniqueResults.slice(0, 12));
-    }
-
-    async function runSearch(isNewSearch = false) {
-      if (isLoading) return;
-      isLoading = true;
-      let page = 1;
-      if (!isNewSearch) page = currentPage;
-      else currentPage = 1;
-      let query = currentQuery.trim();
-      results = await fetchMedia(currentType, query, page);
-      await showResults(true);
-      isLoading = false;
-    }
-
-    async function showMore() {
-      if (isLoading || showMoreCount >= maxShowMore) return;
-      isLoading = true;
-      currentPage++;
-      let query = currentQuery.trim();
-      let newResults = await fetchMedia(currentType, query, currentPage);
-      for (const item of newResults) {
-        const key = (item.media_type || '') + ':' + item.id;
-        if (!seenIdSet.has(key)) {
-          uniqueResults.push(item);
-          seenIdSet.add(key);
-        }
-      }
-      let start = showMoreCount * 12 + 12;
-      let end = start + 12;
-      await renderBatchUnique(uniqueResults.slice(start, end));
-      showMoreCount++;
-      isLoading = false;
-    }
-
-    function setActiveTab(tab) {
-      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active-tab', 'inactive-tab'));
-      tab.classList.add('active-tab');
-    }
-    function setRegionButton(regionBtn) {
-      document.querySelectorAll('.flag-tab').forEach(btn => btn.classList.remove('selected'));
-      regionBtn.classList.add('selected');
-    }
-
-    async function wildCard() {
-      document.getElementById('wildOverlay').style.display = "flex";
-      let tries = 0, found = null;
-      while (tries < 10 && !found) {
-        let randPage = 1 + Math.floor(Math.random() * 4);
-        let media = await fetchMedia(currentType, '', randPage);
-        media = deduplicateAndSort(media, '').filter(i => (i.vote_count || 0) >= 100);
-        if (!media.length) { tries++; continue; }
-        for (let i = media.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [media[i], media[j]] = [media[j], media[i]];
-        }
-        for (let m of media) {
-          const avail = await fetchAvailability(m.id, m.media_type, m.title || m.name || '');
-          if (avail && avail.stream) {
-            found = { ...m, availability: avail };
-            break;
-          }
-        }
-        tries++;
-      }
-      setTimeout(async () => {
-        document.getElementById('wildOverlay').style.display = "none";
-        clearResults();
-        if (found) {
-          await renderBatchUnique([found], true);
-        } else {
-          document.getElementById('searchResults').innerHTML = `<div class="wild-card-center"><div class="text-lg font-bold text-yellow-400">Sorry, nothing found for your region and settings!</div></div>`;
-        }
-      }, 1700);
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      await runSearch(true);
-
-      document.getElementById('allTab').onclick = async function () {
-        if (currentType !== 'all') {
-          setActiveTab(this);
-          currentType = 'all';
-          await runSearch(true);
-        }
-      };
-      document.getElementById('movieTab').onclick = async function () {
-        if (currentType !== 'movie') {
-          setActiveTab(this);
-          currentType = 'movie';
-          await runSearch(true);
-        }
-      };
-      document.getElementById('tvTab').onclick = async function () {
-        if (currentType !== 'tv') {
-          setActiveTab(this);
-          currentType = 'tv';
-          await runSearch(true);
-        }
-      };
-
-      document.getElementById('regionUK').onclick = async function () {
-        if (currentRegion !== 'GB') {
-          setRegionButton(this);
-          currentRegion = 'GB';
-          await runSearch(true);
-        }
-      };
-      document.getElementById('regionUS').onclick = async function () {
-        if (currentRegion !== 'US') {
-          setRegionButton(this);
-          currentRegion = 'US';
-          await runSearch(true);
-        }
-      };
-      document.getElementById('regionCA').onclick = async function () {
-        if (currentRegion !== 'CA') {
-          setRegionButton(this);
-          currentRegion = 'CA';
-          await runSearch(true);
-        }
-      };
-
-      document.getElementById('searchInput').addEventListener('input', async function (e) {
-        currentQuery = e.target.value;
-        await runSearch(true);
-      });
-
-      document.getElementById('showMoreBtn').onclick = async function () {
-        await showMore();
-      };
-
-      document.getElementById('wildBtn').onclick = async function () {
-        await wildCard();
-      };
-    });
-
-    // Trailer button logic
-    document.addEventListener('click', async function(e) {
-      if (e.target && e.target.classList.contains('show-trailer-btn')) {
-        const btn = e.target;
-        const tmdbId = btn.getAttribute('data-tmdbid');
-        const mediaType = btn.getAttribute('data-mediatype'); // "movie" or "tv"
-        btn.disabled = true;
-        btn.textContent = "Loading...";
-        let apiUrl = '';
-        if (mediaType === 'tv' || mediaType === 'movie') {
-          apiUrl = `https://api.themoviedb.org/3/${mediaType}/${tmdbId}/videos?api_key=${tmdbApiKey}`;
-        } else {
-          apiUrl = `https://api.themoviedb.org/3/movie/${tmdbId}/videos?api_key=${tmdbApiKey}`;
-        }
-        try {
-          const res = await fetch(apiUrl);
-          const data = await res.json();
-          let trailer = null;
-          if (Array.isArray(data.results)) {
-            trailer = data.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
-            if (!trailer) {
-              trailer = data.results.find(v => (v.type === 'Teaser' || v.type === 'Clip') && v.site === 'YouTube');
-            }
-          }
-          if (trailer) {
-            showTrailerModal(trailer.key);
-          } else {
-            document.getElementById('trailer-modal-content').innerHTML = "<div class='no-trailer'>No trailer found for this title.</div>";
-            document.getElementById('trailer-modal-bg').classList.add('active');
-          }
-        } catch (err) {
-          document.getElementById('trailer-modal-content').innerHTML = "<div class='no-trailer'>Error loading trailer.</div>";
-          document.getElementById('trailer-modal-bg').classList.add('active');
-        }
-        btn.disabled = false;
-        btn.textContent = "Show Trailer";
-      }
-    });
-  </script>
 </body>
 </html>
